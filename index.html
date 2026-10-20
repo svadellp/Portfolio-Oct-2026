@@ -2347,9 +2347,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function syncMusic(){
     var root = caseInner.querySelector('.music'), t = mu.pl >= 0 && mu.tr >= 0 ? MUSIC[mu.pl][3][mu.tr] : null, on = t && isOn();
-    window.__roomPlaying = !!on;
-    if (window.npShow && t) window.npShow({ title: t[0], artist: t[1], isPlaying: on, url: 'https://open.spotify.com/track/' + t[2] });
-    if (!on && window.npReload) window.npReload();
     if (!root) return;
     root.classList.toggle('on', !!on);
     if (root.classList.contains('loaded') !== (mu.pl >= 0)) {
@@ -2774,14 +2771,12 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      Now playing, with a 5×4 pixel equaliser
      ========================================================== */
   var playing = false, eq = $('eq').getContext('2d');
-  function render(d, fromRoom){
+  function render(d){
     if (!d || !d.title) return;                        // nothing from Spotify yet: keep what's there
-    if (!fromRoom && window.__roomPlaying) return;     // the music room is spinning a record: it owns the corner
     $('npTrack').textContent = d.title; $('npArtist').textContent = d.artist;
     $('npLabel').textContent = d.isPlaying ? 'Now playing' : 'Last played';
     np.href = d.url || 'https://open.spotify.com'; playing = !!d.isPlaying;
   }
-  window.npShow = function(d){ render(d, true); if (d && d.title) np.style.visibility = '' };   // the music room tells the corner what is spinning
   function load(){
     if (!NOW_PLAYING_URL) return render(MOCK);
     fetch(NOW_PLAYING_URL, { cache: 'no-store' }).then(function(r){ if (r.status !== 200) throw r.status; return r.json() })
@@ -2789,7 +2784,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       .catch(function(){});                            // Spotify quiet or not connected: keep the last song shown
   }
   if (NOW_PLAYING_URL) np.style.visibility = 'hidden'; // no placeholder on the live site: it appears with the first real song
-  load(); if (NOW_PLAYING_URL) setInterval(function(){ if (!document.hidden) load() }, 30000);
+  load(); if (NOW_PLAYING_URL) setInterval(function(){ if (!document.hidden) load() }, 15000);   // Spotify only: the music room never touches the corner
   document.addEventListener('visibilitychange', function(){ if (!document.hidden && NOW_PLAYING_URL) load() });
   window.npReload = function(){ if (NOW_PLAYING_URL) load() };
   var levels = [2, 3, 1, 4, 2];

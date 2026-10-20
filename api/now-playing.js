@@ -51,8 +51,8 @@ module.exports = async (req, res) => {
       const rec = await fetch(RECENT_URL, auth);
       if (rec.ok) { const j = await rec.json(); const last = j.items && j.items[0]; if (last) out = shape(last.track, false, last.played_at) }
     }
-    // the edge keeps an answer for 20 seconds, so visitors never hit Spotify's rate limits
-    res.setHeader('Cache-Control', 'public, s-maxage=20, stale-while-revalidate=40');
+    // the edge keeps an answer for 8 seconds, so visitors never hit Spotify's rate limits
+    res.setHeader('Cache-Control', 'public, s-maxage=8, stale-while-revalidate=8');
     res.statusCode = out ? 200 : 204;
     return res.end(out ? JSON.stringify(out) : '');
   } catch (e) {
