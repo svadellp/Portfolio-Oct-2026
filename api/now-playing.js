@@ -1,6 +1,8 @@
 // What Sara is listening to on Spotify right now, or the last song she played.
 // Needs three environment variables in Vercel: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN.
 // Returns: { isPlaying, title, artist, url, playedAt? }
+// pasted keys often carry a stray space, quote or line break: strip them
+const env = k => (process.env[k] || '').trim().replace(/^["']|["']$/g, '');
 
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const NOW_URL = 'https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode';
@@ -10,7 +12,7 @@ let cached = { token: null, until: 0 };   // reused while the serverless instanc
 
 async function accessToken() {
   if (cached.token && Date.now() < cached.until) return cached.token;
-  const { SPOTIFY_CLIENT_ID: id, SPOTIFY_CLIENT_SECRET: secret, SPOTIFY_REFRESH_TOKEN: refresh } = process.env;
+  const id = env('SPOTIFY_CLIENT_ID'), secret = env('SPOTIFY_CLIENT_SECRET'), refresh = env('SPOTIFY_REFRESH_TOKEN');
   const r = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: {
@@ -33,7 +35,7 @@ function shape(item, isPlaying, playedAt) {
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET || !process.env.SPOTIFY_REFRESH_TOKEN) {
+  if (!env('SPOTIFY_CLIENT_ID') || !env('SPOTIFY_CLIENT_SECRET') || !env('SPOTIFY_REFRESH_TOKEN')) {
     res.statusCode = 503; return res.end(JSON.stringify({ error: 'Spotify is not connected yet' }));
   }
   try {
