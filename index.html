@@ -1734,6 +1734,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
 
   /* ---------- Draw ---------- */
+  // Pixels are round: a dot as wide as the old square
+  function dot(g, x, y, s){ if (s < 2.2) { g.fillRect(x - s / 2, y - s / 2, s, s); return } g.beginPath(); g.arc(x, y, s / 2, 0, 6.2832); g.fill() }   // too small to see the corners: a square is quicker
   function draw(now){
     if (!P) { requestAnimationFrame(draw); return }
     var dt = Math.min(64, now - (lastNow || now)); lastNow = now;
@@ -1812,7 +1814,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         if (v <= .06) continue;
         var sz = Math.min(1, v) * sq, col = cold(Math.min(1, c.h * 1.1));
         ctx.fillStyle = 'rgba(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ',' + (Math.min(.85, .18 + v * .8) * fieldA).toFixed(3) + ')';
-        ctx.fillRect(c.x - sz / 2, c.y - sz / 2, sz, sz);
+        dot(ctx, c.x, c.y, sz);
       }
     }
 
@@ -1837,7 +1839,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         keep.push(trail[ti]);
         var tsz = cell * .42 * Math.min(1, .25 + tc.tr * 1.2), tcol = cold(Math.min(1, .3 + tc.tr * .9));   // like the hero cloud: small, saturated
         ctx.fillStyle = 'rgba(' + (tcol[0] | 0) + ',' + (tcol[1] | 0) + ',' + (tcol[2] | 0) + ',' + Math.min(.85, .2 + tc.tr * .8).toFixed(3) + ')';
-        ctx.fillRect(tc.x - tsz / 2, tc.y - tsz / 2, tsz, tsz);
+        dot(ctx, tc.x, tc.y, tsz);
       }
       trail = keep;
     }
@@ -1911,7 +1913,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var h = heat[p];
         if (h > .02) { var hc = cold(h); r += (hc[0] - r) * h; g += (hc[1] - g) * h; bl += (hc[2] - bl) * h; s *= 1 - h * .2 }
         ctx.fillStyle = 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ',' + al.toFixed(3) + ')';
-        ctx.fillRect(x + ox[p] - s / 2, y + oy[p] - s / 2, s, s);
+        dot(ctx, x + ox[p], y + oy[p], s);
       }
     }
     requestAnimationFrame(draw);
@@ -2655,7 +2657,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     return out;
   }
   function paintPixels(list){ ntx.clearRect(0, 0, nt.width / navDpr, nt.height / navDpr); ntx.fillStyle = 'rgb(' + (list.bg || [248, 248, 246]).join(',') + ')'; ntx.fillRect(0, 0, innerWidth, innerHeight);
-    for (var i = 0; i < list.length; i++) { var q = list[i]; ntx.fillStyle = 'rgba(' + q[3] + ',' + q[4] + ',' + q[5] + ',' + q[6] + ')'; ntx.fillRect(q[0] - q[2] / 2, q[1] - q[2] / 2, q[2], q[2]) } }
+    for (var i = 0; i < list.length; i++) { var q = list[i]; ntx.fillStyle = 'rgba(' + q[3] + ',' + q[4] + ',' + q[5] + ',' + q[6] + ')'; dot(ntx, q[0], q[1], q[2]) } }
   var navDpr = 1;
   function pixelNav(apply){
     if (navBusy) return;
@@ -2714,7 +2716,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           if (al < .02 || s < .3) continue;
         }
         ntx.fillStyle = 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ',' + al.toFixed(3) + ')';
-        ntx.fillRect(x - s / 2, y - s / 2, s, s);
+        dot(ntx, x, y, s);
       }
       if (u < 1) { requestAnimationFrame(frame); return }
       // …and the real page takes over from its pixels
