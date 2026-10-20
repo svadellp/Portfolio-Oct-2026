@@ -1256,7 +1256,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   var states = [], delay, phase, ox, oy, ovx, ovy, heat, kind, grp, front, frontRy, cloud = [], trail = [], ncols = 0, nrows = 0;
   var fboxes = [], tiles = [], grids = [], textCount = 0, tCellsCache = [];
   var mouse = { tx: -9999, ty: -9999, x: -9999, y: -9999, vx: 0, vy: 0, on: false, s: 0 };
-  var drift = 0, lastNow = 0, heroBuiltAt = -1, musS = 0;
+  var drift = 0, lastNow = 0, heroBuiltAt = -1;
   var bigBoxes = [], bigT = [];
   var mode = -1, modeFrom = S_FOLDERS, modeTo = S_FOLDERS, modeStart = 0, hoverF = [0, 0], hoverTarget = -1, sharpA = 0;
 
@@ -1739,15 +1739,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var dt = Math.min(64, now - (lastNow || now)); lastNow = now;
     var t = (now - start) / 1000, pr = progress(now);
     var loadIn = reduce ? 1 : clamp((now - start - 100) / 2200, 0, 1);
-    // Music: when Sara is playing something on Spotify, the cloud moves to its beat
-    var M = window.__music, beat = 0, ph = 0, bi = 0;
-    if (M && !reduce) {
-      var mpos = M.pos0 + (now - M.t0);
-      if (mpos < M.dur + 1500) { var blen = 60000 / M.bpm; bi = Math.floor(mpos / blen); ph = (mpos % blen) / blen; beat = Math.exp(-ph * 5) * (bi % 4 === 0 ? 1.3 : 1) } else M = null;
-    }
-    musS += ((M ? 1 : 0) - musS) * .02;                    // eases in when a song starts, out when it stops
-    var mAmp = musS * (M ? .45 + M.energy * .75 : 0);
-    if (pr.s < .01 && mode === -1 && !reduce) drift += dt * .00012 * (1 + mAmp * (M ? .6 + M.dance : 0));
+    if (pr.s < .01 && mode === -1 && !reduce) drift += dt * .00012;
     if ((pr.s >= .01 || mode !== -1) && heroBuiltAt !== drift) buildHero();
 
     var A = pr.A, B = pr.B, tt = pr.t, SA = states[A], SB = states[B];
@@ -1807,14 +1799,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var fieldA = 1 - pr.swap;
     if (fieldA > .01) {
       var sq = cell * .74;
-      if (!cloud.__c) {                                     // the cloud's centre and reach, for the ripple
-        var sw = 0, sx = 0, sy = 0, mr = 0;
-        for (var ci2 = 0; ci2 < cloud.length; ci2++) { var cm = cloud[ci2].m; if (cm > .05) { sw += cm; sx += cloud[ci2].x * cm; sy += cloud[ci2].y * cm } }
-        sx /= sw || 1; sy /= sw || 1;
-        for (ci2 = 0; ci2 < cloud.length; ci2++) if (cloud[ci2].m > .05) mr = Math.max(mr, Math.hypot(cloud[ci2].x - sx, cloud[ci2].y - sy));
-        cloud.__c = { x: sx, y: sy, r: mr || 1 };
-      }
-      var cc0 = cloud.__c, ringAt = ph * 1.15, pulse = beat * mAmp;
       for (var i = 0; i < cloud.length; i++) {
         var c = cloud[i];
         var dx = c.x - mouse.x, dy = c.y - mouse.y, d2 = dx * dx + dy * dy, RR = R * 1.4, near = 0;
@@ -1823,15 +1807,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         if (c.m < .01 && c.h < .02) continue;
         var rev = reduce ? 1 : smoothstep(0, .35, loadIn * 1.35 - c.r * .9);
         if (rev <= 0) continue;
-        var v = (field(c.x, c.y, drift) - .5) * 2.4 * c.m, ring = 0;
-        if (mAmp > .01) {
-          var dn = Math.hypot(c.x - cc0.x, c.y - cc0.y) / cc0.r, rd = dn - ringAt;
-          ring = Math.exp(-rd * rd / .006) * mAmp * c.m * (1 - ph * .6);   // the wave each beat sends out
-          v = v * (1 + pulse * .55) + pulse * .22 * c.m * (1 - dn) + ring * .7;
-        }
+        var v = (field(c.x, c.y, drift) - .5) * 2.4 * c.m;
         v = Math.max(v, c.h * .95 * c.m + c.h * .35) * rev;
         if (v <= .06) continue;
-        var sz = Math.min(1, v) * sq, col = cold(Math.min(1, Math.max(c.h * 1.1, ring * 1.2)));
+        var sz = Math.min(1, v) * sq, col = cold(Math.min(1, c.h * 1.1));
         ctx.fillStyle = 'rgba(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ',' + (Math.min(.85, .18 + v * .8) * fieldA).toFixed(3) + ')';
         ctx.fillRect(c.x - sz / 2, c.y - sz / 2, sz, sz);
       }
@@ -2797,11 +2776,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     $('npTrack').textContent = d.title; $('npArtist').textContent = d.artist;
     $('npLabel').textContent = d.isPlaying ? 'Now playing' : 'Last played';
     np.href = d.url || 'https://open.spotify.com'; playing = !!d.isPlaying;
-    // the hero cloud listens too: tempo + where we are in the song gives a beat clock
-    window.__music = d.isPlaying && d.tempo > 40 && d.progressMs != null ? {
-      bpm: d.tempo, energy: d.energy == null ? .6 : d.energy, dance: d.danceability == null ? .6 : d.danceability,
-      pos0: d.progressMs + Math.max(0, Date.now() - (d.at || Date.now())), t0: performance.now(), dur: d.durationMs || 6e5
-    } : null;
   }
   function load(){
     if (!NOW_PLAYING_URL) return render(MOCK);
