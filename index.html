@@ -469,7 +469,10 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .br-book{position:relative;display:block;aspect-ratio:2 / 3.05;cursor:pointer}
 .case .br-end{position:relative;display:block}
 .case .br-book::after,.case .br-end::after{content:"";position:absolute;left:-9px;right:-9px;bottom:-14px;height:10px;z-index:-1;
-  background:linear-gradient(#FBFCFD,#CDD4DE 55%,#B3BCC9);box-shadow:0 10px 14px -8px rgba(15,22,38,.35)}
+  /* chrome: a polished bar with a bright top edge and the room reflected as dark and light bands */
+  height:12px;bottom:-15px;border-radius:2px;
+  background:linear-gradient(180deg,#FFFFFF 0%,#E6EAF0 10%,#A3ACB9 28%,#F4F6F9 44%,#C9D0D9 56%,#6E7886 78%,#AEB7C3 90%,#E9EDF2 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(40,48,62,.35),0 10px 14px -8px rgba(15,22,38,.42)}
 .case .br-cover{position:absolute;left:0;right:0;bottom:0;height:var(--h);transform-origin:50% 100%;transition:transform .45s var(--ease),filter .35s;
   border-radius:2px 4px 4px 2px;background:#C3CBD6;box-shadow:2px 0 0 #F4F5F7,3px 1px 0 #D5DAE1,4px 2px 0 rgba(0,0,0,.08),0 12px 16px -10px rgba(15,22,38,.55)}
 .case .br-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
