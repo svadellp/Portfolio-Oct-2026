@@ -919,8 +919,8 @@ var FOLDERS = [
 ];
 
 /*
-  NOW PLAYING: live Spotify needs a small server helper (Spotify's secret key can't live in this file).
-  When it exists, set NOW_PLAYING_URL. It should return:
+  NOW PLAYING: on the live site the page asks /api/now-playing (a Vercel function, see api/now-playing.js),
+  which holds the Spotify keys. Opened from your computer it shows the placeholder. It returns:
   { "isPlaying": true, "title": "Song", "artist": "Artist", "url": "https://open.spotify.com/track/..." }
 */
 /* ============================================================
@@ -1191,7 +1191,7 @@ var CASES = {
   (Now playing settings)
 */
 // Your Spotify 'now playing' service (see spotify-now-playing/README.md). Leave empty to show the placeholder.
-var NOW_PLAYING_URL = '';
+var NOW_PLAYING_URL = /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '/api/now-playing' : '';   // live site: the Vercel function in /api
 
 var MOCK = { isPlaying: true, title: '[Track]', artist: '[Artist]', url: 'https://open.spotify.com' };
 
@@ -2781,12 +2781,16 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     $('npLabel').textContent = d.isPlaying ? 'Now playing' : 'Last played';
     np.href = d.url || 'https://open.spotify.com'; playing = !!d.isPlaying;
   }
-  window.npShow = function(d){ render(d, true) };   // the music room tells the corner what is spinning
+  window.npShow = function(d){ render(d, true); if (d && d.title) np.style.visibility = '' };   // the music room tells the corner what is spinning
   function load(){
     if (!NOW_PLAYING_URL) return render(MOCK);
-    fetch(NOW_PLAYING_URL).then(function(r){ return r.json() }).then(function(d){ render(d) }).catch(function(){ if ($('npTrack').textContent === MOCK.title) render(MOCK) });
+    fetch(NOW_PLAYING_URL, { cache: 'no-store' }).then(function(r){ if (r.status !== 200) throw r.status; return r.json() })
+      .then(function(d){ render(d); if (d && d.title) np.style.visibility = '' })
+      .catch(function(){});                            // Spotify quiet or not connected: keep the last song shown
   }
-  load(); if (NOW_PLAYING_URL) setInterval(load, 30000);
+  if (NOW_PLAYING_URL) np.style.visibility = 'hidden'; // no placeholder on the live site: it appears with the first real song
+  load(); if (NOW_PLAYING_URL) setInterval(function(){ if (!document.hidden) load() }, 30000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden && NOW_PLAYING_URL) load() });
   window.npReload = function(){ if (NOW_PLAYING_URL) load() };
   var levels = [2, 3, 1, 4, 2];
   var EQ_COLD = ['#1F4FD1', '#2F6BFF', '#38BDF8', '#67E8F9'];
