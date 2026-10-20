@@ -269,6 +269,11 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .cs .cs-in ul{margin:4px 0 20px 1.1em;font-size:clamp(15px,1.1vw,17px);line-height:1.65;color:#2B2B2B}
 .cs .cs-in h2{font-size:clamp(28px,2.6vw,40px);font-weight:500;letter-spacing:-.035em;line-height:1.05;margin-bottom:22px}
 .cs .c-next{margin-top:48px}
+.cs .cs-in p.cs-link{margin:4px 0 8px}
+.cs-link a{display:inline-flex;gap:6px;align-items:baseline;font-size:15px;font-weight:500;color:var(--ink);border-bottom:1px solid currentColor;padding-bottom:2px;transition:color .2s}
+.cs-link a:hover{color:var(--accent)}
+.cs-link a span{transition:transform .25s var(--ease)}
+.cs-link a:hover span{transform:translate(2px,-2px)}
 .cs .cs-in p.c-sub{font-size:var(--t-h3);line-height:1.35;letter-spacing:-.015em;color:var(--grey);max-width:30ch;margin:16px 0 0}
 .cs-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#F1F2F4,#E3E6EB)}
 .cs-ph span{font-size:12px;letter-spacing:.04em;color:#9AA1AC}
@@ -885,7 +890,10 @@ header.dark .hdr-exit{display:inline-flex}
    `href` opens the full case study; `img` is the picture shown on hover (and the source of its pixel mosaic).
    ============================================================ */
 var FOLDERS = [
-  { name: 'Projects', count: '4 projects', hint: 'Pick a project to read the case study', items: [
+  { name: 'Projects', count: '5 projects', hint: 'Pick a project to read the case study', items: [
+    { title: 'AI Agent Hub', kind: 'SAP, [Month Year]', img: 'images/ai-agent-hub.jpg',
+      text: 'A command centre to discover, govern and evaluate every AI agent, MCP server and LLM across a company, whichever platform it runs on.',
+      result: '', id: 'ai-agent-hub' },
     { title: 'Wains', kind: 'Product design, July 2021', img: 'images/project-3.jpg',
       text: 'Designed the MVP for an AI start-up that spots early signs of burnout at work, from user research to tested prototype in 10 days.',
       result: 'Award winning', id: 'wains' },
@@ -966,6 +974,29 @@ var FILE_BLUES = [                        // one hue, the site accent, in tonal 
 ];
 
 var CASES = {
+  'ai-agent-hub': {
+    title: 'AI Agent Hub', sub: 'One place to see, govern and trust every AI agent in a company',
+    meta: [['Product', 'SAP AI Agent Hub'], ['When', '[Month Year]'], ['Role', '[Your role]'], ['Tools', '[Tools you used]']],
+    blocks: [
+      ['p', 'Companies are adopting AI agents faster than they can keep track of them. SAP AI Agent Hub is a vendor-agnostic command centre to discover, inventory, govern and evaluate AI agents, MCP servers and LLMs, with their full architecture and business context.'],
+      ['link', ['See SAP AI Agent Hub', 'https://www.sap.com/products/artificial-intelligence/ai-agent-hub.html']],
+      ['h', 'What it does'],
+      ['p', 'It brings every agent into one view, whichever platform it comes from, and gives teams the tools to decide which ones can be trusted in production.'],
+      ['notes', [
+        ['AI registry', 'A searchable inventory of agents, LLMs and MCP servers, discovered automatically from vendors like SAP, Microsoft, Google, AWS, Databricks and ServiceNow.'],
+        ['Evaluation and verification', 'Assessments that capture risk, build type, architecture decisions and compliance, with a formal workflow to verify each asset.'],
+        ['Identity and access', 'Runtime permissions and policies: only verified MCP servers reach production, and access is revoked if that changes.'],
+        ['AI observability', 'Session health, goal completion and tool-call correctness, with traces for root-cause analysis.'],
+        ['Agent mining', 'Checks whether agents follow the paths they were designed for.'],
+        ['Org and skills mapping', 'Links agents to the business units, roles and skills they affect, through SAP SuccessFactors.']
+      ]],
+      ['fig', '[Image of the product]'],
+      ['h', 'My part'],
+      ['p', '[What you designed, led or shaped in AI Agent Hub, and why it mattered.]'],
+      ['fig', '[Image of your work]']
+    ]
+  },
+
   'wains': {
     title: 'Wains', sub: 'Transforming workplaces, one mind at a time', hero: 'images/wains-hero.png', heroZoom: true,
     meta: [['Type', 'Product design'], ['When', 'July 2021'], ['Role', 'Product designer, product owner'], ['Tools', 'Figma, FigJam, Miro, Illustrator'], ['Recognition', 'Award winning']],
@@ -2446,6 +2477,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var m = ' data-m="' + shown + '"', S = steps[steps.length - 1];
       if (t === 'h') S.html += '<h2' + m + '>' + esc(v) + '</h2>';
       else if (t === 'p') S.html += '<p' + m + '>' + esc(v) + '</p>';
+      else if (t === 'link') S.html += '<p class="cs-link"' + m + '><a href="' + esc(v[1]) + '" target="_blank" rel="noopener">' + esc(v[0]) + ' <span aria-hidden="true">&nearr;</span></a></p>';
       else if (t === 'ul') S.html += '<ul' + m + '>' + v.map(function(x){ return '<li>' + esc(x) + '</li>' }).join('') + '</ul>';
       else if (t === 'fig') S.html += '<figure class="c-fig"' + m + '><div>Image to add</div><figcaption>' + esc(v) + '</figcaption></figure>';
       else if (t === 'notes') S.html += '<div class="c-notes"' + m + '>' + v.map(function(n){ return '<div><b>' + esc(n[0]) + '</b><span>' + esc(n[1]) + '</span></div>' }).join('') + '</div>';
