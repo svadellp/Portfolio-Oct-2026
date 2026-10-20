@@ -17,6 +17,8 @@ module.exports = async (req, res) => {
     body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: 'https://' + req.headers.host + '/api/spotify-callback' })
   });
   const j = await r.json();
+  // a code works once and only for a few minutes: an old or reused one simply starts the login again
+  if (!j.refresh_token && j.error === 'invalid_grant') { res.statusCode = 302; res.setHeader('Location', '/api/spotify-login'); return res.end() }
   if (!j.refresh_token) {
     const why = j.error_description || j.error || 'No token came back';
     const fix = /client secret/i.test(why) ? 'The <b>SPOTIFY_CLIENT_SECRET</b> in Vercel doesn’t match your Spotify app. In the Spotify dashboard open your app → Settings → <b>View client secret</b>, copy it, paste it into Vercel, redeploy'
