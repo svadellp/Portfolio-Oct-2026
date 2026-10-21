@@ -2091,7 +2091,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       '<div class="bh-intro"><p>' + esc(c.sub) + '</p>' +
       '<div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div></div>' +
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
-      '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div>' +
+      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
     '</div>';
   }
@@ -2115,7 +2115,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var vis = [], rank = [];
       for (var q = 0; q < N; q++) { rank[q] = -1; if (shown(q)) { rank[q] = vis.length; vis.push(q) } }
       var n = vis.length || 1; lay.rank = rank; lay.n = n;
-      var out = [], cx = W / 2, cy = H * (W > 860 ? .5 : .5), wide = W > 860;
+      var out = [], cx = W / 2, cy = H * (W > 860 ? .45 : .47), wide = W > 860;
       var base = wide ? Math.min(Math.min(132, W * .09), H * .165) : Math.min(84, W * .2);
       if (mode === 'halo') {
         var Rx = Math.min(W * (wide ? .36 : .42), 580) * Math.min(1, .3 + n / 34), Ry = Rx * .27;   // fewer books, a tighter ring
