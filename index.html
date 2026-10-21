@@ -494,18 +494,21 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-modes button{display:block;text-align:left;color:var(--grey);transition:color .2s}
 .case .bh-modes small{display:block;font-size:11px;color:var(--grey);transition:color .2s}
 .case .bh-modes button.on small,.case .bh-modes button:hover small{color:var(--ink)}
-.case .bh-modes .ic{display:block;width:34px;height:20px;margin-top:3px;fill:currentColor;opacity:.5;overflow:visible;transition:color .25s,opacity .25s}
+.case .bh-modes .ic{display:block;width:22px;height:14px;margin:6px 0 3px;fill:currentColor;opacity:.5;overflow:visible;transition:color .25s,opacity .25s}
 .case .bh-modes button:hover .ic{opacity:.85}
 .case .bh-modes button.on .ic{color:var(--accent);opacity:1}
 .case .bh.open .bh-intro{opacity:0}
 .case .bh.open .bh-intro{pointer-events:none}
-.case .bh-panel{position:absolute;left:52%;right:var(--gutter);top:50%;max-width:520px;transform:translateY(-46%);opacity:0;pointer-events:none;transition:opacity .35s,transform .5s var(--ease)}
-.case .bh-panel.in{opacity:1;transform:translateY(-50%);pointer-events:auto}
+.case .bh-panel{position:absolute;left:52%;right:var(--gutter);top:12%;max-width:520px;transform:translateY(8px);opacity:0;pointer-events:none;transition:opacity .35s,transform .5s var(--ease)}
+.case .bh-panel.in{opacity:1;transform:none;pointer-events:auto}
 .case .bh-panel .br-dcover{display:none}
 .case .bh-panel .br-dtop{display:block}
 .case .bh-panel .br-detail h2{font-size:clamp(28px,3vw,46px)}
+.case .bh-panel .br-detail h2 a{transition:color .2s}
+.case .bh-panel .br-detail h2 a:hover{color:var(--accent)}
+.case .bh-panel .br-rate i{border-radius:50%}
 .case .bh-panel .br-syn{margin:18px 0 20px;font-size:15px;line-height:1.6;max-height:34vh;overflow:auto;scrollbar-width:thin}
-.case .bh-close{display:block;margin-top:22px;font-size:13px;font-weight:500;color:var(--grey);transition:color .2s}
+.case .bh-close{display:block;margin:0 0 22px;font-size:15px;font-weight:500;color:var(--ink);transition:color .2s}
 .case .bh-close:hover{color:var(--accent)}
 @media (max-width:860px){
   .case .bh-intro{max-width:none;right:var(--gutter)}
@@ -2073,10 +2076,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var syn = BOOKS_DESC[b[6]] || '';
     return '<div class="br-detail"><div class="br-dtop">' +
       '<div class="br-dcover"><img src="' + IMG + b[2].replace('._SY475_', '').replace('._SX318_', '') + '.jpg" alt=""></div>' +
-      '<div><small>' + esc(st) + '</small><h2>' + esc(o.t[0]) + '</h2>' + (o.t[1] ? '<p class="br-series">' + esc(o.t[1]) + '</p>' : '') + '<p class="br-author">' + esc(o.author) + '</p>' +
+      '<div><small>' + esc(st) + '</small><h2><a href="https://www.goodreads.com/book/show/' + b[6] + '" target="_blank" rel="noopener" title="See it on Goodreads">' + esc(o.t[0]) + '</a></h2>' + (o.t[1] ? '<p class="br-series">' + esc(o.t[1]) + '</p>' : '') + '<p class="br-author">' + esc(o.author) + '</p>' +
       '<dl>' + (o.st === 'read' && b[3] ? '<div><dt>My rating</dt><dd>' + grRate(b[3]) + '</dd></div>' : '') + (b[5] ? '<div><dt>Published</dt><dd>' + esc(b[5]) + '</dd></div>' : '') + '</dl></div></div>' +
       (syn ? '<p class="br-syn">' + esc(syn) + '</p>' : '') +
-      '<a class="br-gr" href="https://www.goodreads.com/book/show/' + b[6] + '" target="_blank" rel="noopener">View on Goodreads</a></div>';
+      '</div>';
   }
   /* ---------- Books room: a slowly turning halo of covers (or a flat row), click one to open it ---------- */
   function booksRoom(c){
@@ -2089,7 +2092,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       '<div class="bh-stage">' + cards + '</div>' +
       '<div class="bh-intro"><p>' + esc(c.sub) + '</p>' +
       '<div class="bh-bar"><div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
-      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on" aria-pressed="true"><small>Halo</small><svg class="ic" viewBox="0 0 34 20" aria-hidden="true"><circle cx="31.50" cy="10.00" r="1.9"/><circle cx="28.73" cy="14.47" r="1.9"/><circle cx="21.48" cy="17.23" r="1.9"/><circle cx="12.52" cy="17.23" r="1.9"/><circle cx="5.27" cy="14.47" r="1.9"/><circle cx="2.50" cy="10.00" r="1.9"/><circle cx="5.27" cy="5.53" r="1.9"/><circle cx="12.52" cy="2.77" r="1.9"/><circle cx="21.48" cy="2.77" r="1.9"/><circle cx="28.73" cy="5.53" r="1.9"/></svg></button><button type="button" data-m="row" aria-pressed="false"><small>Row</small><svg class="ic" viewBox="0 0 34 20" aria-hidden="true"><circle cx="3.0" cy="10" r="1.9"/><circle cx="10.3" cy="10" r="1.9"/><circle cx="17.6" cy="10" r="1.9"/><circle cx="24.9" cy="10" r="1.9"/><circle cx="32.2" cy="10" r="1.9"/></svg></button></div></div></div>' +
+      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on" aria-pressed="true"><small>Halo</small><svg class="ic" viewBox="0 0 22 14" aria-hidden="true"><circle cx="20.60" cy="7.00" r="1.3"/><circle cx="17.79" cy="10.54" r="1.3"/><circle cx="11.00" cy="12.00" r="1.3"/><circle cx="4.21" cy="10.54" r="1.3"/><circle cx="1.40" cy="7.00" r="1.3"/><circle cx="4.21" cy="3.46" r="1.3"/><circle cx="11.00" cy="2.00" r="1.3"/><circle cx="17.79" cy="3.46" r="1.3"/></svg></button><button type="button" data-m="row" aria-pressed="false"><small>Row</small><svg class="ic" viewBox="0 0 22 14" aria-hidden="true"><circle cx="1.4" cy="7" r="1.3"/><circle cx="6.8" cy="7" r="1.3"/><circle cx="12.2" cy="7" r="1.3"/><circle cx="17.6" cy="7" r="1.3"/></svg></button></div></div></div>' +
 
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
@@ -2100,6 +2103,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var list = booksAll().filter(function(o){ return o.st === 'reading' || o.st === 'read' }), N = list.length;
     var els = [].slice.call(stage.querySelectorAll('.bh-card'));
     var st = els.map(function(){ return { x: 0, y: 0, s: .2, r: 0, o: 0, ready: false } });
+    var PANEL_TOP = .12;                                   // the open book and its details both start here
     var HALO_SPEED = .1, ROW_SPEED = 28, TILT = Math.tan(7 * Math.PI / 180);   // the halo leans: its right side sits higher                 // one full turn a minute; the row glides 28px a second, always the same
     var switched = -1e9;
     var mode = 'halo', spin = 0, vel = HALO_SPEED, row = 0, rowVel = ROW_SPEED, sel = -1, hover = -1, drag = null, last = performance.now(), born = last;
@@ -2141,7 +2145,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (sel >= 0) {                                        // the open book comes forward on the left, the rest step back
         for (var k = 0; k < N; k++) { if (k !== sel) { out[k].o *= wide ? .05 : .08; out[k].s *= .8 } }
         var big = wide ? Math.min(H * .62, W * .3) / 1.5 : H * .24 / 1.5;
-        out[sel] = { x: wide ? W * .3 : cx, y: wide ? cy : H * .2, s: big / out[sel].w, r: 0, o: 1, z: 3000, w: out[sel].w };
+        out[sel] = { x: wide ? W * .3 : cx, y: wide ? H * PANEL_TOP + big * .75 : H * .2, s: big / out[sel].w, r: 0, o: 1, z: 3000, w: out[sel].w };
       }
       liftI = sel < 0 ? (hover >= 0 ? hover : seek ? seek.i : -1) : -1;
       return out;
@@ -2192,7 +2196,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (i === sel || i < 0) { close(); return }
       sel = i; setLabel(-1); root.classList.add('open');
       panel.classList.remove('in');
-      setTimeout(function(){ panel.innerHTML = bookDetail(list[i]) + '<button type="button" class="bh-close">Close</button>'; panel.classList.add('in');
+      setTimeout(function(){ panel.innerHTML = '<button type="button" class="bh-close">Back</button>' + bookDetail(list[i]); panel.classList.add('in');
         panel.querySelector('.bh-close').addEventListener('click', close) }, reduce ? 0 : 160);
     }
     function close(){ sel = -1; root.classList.remove('open'); panel.classList.remove('in') }
