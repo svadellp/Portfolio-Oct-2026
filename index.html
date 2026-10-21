@@ -473,7 +473,10 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
   background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.18) 4%,rgba(0,0,0,.05) 8%,rgba(255,255,255,0) 14%)}
 /* a soft shadow painted as a gradient: far cheaper to animate than a blurred box-shadow on every cover */
 .case .bh-card::before{content:"";position:absolute;left:4%;right:4%;bottom:-9%;height:14%;z-index:-1;pointer-events:none;background:radial-gradient(50% 50% at 50% 50%,rgba(15,22,38,.32),rgba(15,22,38,0))}
-.case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);animation:bkPulse 1.6s steps(2) infinite}
+/* reading now: a solid blue dot, a little bigger on the open book, breathing gently instead of blinking off */
+.case .bh-dot{position:absolute;right:0;top:0;z-index:2;width:max(12px,6%);aspect-ratio:1;border-radius:50%;background:var(--accent);
+  transform:translate(40%,-40%);box-shadow:0 2px 6px rgba(47,107,255,.45);animation:bhDot 2.2s ease-in-out infinite}
+@keyframes bhDot{0%,100%{transform:translate(40%,-40%) scale(1)}50%{transform:translate(40%,-40%) scale(1.18)}}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
 .case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
 .case .bh-bar{display:flex;align-items:flex-end;gap:22px;margin-top:16px}
