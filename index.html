@@ -483,7 +483,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-counts button:hover b,.case .bh-counts button.on b{color:var(--accent)}
 .case .bh-counts button.on small{color:var(--ink)}
 .case .bh-counts:has(.on) button:not(.on){opacity:.45}
-.case .bh-label{position:absolute;left:0;right:0;bottom:clamp(70px,11vh,104px);text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
+.case .bh-label{position:absolute;left:0;right:0;bottom:clamp(58px,8vh,74px);z-index:6000;text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
 .case .bh-label.on{opacity:1;transform:none}
 .case .bh-label b{font-weight:500}
 .case .bh-label span{color:var(--grey);margin-left:8px}
@@ -496,8 +496,15 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-modes .ic{display:block;width:20px;height:12px;fill:currentColor;opacity:.55;overflow:visible;transition:color .25s,opacity .25s,transform .4s var(--ease)}
 .case .bh-modes button.on .ic{color:var(--accent);opacity:1}
 .case .bh-modes button:hover .ic{transform:scale(1.1)}
-.case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(30px,5vh,46px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
+.case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(20px,3.2vh,30px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
 .case .bh.open .bh-intro,.case .bh.open .bh-hint{opacity:0}
+/* A to Z by author: small and quiet, letters swell under the pointer like a dock */
+.case .bh-az{position:absolute;left:50%;bottom:clamp(18px,3vh,28px);z-index:6000;transform:translateX(-50%);display:flex;align-items:flex-end;gap:1px;height:30px;transition:opacity .4s}
+.case .bh-az button{--m:1;width:15px;font-size:10px;line-height:1;font-weight:500;color:var(--ink);text-align:center;transform-origin:50% 100%;transform:scale(var(--m));transition:transform .18s var(--ease),color .2s,opacity .2s}
+.case .bh-az button:hover{color:var(--accent)}
+.case .bh-az button.cur{color:var(--accent)}
+.case .bh-az button:disabled{opacity:.25;cursor:default;color:var(--grey)}
+.case .bh.open .bh-az{opacity:.35}
 .case .bh.open .bh-intro{pointer-events:none}
 .case .bh-panel{position:absolute;left:52%;right:var(--gutter);top:50%;max-width:520px;transform:translateY(-46%);opacity:0;pointer-events:none;transition:opacity .35s,transform .5s var(--ease)}
 .case .bh-panel.in{opacity:1;transform:translateY(-50%);pointer-events:auto}
@@ -2092,6 +2099,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div></div>' +
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
       '<p class="bh-hint">Drag to turn, click a book to open it</p>' +
+      '<nav class="bh-az" aria-label="Browse by author">' + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(function(L){ return '<button type="button" data-l="' + L + '">' + L + '</button>' }).join('') + '</nav>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
     '</div>';
   }
@@ -2109,12 +2117,13 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var o = list[i]; label.querySelector('b').textContent = o.t[0]; label.querySelector('span').textContent = o.author + (o.st === 'reading' ? ' · reading now' : ''); label.classList.add('on');
     }
     var filter = null;                                       // null: everything; 'reading' or 'read': only that group
+    var lay = { rank: [], n: 1, gap: 1, span: 1, loop: false }, seek = null, seekUntil = 0;
     function shown(i){ return !filter || list[i].st === filter }
     function targets(W, H, now){
       var vis = [], rank = [];
       for (var q = 0; q < N; q++) { rank[q] = -1; if (shown(q)) { rank[q] = vis.length; vis.push(q) } }
-      var n = vis.length || 1;
-      var out = [], cx = W / 2, cy = H * (W > 860 ? .56 : .55), wide = W > 860;
+      var n = vis.length || 1; lay.rank = rank; lay.n = n;
+      var out = [], cx = W / 2, cy = H * (W > 860 ? .52 : .5), wide = W > 860;
       var base = wide ? Math.min(Math.min(132, W * .09), H * .165) : Math.min(84, W * .2);
       if (mode === 'halo') {
         var Rx = Math.min(W * (wide ? .36 : .42), 580) * Math.min(1, .3 + n / 34), Ry = Rx * .27;   // fewer books, a tighter ring
@@ -2124,7 +2133,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           out.push({ x: cx + Math.cos(a) * Rx, y: cy + Math.sin(a) * Ry - (1 - d) * 18, s: base * (.5 + .62 * d) / base, r: -Math.cos(a) * 38, o: .45 + .55 * d, z: Math.round(d * 1000), w: base });
         }
       } else {
-        var w0 = base * .92, gap = w0 * 1.32 + 14, span = gap * n, loop = span > W * .9;
+        var w0 = base * .92, gap = w0 * 1.32 + 14, span = gap * n, loop = span > W * .9; lay.gap = gap; lay.span = span; lay.loop = loop;
         for (var j = 0; j < N; j++) {
           if (rank[j] < 0) { out.push({ x: cx, y: cy, s: .3, r: 0, o: 0, z: 0, w: w0 }); continue }
           var x = loop ? ((rank[j] * gap - row) % span + span) % span - span / 2   // a loop: books leaving one side come back on the other
@@ -2138,14 +2147,28 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var big = wide ? Math.min(H * .62, W * .3) / 1.5 : H * .24 / 1.5;
         out[sel] = { x: wide ? W * .3 : cx, y: wide ? cy : H * .2, s: big / out[sel].w, r: 0, o: 1, z: 3000, w: out[sel].w };
       }
-      if (hover >= 0 && sel < 0) { out[hover].s *= 1.1; out[hover].o = 1; out[hover].z += 2000 }
+      var lift = hover >= 0 ? hover : seek ? seek.i : -1;
+      if (lift >= 0 && sel < 0 && lay.rank[lift] >= 0) { out[lift].s *= 1.1; out[lift].o = 1; out[lift].z += 2000 }
       return out;
     }
     function frame(now){
       if (!root.isConnected) return;                         // the room was closed: stop
       var dt = Math.min(50, now - last) / 1000; last = now;
       var W = stage.clientWidth, H = stage.clientHeight;
-      if (!drag) {
+      if (seek && !drag) {
+        var r = lay.rank[seek.i];
+        if (r < 0) seek = null;
+        else if (mode === 'halo') {
+          var want = Math.PI / 2 - r / lay.n * Math.PI * 2, dA = Math.atan2(Math.sin(want - spin), Math.cos(want - spin));
+          spin += dA * (1 - Math.exp(-dt * 3.2)); vel = 0;
+          if (Math.abs(dA) < .004 && now > seekUntil) seek = null;
+        } else if (lay.loop) {
+          var wantR = r * lay.gap - lay.span / 2, dR = ((wantR - row) % lay.span + lay.span * 1.5) % lay.span - lay.span / 2;
+          row += dR * (1 - Math.exp(-dt * 3.2)); rowVel = 0;
+          if (Math.abs(dR) < .5 && now > seekUntil) seek = null;
+        } else seek = null;
+      }
+      else if (!drag) {
         if (mode === 'halo') { vel += ((sel >= 0 ? 0 : HALO_SPEED) - vel) * (1 - Math.exp(-dt * 1.6)); spin += vel * dt }
         else { rowVel += ((sel >= 0 ? 0 : ROW_SPEED) - rowVel) * (1 - Math.exp(-dt * 1.6)); row += rowVel * dt }
       }
@@ -2194,11 +2217,34 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (mode === 'halo') { spin += d * .0016 } else { row += d }
     }, { passive: false });
     stage.addEventListener('click', function(e){ if (!e.target.closest('.bh-card') && sel >= 0) close() });
+    var az = root.querySelector('.bh-az'), azB = [].slice.call(az.querySelectorAll('button'));
+    function letterOf(i){ return list[i].sur.charAt(0).toUpperCase() }
+    function azAvail(){ var have = {}; for (var i = 0; i < N; i++) if (shown(i)) have[letterOf(i)] = 1; azB.forEach(function(b){ b.disabled = !have[b.getAttribute('data-l')] }) }
+    azAvail();
+    az.addEventListener('pointermove', function(e){
+      azB.forEach(function(b){ var r = b.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.width / 2)), k = Math.max(0, 1 - d / 70);
+        b.style.setProperty('--m', (1 + k * k * 1.3).toFixed(3)) });
+    });
+    az.addEventListener('pointerleave', function(){ azB.forEach(function(b){ b.style.setProperty('--m', 1) }) });
+    azB.forEach(function(b){ b.addEventListener('click', function(){
+      var L = b.getAttribute('data-l'), first = -1;
+      for (var i = 0; i < N; i++) if (shown(i) && letterOf(i) === L) { first = i; break }
+      if (first < 0) return;
+      if (sel >= 0) close();
+      seek = { i: first }; seekUntil = performance.now() + 1600; setLabel(first);
+      clearTimeout(azB.t); azB.t = setTimeout(function(){ if (hover < 0 && sel < 0) setLabel(-1) }, 2600);
+    }) });
+    setInterval(function(){                                   // which letter is at the front right now
+      if (!root.isConnected) return;
+      var best = -1, bz = -1; for (var i = 0; i < N; i++) { var z = +els[i].style.zIndex || 0; if (shown(i) && z > bz && z < 200) { bz = z; best = i } }
+      if (mode === 'row') { var bx = 1e9; best = -1; for (var j = 0; j < N; j++) if (shown(j)) { var dx = Math.abs(st[j].x - stage.clientWidth / 2); if (dx < bx) { bx = dx; best = j } } }
+      var L = best >= 0 ? letterOf(best) : ''; azB.forEach(function(b){ b.classList.toggle('cur', b.getAttribute('data-l') === L) });
+    }, 250);
     [].forEach.call(root.querySelectorAll('.bh-counts button'), function(b){ b.addEventListener('click', function(){
       var f = b.getAttribute('data-f'); filter = filter === f ? null : f;     // click again to see them all
       [].forEach.call(root.querySelectorAll('.bh-counts button'), function(x){ var on = x.getAttribute('data-f') === filter; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on) });
       if (sel >= 0 && !shown(sel)) close();
-      switched = performance.now(); row = 0;
+      switched = performance.now(); row = 0; seek = null; azAvail();
       els.forEach(function(el, i){ el.tabIndex = shown(i) ? 0 : -1; el.style.pointerEvents = shown(i) ? '' : 'none' });
     }) });
     [].forEach.call(root.querySelectorAll('.bh-modes button'), function(b){ b.addEventListener('click', function(){
