@@ -476,7 +476,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
 .case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
-.case .bh-counts{display:flex;gap:22px;margin-top:14px}
+.case .bh-counts{position:absolute;left:var(--gutter);bottom:clamp(14px,2.4vh,24px);z-index:6000;display:flex;gap:22px;transition:opacity .4s}
 .case .bh-counts button{display:block;text-align:left;color:var(--ink);transition:color .2s,opacity .25s}
 .case .bh-counts small{display:block;font-size:11px;color:var(--grey);transition:color .2s}
 .case .bh-counts b{display:block;font-size:20px;font-weight:500;letter-spacing:-.03em;line-height:1;margin-top:3px;font-variant-numeric:tabular-nums;transition:color .2s}
@@ -488,7 +488,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-label b{font-weight:500}
 .case .bh-label span{color:var(--grey);margin-left:8px}
 /* the view switch: two words with a tiny dot drawing of each layout; the chosen one turns ink and its drawing blue */
-.case .bh-modes{display:flex;align-items:center;gap:16px;margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-size:13px}
+.case .bh-modes{position:absolute;right:var(--gutter);bottom:clamp(16px,2.6vh,26px);z-index:6000;display:flex;align-items:center;gap:16px;font-size:13px;transition:opacity .4s}
 .case .bh-modes span{font-size:11px;color:var(--grey);margin-right:2px}
 .case .bh-modes button{display:inline-flex;align-items:center;gap:7px;padding:2px 0;font-weight:500;color:var(--grey);transition:color .2s}
 .case .bh-modes button:hover{color:var(--ink)}
@@ -496,8 +496,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-modes .ic{display:block;width:20px;height:12px;fill:currentColor;opacity:.55;overflow:visible;transition:color .25s,opacity .25s,transform .4s var(--ease)}
 .case .bh-modes button.on .ic{color:var(--accent);opacity:1}
 .case .bh-modes button:hover .ic{transform:scale(1.1)}
-.case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(20px,3.2vh,30px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
-.case .bh.open .bh-intro,.case .bh.open .bh-hint{opacity:0}
+.case .bh.open .bh-intro{opacity:0}
 /* A to Z by author: small and quiet, letters swell under the pointer like a dock */
 .case .bh-az{position:absolute;left:50%;bottom:clamp(10px,1.8vh,18px);z-index:6000;transform:translateX(-50%);display:flex;align-items:flex-end;gap:1px;height:30px;transition:opacity .4s}
 .case .bh-az button{--m:1;width:15px;font-size:10px;line-height:1;font-weight:500;color:var(--ink);text-align:center;transform-origin:50% 100%;transform:scale(var(--m));transition:transform .18s var(--ease),color .2s,opacity .2s}
@@ -517,7 +516,8 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 @media (max-width:860px){
   .case .bh-intro{max-width:none;right:var(--gutter)}
   .case .bh-intro p{font-size:16px}
-  .case .bh-hint{display:none}
+  .case .bh-modes span{display:none}
+  .case .bh-az{display:none}
   .case .bh-panel{left:var(--gutter);right:var(--gutter);top:auto;bottom:84px;transform:translateY(10px);max-height:46vh;overflow:auto;background:var(--room)}
   .case .bh-panel.in{transform:none}
 }
@@ -2095,10 +2095,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager">' + (o.st === 'reading' ? '<i class="bh-dot"></i>' : '') + '</button>' }).join('');
     return '<div class="bh" data-mode="halo">' +
       '<div class="bh-stage">' + cards + '</div>' +
-      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading now</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
-        '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div></div>' +
+      '<div class="bh-intro"><p>' + esc(c.sub) + '</p></div>' +
+      '<div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
+      '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div>' +
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
-      '<p class="bh-hint">Drag to turn, click a book to open it</p>' +
       '<nav class="bh-az" aria-label="Browse by author">' + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(function(L){ return '<button type="button" data-l="' + L + '">' + L + '</button>' }).join('') + '</nav>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
     '</div>';
@@ -2114,10 +2114,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var label = root.querySelector('.bh-label');
     function setLabel(i){
       if (i < 0) { label.classList.remove('on'); return }
-      var o = list[i]; label.querySelector('b').textContent = o.t[0]; label.querySelector('span').textContent = o.author + (o.st === 'reading' ? ' · reading now' : ''); label.classList.add('on');
+      var o = list[i]; label.querySelector('b').textContent = o.t[0]; label.querySelector('span').textContent = o.author + (o.st === 'reading' ? ' · reading' : ''); label.classList.add('on');
     }
     var filter = null;                                       // null: everything; 'reading' or 'read': only that group
-    var lay = { rank: [], n: 1, gap: 1, span: 1, loop: false }, seek = null, seekUntil = 0;
+    var lay = { rank: [], n: 1, gap: 1, span: 1, loop: false }, seek = null, seekUntil = 0, liftI = -1;
     function shown(i){ return !filter || list[i].st === filter }
     function targets(W, H, now){
       var vis = [], rank = [];
@@ -2150,8 +2150,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var big = wide ? Math.min(H * .62, W * .3) / 1.5 : H * .24 / 1.5;
         out[sel] = { x: wide ? W * .3 : cx, y: wide ? cy : H * .2, s: big / out[sel].w, r: 0, o: 1, z: 3000, w: out[sel].w };
       }
-      var lift = hover >= 0 ? hover : seek ? seek.i : -1;
-      if (lift >= 0 && sel < 0 && lay.rank[lift] >= 0) { out[lift].s *= 1.1; out[lift].o = 1; out[lift].z += 2000 }
+      liftI = sel < 0 ? (hover >= 0 ? hover : seek ? seek.i : -1) : -1;
       return out;
     }
     function frame(now){
@@ -2180,7 +2179,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       for (var i = 0; i < N; i++) {
         var t = T[i], c = st[i], k = reduce ? 1 : 1 - Math.exp(-dt * rate * (now - switched < 1500 ? .55 + (i % 7) * .09 : 1));   // staggered only while changing view
         if (!c.ready) { c.x = W / 2; c.y = H * .52; c.s = .2; c.ready = true }
-        c.x += (t.x - c.x) * k; c.y += (t.y - c.y) * k; c.s += (t.s - c.s) * k; c.r += (t.r - c.r) * k; c.o += (t.o * intro - c.o) * k;
+        c.l = (c.l || 0) + ((i === liftI ? 1 : 0) - (c.l || 0)) * (reduce ? 1 : 1 - Math.exp(-dt * 7));   // lifted: a soft 0..1, never a jump
+        var ts = t.s * (1 + .08 * c.l), to = t.o + (1 - t.o) * c.l;
+        c.x += (t.x - c.x) * k; c.y += (t.y - c.l * 8 - c.y) * k; c.s += (ts - c.s) * k; c.r += (t.r * (1 - .6 * c.l) - c.r) * k; c.o += (to * intro - c.o) * k;
+        if (c.l > .5) t.z += 1500;
         var el = els[i];
         if (c.w !== t.w) { c.w = t.w; el.style.width = t.w + 'px' }          // size only changes with the view, not every frame
         el.style.transform = 'translate3d(' + (c.x - t.w / 2).toFixed(1) + 'px,' + (c.y - t.w * .75).toFixed(1) + 'px,0) rotateY(' + c.r.toFixed(1) + 'deg) scale(' + c.s.toFixed(3) + ')';
@@ -2200,11 +2202,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
     function close(){ sel = -1; root.classList.remove('open'); panel.classList.remove('in') }
     els.forEach(function(el, i){
-      el.addEventListener('pointerenter', function(){ if (!drag) { hover = i; if (sel < 0) setLabel(i) } });
       el.addEventListener('pointerleave', function(){ if (hover === i) { hover = -1; setLabel(-1) } });
       el.addEventListener('click', function(e){ e.stopPropagation(); if (drag && drag.moved) return; open(i) });
     });
     // drag (or swipe, or scroll) to turn the halo / slide the row; it keeps a little momentum
+    var px = -1, py = -1;
+    stage.addEventListener('pointermove', function(e){
+      if (drag || Math.abs(e.clientX - px) + Math.abs(e.clientY - py) < 2) return;   // only a moving hand picks a book
+      px = e.clientX; py = e.clientY;
+      var card = e.target.closest && e.target.closest('.bh-card'), i = card ? +card.getAttribute('data-i') : -1;
+      if (i !== hover) { hover = i; if (sel < 0) setLabel(i) }
+    });
     stage.addEventListener('pointerdown', function(e){ drag = { x: e.clientX, t: performance.now(), moved: false, id: e.pointerId } });
     addEventListener('pointermove', function(e){
       if (!drag || !root.isConnected) return;
@@ -2261,7 +2269,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     });
     [].forEach.call(root.querySelectorAll('.bh-modes button'), function(b){ b.addEventListener('click', function(){
       mode = b.getAttribute('data-m'); root.setAttribute('data-mode', mode); switched = performance.now();
-      root.querySelector('.bh-hint').textContent = mode === 'halo' ? 'Drag to turn, click a book to open it' : 'Drag to browse, click a book to open it';
       [].forEach.call(root.querySelectorAll('.bh-modes button'), function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b) });
       if (mode === 'row' && sel < 0) { row = 0; rowVel = 0 }
     }) });
