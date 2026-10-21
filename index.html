@@ -464,14 +464,16 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 /* The books room */
 /* Books room: the halo */
 .case .bh{position:fixed;left:0;right:0;top:62px;bottom:0;overflow:hidden;user-select:none;-webkit-user-select:none}
-.case .bh-stage{position:absolute;inset:0;cursor:grab;touch-action:pan-y}
+.case .bh-stage{position:absolute;inset:0;cursor:grab;touch-action:pan-y;perspective:1100px}
 .case .bh-stage:active{cursor:grabbing}
 .case .bh-card{position:absolute;left:0;top:0;aspect-ratio:2/3;padding:0;border-radius:2px 4px 4px 2px;transform-origin:50% 50%;will-change:transform,opacity;
-  background:#C3CBD6;box-shadow:0 14px 22px -14px rgba(15,22,38,.55);cursor:pointer;transition:box-shadow .3s}
+  background:#C3CBD6;cursor:pointer;backface-visibility:hidden}
 .case .bh-card img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;pointer-events:none}
 .case .bh-card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.18) 4%,rgba(0,0,0,.05) 8%,rgba(255,255,255,0) 14%)}
-.case .bh-card.now::before{content:"";position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
+/* a soft shadow painted as a gradient: far cheaper to animate than a blurred box-shadow on every cover */
+.case .bh-card::before{content:"";position:absolute;left:4%;right:4%;bottom:-9%;height:14%;z-index:-1;pointer-events:none;background:radial-gradient(50% 50% at 50% 50%,rgba(15,22,38,.32),rgba(15,22,38,0))}
+.case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,40px);max-width:30ch;pointer-events:none;transition:opacity .4s}
 .case .bh-intro p{font-size:var(--t-h3);line-height:1.35;letter-spacing:-.015em}
 .case .bh-intro dl{display:flex;gap:28px;margin-top:18px}
@@ -1823,6 +1825,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function draw(now){
     if (!P) { requestAnimationFrame(draw); return }
     var dt = Math.min(64, now - (lastNow || now)); lastNow = now;
+    // a page or room covers the whole screen: nothing back here is visible, so don't spend the frame on it
+    if (typeof caseOpen !== 'undefined' && caseOpen && !navBusy && caseEl.classList.contains('live') && getComputedStyle(caseEl).opacity === '1') { requestAnimationFrame(draw); return }
     var t = (now - start) / 1000, pr = progress(now);
     var loadIn = reduce ? 1 : clamp((now - start - 100) / 2200, 0, 1);
     if (pr.s < .01 && mode === -1 && !reduce) drift += dt * .00012;
@@ -2072,7 +2076,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var list = booksAll().filter(function(o){ return o.st === 'reading' || o.st === 'read' });
     var cards = list.map(function(o, i){
       return '<button type="button" class="bh-card' + (o.st === 'reading' ? ' now' : '') + '" data-i="' + i + '" aria-label="' + esc(o.t[0] + ', ' + o.author) + '">' +
-        '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager"></button>' }).join('');
+        '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager">' + (o.st === 'reading' ? '<i class="bh-dot"></i>' : '') + '</button>' }).join('');
     return '<div class="bh" data-mode="halo">' +
       '<div class="bh-stage">' + cards + '</div>' +
       '<div class="bh-intro"><p>' + esc(c.sub) + '</p><dl><div><dt>Read</dt><dd>' + BOOKS.counts.read + '</dd></div><div><dt>Reading now</dt><dd>' + BOOKS.counts.reading + '</dd></div></dl></div>' +
@@ -2123,18 +2127,20 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var dt = Math.min(50, now - last) / 1000; last = now;
       var W = stage.clientWidth, H = stage.clientHeight;
       if (!drag) {
-        if (mode === 'halo') { vel += ((sel >= 0 || hover >= 0 ? .015 : .09) - vel) * Math.min(1, dt * 2.5); spin += vel * dt }
-        else { rowVel += ((sel >= 0 || hover >= 0 ? 4 : 26) - rowVel) * Math.min(1, dt * 2.5); row += rowVel * dt }
+        if (mode === 'halo') { vel += ((sel >= 0 ? .02 : hover >= 0 ? .06 : .26) - vel) * Math.min(1, dt * 3); spin += vel * dt }
+        else { rowVel += ((sel >= 0 ? 6 : hover >= 0 ? 18 : 70) - rowVel) * Math.min(1, dt * 3); row += rowVel * dt }
       }
-      var T = targets(W, H, now), intro = Math.min(1, (now - born) / 1400);
+      var T = targets(W, H, now), intro = Math.min(1, (now - born) / 900);
+      var rate = drag ? 28 : 9;                               // follows the hand closely, settles softly on its own
       for (var i = 0; i < N; i++) {
-        var t = T[i], c = st[i], k = reduce ? 1 : (.07 + (i % 7) * .006);   // slightly different speeds: the cards unfold, not march
+        var t = T[i], c = st[i], k = reduce ? 1 : 1 - Math.exp(-dt * rate * (1 + (i % 7) * .05));   // slightly different speeds: the cards unfold, not march
         if (!c.ready) { c.x = W / 2; c.y = H * .52; c.s = .2; c.ready = true }
         c.x += (t.x - c.x) * k; c.y += (t.y - c.y) * k; c.s += (t.s - c.s) * k; c.r += (t.r - c.r) * k; c.o += (t.o * intro - c.o) * k;
         var el = els[i];
-        el.style.width = t.w + 'px';
-        el.style.transform = 'translate3d(' + (c.x - t.w / 2).toFixed(1) + 'px,' + (c.y - t.w * .75).toFixed(1) + 'px,0) perspective(900px) rotateY(' + c.r.toFixed(2) + 'deg) scale(' + c.s.toFixed(4) + ')';
-        el.style.opacity = c.o.toFixed(3); el.style.zIndex = t.z;
+        if (c.w !== t.w) { c.w = t.w; el.style.width = t.w + 'px' }          // size only changes with the view, not every frame
+        el.style.transform = 'translate3d(' + (c.x - t.w / 2).toFixed(1) + 'px,' + (c.y - t.w * .75).toFixed(1) + 'px,0) rotateY(' + c.r.toFixed(1) + 'deg) scale(' + c.s.toFixed(3) + ')';
+        var o = c.o.toFixed(2); if (c.oS !== o) { c.oS = o; el.style.opacity = o }
+        var z = (t.z / 10) | 0; if (c.z !== z) { c.z = z; el.style.zIndex = z }
       }
       requestAnimationFrame(frame);
     }
