@@ -476,7 +476,8 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
 .case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
-.case .bh-counts{display:flex;gap:22px;margin-top:16px}
+.case .bh-bar{display:flex;align-items:flex-end;gap:22px;margin-top:16px}
+.case .bh-counts{display:flex;gap:22px}
 .case .bh-counts button{display:block;text-align:left;color:var(--ink);transition:color .2s,opacity .25s}
 .case .bh-counts small{display:block;font-size:11px;color:var(--grey);transition:color .2s}
 .case .bh-counts b{display:block;font-size:20px;font-weight:500;letter-spacing:-.03em;line-height:1;margin-top:3px;font-variant-numeric:tabular-nums;transition:color .2s}
@@ -488,14 +489,14 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-label b{font-size:15px;font-weight:500;color:var(--ink)}
 .case .bh-label span{margin-left:10px;font-size:14px;color:var(--grey)}
 /* the view switch: two words with a tiny dot drawing of each layout; the chosen one turns ink and its drawing blue */
-.case .bh-modes{display:flex;align-items:center;gap:18px;margin-top:16px;font-size:13px}
-.case .bh-modes span{font-size:11px;color:var(--grey);margin-right:2px}
-.case .bh-modes button{display:inline-flex;align-items:center;gap:7px;padding:2px 0;font-weight:500;color:var(--grey);transition:color .2s}
-.case .bh-modes button:hover{color:var(--ink)}
-.case .bh-modes button.on{color:var(--ink)}
-.case .bh-modes .ic{display:block;width:20px;height:12px;fill:currentColor;opacity:.55;overflow:visible;transition:color .25s,opacity .25s,transform .4s var(--ease)}
+/* the view switch reads like the counts: a small word on top, its drawing below at the size of the numbers */
+.case .bh-modes{display:flex;gap:18px;padding-left:22px;border-left:1px solid var(--line)}
+.case .bh-modes button{display:block;text-align:left;color:var(--grey);transition:color .2s}
+.case .bh-modes small{display:block;font-size:11px;color:var(--grey);transition:color .2s}
+.case .bh-modes button.on small,.case .bh-modes button:hover small{color:var(--ink)}
+.case .bh-modes .ic{display:block;width:34px;height:20px;margin-top:3px;fill:currentColor;opacity:.5;overflow:visible;transition:color .25s,opacity .25s}
+.case .bh-modes button:hover .ic{opacity:.85}
 .case .bh-modes button.on .ic{color:var(--accent);opacity:1}
-.case .bh-modes button:hover .ic{transform:scale(1.1)}
 .case .bh.open .bh-intro{opacity:0}
 .case .bh.open .bh-intro{pointer-events:none}
 .case .bh-panel{position:absolute;left:52%;right:var(--gutter);top:50%;max-width:520px;transform:translateY(-46%);opacity:0;pointer-events:none;transition:opacity .35s,transform .5s var(--ease)}
@@ -509,7 +510,6 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 @media (max-width:860px){
   .case .bh-intro{max-width:none;right:var(--gutter)}
   .case .bh-intro p{font-size:16px}
-  .case .bh-modes span{display:none}
   .case .bh-panel{left:var(--gutter);right:var(--gutter);top:auto;bottom:84px;transform:translateY(10px);max-height:46vh;overflow:auto;background:var(--room)}
   .case .bh-panel.in{transform:none}
 }
@@ -2088,8 +2088,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     return '<div class="bh" data-mode="halo">' +
       '<div class="bh-stage">' + cards + '</div>' +
       '<div class="bh-intro"><p>' + esc(c.sub) + '</p>' +
-      '<div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
-      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div></div>' +
+      '<div class="bh-bar"><div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
+      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on" aria-pressed="true"><small>Halo</small><svg class="ic" viewBox="0 0 34 20" aria-hidden="true"><circle cx="31.50" cy="10.00" r="1.9"/><circle cx="28.73" cy="14.47" r="1.9"/><circle cx="21.48" cy="17.23" r="1.9"/><circle cx="12.52" cy="17.23" r="1.9"/><circle cx="5.27" cy="14.47" r="1.9"/><circle cx="2.50" cy="10.00" r="1.9"/><circle cx="5.27" cy="5.53" r="1.9"/><circle cx="12.52" cy="2.77" r="1.9"/><circle cx="21.48" cy="2.77" r="1.9"/><circle cx="28.73" cy="5.53" r="1.9"/></svg></button><button type="button" data-m="row" aria-pressed="false"><small>Row</small><svg class="ic" viewBox="0 0 34 20" aria-hidden="true"><circle cx="3.0" cy="10" r="1.9"/><circle cx="10.3" cy="10" r="1.9"/><circle cx="17.6" cy="10" r="1.9"/><circle cx="24.9" cy="10" r="1.9"/><circle cx="32.2" cy="10" r="1.9"/></svg></button></div></div></div>' +
 
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
