@@ -473,7 +473,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
   background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.18) 4%,rgba(0,0,0,.05) 8%,rgba(255,255,255,0) 14%)}
 /* a soft shadow painted as a gradient: far cheaper to animate than a blurred box-shadow on every cover */
 .case .bh-card::before{content:"";position:absolute;left:4%;right:4%;bottom:-9%;height:14%;z-index:-1;pointer-events:none;background:radial-gradient(50% 50% at 50% 50%,rgba(15,22,38,.32),rgba(15,22,38,0))}
-.case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
+.case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);animation:bkPulse 1.6s steps(2) infinite}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
 .case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
 .case .bh-bar{display:flex;align-items:flex-end;gap:22px;margin-top:16px}
@@ -504,7 +504,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-panel.in{opacity:1;transform:none;pointer-events:auto}
 .case .bh-panel .br-dcover{display:none}
 .case .bh-panel .br-dtop{display:block}
-.case .bh-panel .br-detail h2{font-size:clamp(28px,3vw,46px)}
+.case .bh-panel .br-detail h2{font-size:clamp(22px,2vw,30px);line-height:1.15}
 .case .bh-panel .br-detail h2 a{transition:color .2s}
 .case .bh-panel .br-detail h2 a:hover{color:var(--accent)}
 .case .bh-panel .br-rate i{border-radius:50%}
@@ -2146,7 +2146,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (sel >= 0) {                                        // the open book comes forward on the left, the rest step back
         for (var k = 0; k < N; k++) { if (k !== sel) { out[k].o *= wide ? .05 : .08; out[k].s *= .8 } }
         var big = wide ? Math.min(H * .62, W * .3) / 1.5 : H * .24 / 1.5;
-        out[sel] = { x: wide ? W * .3 : cx, y: wide ? H * PANEL_TOP + big * .75 : H * .2, s: big / out[sel].w, r: 0, o: 1, z: 3000, w: out[sel].w };
+        out[sel] = { x: wide ? W * .3 : cx, y: wide ? H * PANEL_TOP + big * .75 : H * .2, s: 1, r: 0, o: 1, z: 3000, w: big };
       }
       liftI = sel < 0 ? (hover >= 0 ? hover : seek ? seek.i : -1) : -1;
       return out;
@@ -2184,8 +2184,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         c.x += (t.x - c.x) * k; c.y += (t.y - c.l * 8 - c.y) * k; c.s += (ts - c.s) * k; c.r += (t.r * (1 - .6 * c.l) - c.r) * k; c.o += (to * intro - c.o) * k;
         if (c.l > .5) t.z += 1500;
         var el = els[i];
-        if (c.w !== t.w) { c.w = t.w; el.style.width = t.w + 'px' }          // size only changes with the view, not every frame
-        el.style.transform = 'translate3d(' + (c.x - t.w / 2).toFixed(1) + 'px,' + (c.y - t.w * .75).toFixed(1) + 'px,0) rotateY(' + c.r.toFixed(1) + 'deg) scale(' + c.s.toFixed(3) + ')';
+        if (c.w !== t.w) { if (c.w) c.s *= c.w / t.w; c.w = t.w; el.style.width = t.w + 'px' }   // new real size: rescale so nothing jumps
+        el.style.transform = 'translate3d(' + (c.x - c.w / 2).toFixed(1) + 'px,' + (c.y - c.w * .75).toFixed(1) + 'px,0) rotateY(' + c.r.toFixed(1) + 'deg) scale(' + c.s.toFixed(3) + ')';
         var o = c.o.toFixed(2); if (c.oS !== o) { c.oS = o; el.style.opacity = o }
         var z = (t.z / 10) | 0; if (c.z !== z) { c.z = z; el.style.zIndex = z }
       }
