@@ -2091,7 +2091,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var list = booksAll().filter(function(o){ return o.st === 'reading' || o.st === 'read' }), N = list.length;
     var els = [].slice.call(stage.querySelectorAll('.bh-card'));
     var st = els.map(function(){ return { x: 0, y: 0, s: .2, r: 0, o: 0, ready: false } });
-    var mode = 'halo', spin = 0, vel = 0, row = 0, rowVel = 0, sel = -1, hover = -1, drag = null, last = performance.now(), born = last;
+    var HALO_SPEED = .1, ROW_SPEED = 28;                 // one full turn a minute; the row glides 28px a second, always the same
+    var switched = -1e9;
+    var mode = 'halo', spin = 0, vel = HALO_SPEED, row = 0, rowVel = ROW_SPEED, sel = -1, hover = -1, drag = null, last = performance.now(), born = last;
     var label = root.querySelector('.bh-label');
     function setLabel(i){
       if (i < 0) { label.classList.remove('on'); return }
@@ -2127,13 +2129,13 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var dt = Math.min(50, now - last) / 1000; last = now;
       var W = stage.clientWidth, H = stage.clientHeight;
       if (!drag) {
-        if (mode === 'halo') { vel += ((sel >= 0 ? .02 : hover >= 0 ? .06 : .26) - vel) * Math.min(1, dt * 3); spin += vel * dt }
-        else { rowVel += ((sel >= 0 ? 6 : hover >= 0 ? 18 : 70) - rowVel) * Math.min(1, dt * 3); row += rowVel * dt }
+        if (mode === 'halo') { vel += ((sel >= 0 ? 0 : HALO_SPEED) - vel) * (1 - Math.exp(-dt * 1.6)); spin += vel * dt }
+        else { rowVel += ((sel >= 0 ? 0 : ROW_SPEED) - rowVel) * (1 - Math.exp(-dt * 1.6)); row += rowVel * dt }
       }
       var T = targets(W, H, now), intro = Math.min(1, (now - born) / 900);
       var rate = drag ? 28 : 9;                               // follows the hand closely, settles softly on its own
       for (var i = 0; i < N; i++) {
-        var t = T[i], c = st[i], k = reduce ? 1 : 1 - Math.exp(-dt * rate * (1 + (i % 7) * .05));   // slightly different speeds: the cards unfold, not march
+        var t = T[i], c = st[i], k = reduce ? 1 : 1 - Math.exp(-dt * rate * (now - switched < 1500 ? .55 + (i % 7) * .09 : 1));   // staggered only while changing view
         if (!c.ready) { c.x = W / 2; c.y = H * .52; c.s = .2; c.ready = true }
         c.x += (t.x - c.x) * k; c.y += (t.y - c.y) * k; c.s += (t.s - c.s) * k; c.r += (t.r - c.r) * k; c.o += (t.o * intro - c.o) * k;
         var el = els[i];
@@ -2165,18 +2167,18 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (!drag || !root.isConnected) return;
       var dx = e.clientX - drag.x, now = performance.now(), dts = Math.max(.008, (now - drag.t) / 1000);
       if (Math.abs(dx) > 3) drag.moved = true;
-      if (mode === 'halo') { var da = dx / Math.max(320, stage.clientWidth * .4); spin += da; vel = da / dts }
-      else { row -= dx; rowVel = -dx / dts }
+      if (mode === 'halo') { var da = dx / Math.max(320, stage.clientWidth * .4); spin += da; vel = Math.max(-1.2, Math.min(1.2, da / dts)) }
+      else { row -= dx; rowVel = Math.max(-900, Math.min(900, -dx / dts)) }
       drag.x = e.clientX; drag.t = now;
     });
     addEventListener('pointerup', function(){ if (drag) { var m = drag.moved; setTimeout(function(){ drag = null }, m ? 30 : 0); if (!m) drag = null } });
     stage.addEventListener('wheel', function(e){
       e.preventDefault(); var d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
-      if (mode === 'halo') { spin += d * .0016; vel = d * .05 } else { row += d; rowVel = d * 3 }
+      if (mode === 'halo') { spin += d * .0016 } else { row += d }
     }, { passive: false });
     stage.addEventListener('click', function(e){ if (!e.target.closest('.bh-card') && sel >= 0) close() });
     [].forEach.call(root.querySelectorAll('.bh-modes button'), function(b){ b.addEventListener('click', function(){
-      mode = b.getAttribute('data-m'); root.setAttribute('data-mode', mode);
+      mode = b.getAttribute('data-m'); root.setAttribute('data-mode', mode); switched = performance.now();
       root.querySelector('.bh-hint').textContent = mode === 'halo' ? 'Drag to turn, click a book to open it' : 'Drag to browse, click a book to open it';
       [].forEach.call(root.querySelectorAll('.bh-modes button'), function(x){ x.classList.toggle('on', x === b) });
       if (mode === 'row' && sel < 0) { row = 0; rowVel = 0 }
