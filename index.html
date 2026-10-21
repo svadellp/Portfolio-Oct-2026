@@ -474,21 +474,31 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 /* a soft shadow painted as a gradient: far cheaper to animate than a blurred box-shadow on every cover */
 .case .bh-card::before{content:"";position:absolute;left:4%;right:4%;bottom:-9%;height:14%;z-index:-1;pointer-events:none;background:radial-gradient(50% 50% at 50% 50%,rgba(15,22,38,.32),rgba(15,22,38,0))}
 .case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
-.case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,40px);max-width:30ch;pointer-events:none;transition:opacity .4s}
-.case .bh-intro p{font-size:var(--t-h3);line-height:1.35;letter-spacing:-.015em}
-.case .bh-intro dl{display:flex;gap:28px;margin-top:18px}
-.case .bh-intro dt{font-size:12px;color:var(--grey)}
-.case .bh-intro dd{font-size:clamp(26px,2.4vw,36px);font-weight:500;letter-spacing:-.04em;line-height:1;margin-top:4px}
+.case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
+.case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
+.case .bh-intro dl{display:flex;gap:22px;margin-top:14px}
+.case .bh-intro dt{font-size:11px;color:var(--grey)}
+.case .bh-intro dd{font-size:20px;font-weight:500;letter-spacing:-.03em;line-height:1;margin-top:3px}
 .case .bh-label{position:absolute;left:0;right:0;bottom:clamp(70px,11vh,104px);text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
 .case .bh-label.on{opacity:1;transform:none}
 .case .bh-label b{font-weight:500}
 .case .bh-label span{color:var(--grey);margin-left:8px}
-.case .bh-modes{position:absolute;left:50%;bottom:clamp(24px,4.5vh,40px);transform:translateX(-50%);display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.case .bh-modes button{padding:6px 14px;font-size:13px;font-weight:500;color:var(--grey);border-radius:999px;transition:color .2s,background .25s}
+/* the view switch: two words with a tiny dot drawing of each layout; the chosen one turns ink and its drawing blue */
+.case .bh-modes{display:flex;align-items:center;gap:16px;margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-size:13px}
+.case .bh-modes span{font-size:11px;color:var(--grey);margin-right:2px}
+.case .bh-modes button{display:inline-flex;align-items:center;gap:7px;padding:2px 0;font-weight:500;color:var(--grey);transition:color .2s}
 .case .bh-modes button:hover{color:var(--ink)}
-.case .bh-modes button.on{background:var(--ink);color:#fff}
+.case .bh-modes button.on{color:var(--ink)}
+.case .bh-modes i{position:relative;display:block;width:16px;height:10px;color:inherit;opacity:.55;transition:color .25s,opacity .25s,transform .4s var(--ease)}
+.case .bh-modes button.on i{color:var(--accent);opacity:1}
+.case .bh-modes button:hover i{transform:scale(1.12)}
+/* a ring of dots */
+.case .ic-halo{background:radial-gradient(circle,currentColor 1.1px,transparent 1.4px) 0 0/4px 4px;-webkit-mask:radial-gradient(ellipse 50% 50%,transparent 44%,#000 46%,#000 100%,transparent 101%);mask:radial-gradient(ellipse 50% 50%,transparent 44%,#000 46%,#000 100%,transparent 101%)}
+/* a line of dots */
+.case .ic-row{background:radial-gradient(circle,currentColor 1.3px,transparent 1.6px) 0 50%/4px 4px repeat-x}
 .case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(30px,5vh,46px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
 .case .bh.open .bh-intro,.case .bh.open .bh-hint{opacity:0}
+.case .bh.open .bh-intro{pointer-events:none}
 .case .bh-panel{position:absolute;left:52%;right:var(--gutter);top:50%;max-width:520px;transform:translateY(-46%);opacity:0;pointer-events:none;transition:opacity .35s,transform .5s var(--ease)}
 .case .bh-panel.in{opacity:1;transform:translateY(-50%);pointer-events:auto}
 .case .bh-panel .br-dcover{display:none}
@@ -503,7 +513,6 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
   .case .bh-hint{display:none}
   .case .bh-panel{left:var(--gutter);right:var(--gutter);top:auto;bottom:84px;transform:translateY(10px);max-height:46vh;overflow:auto;background:var(--room)}
   .case .bh-panel.in{transform:none}
-  .case .bh.open .bh-modes{opacity:0;pointer-events:none}
 }
 .case .br{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,440px);gap:clamp(32px,4.5vw,80px);height:calc(100vh - 110px);min-height:560px}
 .case .br-sec{margin-bottom:56px}
@@ -2079,9 +2088,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager">' + (o.st === 'reading' ? '<i class="bh-dot"></i>' : '') + '</button>' }).join('');
     return '<div class="bh" data-mode="halo">' +
       '<div class="bh-stage">' + cards + '</div>' +
-      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><dl><div><dt>Read</dt><dd>' + BOOKS.counts.read + '</dd></div><div><dt>Reading now</dt><dd>' + BOOKS.counts.reading + '</dd></div></dl></div>' +
+      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><dl><div><dt>Read</dt><dd>' + BOOKS.counts.read + '</dd></div><div><dt>Reading now</dt><dd>' + BOOKS.counts.reading + '</dd></div></dl>' +
+        '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><i class="ic-halo"></i>Halo</button><button type="button" data-m="row" aria-pressed="false"><i class="ic-row"></i>Row</button></div></div>' +
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
-      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on">Halo</button><button type="button" data-m="row">Row</button></div>' +
       '<p class="bh-hint">Drag to turn, click a book to open it</p>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
     '</div>';
@@ -2101,9 +2110,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
     function targets(W, H, now){
       var out = [], cx = W / 2, cy = H * (W > 860 ? .56 : .55), wide = W > 860;
-      var base = wide ? Math.min(Math.min(112, W * .078), H * .14) : Math.min(84, W * .2);
+      var base = wide ? Math.min(Math.min(132, W * .09), H * .165) : Math.min(84, W * .2);
       if (mode === 'halo') {
-        var Rx = Math.min(W * (wide ? .33 : .42), 520), Ry = Rx * .28;
+        var Rx = Math.min(W * (wide ? .36 : .42), 580), Ry = Rx * .27;
         for (var i = 0; i < N; i++) {
           var a = i / N * Math.PI * 2 + spin, d = (Math.sin(a) + 1) / 2;   // d: 1 at the front of the ring, 0 at the back
           out.push({ x: cx + Math.cos(a) * Rx, y: cy + Math.sin(a) * Ry - (1 - d) * 18, s: base * (.5 + .62 * d) / base, r: -Math.cos(a) * 38, o: .45 + .55 * d, z: Math.round(d * 1000), w: base });
@@ -2180,7 +2189,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     [].forEach.call(root.querySelectorAll('.bh-modes button'), function(b){ b.addEventListener('click', function(){
       mode = b.getAttribute('data-m'); root.setAttribute('data-mode', mode); switched = performance.now();
       root.querySelector('.bh-hint').textContent = mode === 'halo' ? 'Drag to turn, click a book to open it' : 'Drag to browse, click a book to open it';
-      [].forEach.call(root.querySelectorAll('.bh-modes button'), function(x){ x.classList.toggle('on', x === b) });
+      [].forEach.call(root.querySelectorAll('.bh-modes button'), function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b) });
       if (mode === 'row' && sel < 0) { row = 0; rowVel = 0 }
     }) });
     addEventListener('keydown', function(e){
