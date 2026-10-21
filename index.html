@@ -483,7 +483,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-counts button:hover b,.case .bh-counts button.on b{color:var(--accent)}
 .case .bh-counts button.on small{color:var(--ink)}
 .case .bh-counts:has(.on) button:not(.on){opacity:.45}
-.case .bh-label{position:absolute;left:0;right:0;bottom:clamp(58px,8vh,74px);z-index:6000;text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
+.case .bh-label{position:absolute;left:0;right:0;bottom:clamp(48px,6.4vh,60px);z-index:6000;text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
 .case .bh-label.on{opacity:1;transform:none}
 .case .bh-label b{font-weight:500}
 .case .bh-label span{color:var(--grey);margin-left:8px}
@@ -499,7 +499,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(20px,3.2vh,30px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
 .case .bh.open .bh-intro,.case .bh.open .bh-hint{opacity:0}
 /* A to Z by author: small and quiet, letters swell under the pointer like a dock */
-.case .bh-az{position:absolute;left:50%;bottom:clamp(18px,3vh,28px);z-index:6000;transform:translateX(-50%);display:flex;align-items:flex-end;gap:1px;height:30px;transition:opacity .4s}
+.case .bh-az{position:absolute;left:50%;bottom:clamp(10px,1.8vh,18px);z-index:6000;transform:translateX(-50%);display:flex;align-items:flex-end;gap:1px;height:30px;transition:opacity .4s}
 .case .bh-az button{--m:1;width:15px;font-size:10px;line-height:1;font-weight:500;color:var(--ink);text-align:center;transform-origin:50% 100%;transform:scale(var(--m));transition:transform .18s var(--ease),color .2s,opacity .2s}
 .case .bh-az button:hover{color:var(--accent)}
 .case .bh-az button.cur{color:var(--accent)}
@@ -2108,7 +2108,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var list = booksAll().filter(function(o){ return o.st === 'reading' || o.st === 'read' }), N = list.length;
     var els = [].slice.call(stage.querySelectorAll('.bh-card'));
     var st = els.map(function(){ return { x: 0, y: 0, s: .2, r: 0, o: 0, ready: false } });
-    var HALO_SPEED = .1, ROW_SPEED = 28;                 // one full turn a minute; the row glides 28px a second, always the same
+    var HALO_SPEED = .1, ROW_SPEED = 28, TILT = Math.tan(7 * Math.PI / 180);   // the halo leans: its right side sits higher                 // one full turn a minute; the row glides 28px a second, always the same
     var switched = -1e9;
     var mode = 'halo', spin = 0, vel = HALO_SPEED, row = 0, rowVel = ROW_SPEED, sel = -1, hover = -1, drag = null, last = performance.now(), born = last;
     var label = root.querySelector('.bh-label');
@@ -2123,14 +2123,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var vis = [], rank = [];
       for (var q = 0; q < N; q++) { rank[q] = -1; if (shown(q)) { rank[q] = vis.length; vis.push(q) } }
       var n = vis.length || 1; lay.rank = rank; lay.n = n;
-      var out = [], cx = W / 2, cy = H * (W > 860 ? .52 : .5), wide = W > 860;
+      var out = [], cx = W / 2, cy = H * (W > 860 ? .5 : .5), wide = W > 860;
       var base = wide ? Math.min(Math.min(132, W * .09), H * .165) : Math.min(84, W * .2);
       if (mode === 'halo') {
         var Rx = Math.min(W * (wide ? .36 : .42), 580) * Math.min(1, .3 + n / 34), Ry = Rx * .27;   // fewer books, a tighter ring
         for (var i = 0; i < N; i++) {
           if (rank[i] < 0) { out.push({ x: cx, y: cy, s: .3, r: 0, o: 0, z: 0, w: base }); continue }
           var a = rank[i] / n * Math.PI * 2 + spin, d = (Math.sin(a) + 1) / 2;   // d: 1 at the front of the ring, 0 at the back
-          out.push({ x: cx + Math.cos(a) * Rx, y: cy + Math.sin(a) * Ry - (1 - d) * 18, s: base * (.5 + .62 * d) / base, r: -Math.cos(a) * 38, o: .45 + .55 * d, z: Math.round(d * 1000), w: base });
+          // the turn of each cover eases in and out: books near the front stay almost flat, so they glide past instead of flipping
+          var ca = Math.cos(a), turn = -34 * ca * Math.pow(Math.abs(ca), .8);
+          var hx = Math.cos(a) * Rx, hy = Math.sin(a) * Ry - (1 - d) * 18;
+          out.push({ x: cx + hx, y: cy + hy - hx * TILT, s: base * (.5 + .62 * d) / base, r: turn, o: .45 + .55 * d, z: Math.round(d * 1000), w: base });
         }
       } else {
         var w0 = base * .92, gap = w0 * 1.32 + 14, span = gap * n, loop = span > W * .9; lay.gap = gap; lay.span = span; lay.loop = loop;
