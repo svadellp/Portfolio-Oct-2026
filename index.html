@@ -476,9 +476,13 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-dot{position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
 .case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
-.case .bh-intro dl{display:flex;gap:22px;margin-top:14px}
-.case .bh-intro dt{font-size:11px;color:var(--grey)}
-.case .bh-intro dd{font-size:20px;font-weight:500;letter-spacing:-.03em;line-height:1;margin-top:3px}
+.case .bh-counts{display:flex;gap:22px;margin-top:14px}
+.case .bh-counts button{display:block;text-align:left;color:var(--ink);transition:color .2s,opacity .25s}
+.case .bh-counts small{display:block;font-size:11px;color:var(--grey);transition:color .2s}
+.case .bh-counts b{display:block;font-size:20px;font-weight:500;letter-spacing:-.03em;line-height:1;margin-top:3px;font-variant-numeric:tabular-nums;transition:color .2s}
+.case .bh-counts button:hover b,.case .bh-counts button.on b{color:var(--accent)}
+.case .bh-counts button.on small{color:var(--ink)}
+.case .bh-counts:has(.on) button:not(.on){opacity:.45}
 .case .bh-label{position:absolute;left:0;right:0;bottom:clamp(70px,11vh,104px);text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
 .case .bh-label.on{opacity:1;transform:none}
 .case .bh-label b{font-weight:500}
@@ -489,13 +493,9 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-modes button{display:inline-flex;align-items:center;gap:7px;padding:2px 0;font-weight:500;color:var(--grey);transition:color .2s}
 .case .bh-modes button:hover{color:var(--ink)}
 .case .bh-modes button.on{color:var(--ink)}
-.case .bh-modes i{position:relative;display:block;width:16px;height:10px;color:inherit;opacity:.55;transition:color .25s,opacity .25s,transform .4s var(--ease)}
-.case .bh-modes button.on i{color:var(--accent);opacity:1}
-.case .bh-modes button:hover i{transform:scale(1.12)}
-/* a ring of dots */
-.case .ic-halo{background:radial-gradient(circle,currentColor 1.1px,transparent 1.4px) 0 0/4px 4px;-webkit-mask:radial-gradient(ellipse 50% 50%,transparent 44%,#000 46%,#000 100%,transparent 101%);mask:radial-gradient(ellipse 50% 50%,transparent 44%,#000 46%,#000 100%,transparent 101%)}
-/* a line of dots */
-.case .ic-row{background:radial-gradient(circle,currentColor 1.3px,transparent 1.6px) 0 50%/4px 4px repeat-x}
+.case .bh-modes .ic{display:block;width:20px;height:12px;fill:currentColor;opacity:.55;overflow:visible;transition:color .25s,opacity .25s,transform .4s var(--ease)}
+.case .bh-modes button.on .ic{color:var(--accent);opacity:1}
+.case .bh-modes button:hover .ic{transform:scale(1.1)}
 .case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(30px,5vh,46px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
 .case .bh.open .bh-intro,.case .bh.open .bh-hint{opacity:0}
 .case .bh.open .bh-intro{pointer-events:none}
@@ -2088,8 +2088,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager">' + (o.st === 'reading' ? '<i class="bh-dot"></i>' : '') + '</button>' }).join('');
     return '<div class="bh" data-mode="halo">' +
       '<div class="bh-stage">' + cards + '</div>' +
-      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><dl><div><dt>Read</dt><dd>' + BOOKS.counts.read + '</dd></div><div><dt>Reading now</dt><dd>' + BOOKS.counts.reading + '</dd></div></dl>' +
-        '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><i class="ic-halo"></i>Halo</button><button type="button" data-m="row" aria-pressed="false"><i class="ic-row"></i>Row</button></div></div>' +
+      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading now</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
+        '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div></div>' +
       '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
       '<p class="bh-hint">Drag to turn, click a book to open it</p>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
@@ -2108,19 +2108,27 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (i < 0) { label.classList.remove('on'); return }
       var o = list[i]; label.querySelector('b').textContent = o.t[0]; label.querySelector('span').textContent = o.author + (o.st === 'reading' ? ' · reading now' : ''); label.classList.add('on');
     }
+    var filter = null;                                       // null: everything; 'reading' or 'read': only that group
+    function shown(i){ return !filter || list[i].st === filter }
     function targets(W, H, now){
+      var vis = [], rank = [];
+      for (var q = 0; q < N; q++) { rank[q] = -1; if (shown(q)) { rank[q] = vis.length; vis.push(q) } }
+      var n = vis.length || 1;
       var out = [], cx = W / 2, cy = H * (W > 860 ? .56 : .55), wide = W > 860;
       var base = wide ? Math.min(Math.min(132, W * .09), H * .165) : Math.min(84, W * .2);
       if (mode === 'halo') {
-        var Rx = Math.min(W * (wide ? .36 : .42), 580), Ry = Rx * .27;
+        var Rx = Math.min(W * (wide ? .36 : .42), 580) * Math.min(1, .3 + n / 34), Ry = Rx * .27;   // fewer books, a tighter ring
         for (var i = 0; i < N; i++) {
-          var a = i / N * Math.PI * 2 + spin, d = (Math.sin(a) + 1) / 2;   // d: 1 at the front of the ring, 0 at the back
+          if (rank[i] < 0) { out.push({ x: cx, y: cy, s: .3, r: 0, o: 0, z: 0, w: base }); continue }
+          var a = rank[i] / n * Math.PI * 2 + spin, d = (Math.sin(a) + 1) / 2;   // d: 1 at the front of the ring, 0 at the back
           out.push({ x: cx + Math.cos(a) * Rx, y: cy + Math.sin(a) * Ry - (1 - d) * 18, s: base * (.5 + .62 * d) / base, r: -Math.cos(a) * 38, o: .45 + .55 * d, z: Math.round(d * 1000), w: base });
         }
       } else {
-        var w0 = base * .92, gap = w0 * 1.32 + 14, span = gap * N;
+        var w0 = base * .92, gap = w0 * 1.32 + 14, span = gap * n, loop = span > W * .9;
         for (var j = 0; j < N; j++) {
-          var x = ((j * gap - row) % span + span) % span - span / 2;   // a loop: books leaving one side come back on the other
+          if (rank[j] < 0) { out.push({ x: cx, y: cy, s: .3, r: 0, o: 0, z: 0, w: w0 }); continue }
+          var x = loop ? ((rank[j] * gap - row) % span + span) % span - span / 2   // a loop: books leaving one side come back on the other
+                       : (rank[j] - (n - 1) / 2) * gap;                          // too few to loop: they sit still, centred
           var near = 1 - Math.min(1, Math.abs(x) / (W * .6));
           out.push({ x: cx + x, y: cy + Math.sin(j * 1.7) * 6, s: 1 + near * .08, r: 0, o: Math.abs(x) > W / 2 + w0 ? 0 : 1, z: 500 + Math.round(near * 100), w: w0 });
         }
@@ -2186,6 +2194,13 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (mode === 'halo') { spin += d * .0016 } else { row += d }
     }, { passive: false });
     stage.addEventListener('click', function(e){ if (!e.target.closest('.bh-card') && sel >= 0) close() });
+    [].forEach.call(root.querySelectorAll('.bh-counts button'), function(b){ b.addEventListener('click', function(){
+      var f = b.getAttribute('data-f'); filter = filter === f ? null : f;     // click again to see them all
+      [].forEach.call(root.querySelectorAll('.bh-counts button'), function(x){ var on = x.getAttribute('data-f') === filter; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on) });
+      if (sel >= 0 && !shown(sel)) close();
+      switched = performance.now(); row = 0;
+      els.forEach(function(el, i){ el.tabIndex = shown(i) ? 0 : -1; el.style.pointerEvents = shown(i) ? '' : 'none' });
+    }) });
     [].forEach.call(root.querySelectorAll('.bh-modes button'), function(b){ b.addEventListener('click', function(){
       mode = b.getAttribute('data-m'); root.setAttribute('data-mode', mode); switched = performance.now();
       root.querySelector('.bh-hint').textContent = mode === 'halo' ? 'Drag to turn, click a book to open it' : 'Drag to browse, click a book to open it';
@@ -2195,7 +2210,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     addEventListener('keydown', function(e){
       if (!root.isConnected || caseOpen !== 'books') return;
       if (e.key === 'Escape' && sel >= 0) { e.stopImmediatePropagation(); close() }
-      else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { var s = e.key === 'ArrowRight' ? 1 : -1; if (mode === 'halo') spin -= s * Math.PI * 2 / N; else row += s * 160; if (sel >= 0) open((sel + s + N) % N) }
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { var s = e.key === 'ArrowRight' ? 1 : -1; if (mode === 'halo') spin -= s * Math.PI * 2 / N; else row += s * 160; if (sel >= 0) { var nx = sel; do { nx = (nx + s + N) % N } while (!shown(nx) && nx !== sel); open(nx) } }
     }, true);
   }
   /* ---------- Photo lab: two slow rails of AI images, a quiet lightbox ---------- */
