@@ -462,6 +462,47 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .ga-lb .ga-x:hover{color:var(--accent)}
 @media (max-width:860px){.case .ga{display:flex;flex-direction:column;height:auto;padding-bottom:96px}.case:has(.np.in-case)::after{content:"";position:fixed;left:0;right:0;bottom:0;height:86px;background:var(--room);z-index:2}.case .ga-head{overflow:visible}.case .ga-rails{height:64vh;margin-left:calc(-1 * var(--gutter))}.case .ga-lb{grid-template-columns:44px 1fr 44px;padding:70px 8px 30px}.case .ga-lb .ga-prev,.case .ga-lb .ga-next{width:36px;height:36px}}
 /* The books room */
+/* Books room: the halo */
+.case .bh{position:fixed;left:0;right:0;top:62px;bottom:0;overflow:hidden;user-select:none;-webkit-user-select:none}
+.case .bh-stage{position:absolute;inset:0;cursor:grab;touch-action:pan-y}
+.case .bh-stage:active{cursor:grabbing}
+.case .bh-card{position:absolute;left:0;top:0;aspect-ratio:2/3;padding:0;border-radius:2px 4px 4px 2px;transform-origin:50% 50%;will-change:transform,opacity;
+  background:#C3CBD6;box-shadow:0 14px 22px -14px rgba(15,22,38,.55);cursor:pointer;transition:box-shadow .3s}
+.case .bh-card img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;pointer-events:none}
+.case .bh-card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.18) 4%,rgba(0,0,0,.05) 8%,rgba(255,255,255,0) 14%)}
+.case .bh-card.now::before{content:"";position:absolute;right:-4px;top:-4px;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--room);animation:bkPulse 1.6s steps(2) infinite}
+.case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,40px);max-width:30ch;pointer-events:none;transition:opacity .4s}
+.case .bh-intro p{font-size:var(--t-h3);line-height:1.35;letter-spacing:-.015em}
+.case .bh-intro dl{display:flex;gap:28px;margin-top:18px}
+.case .bh-intro dt{font-size:12px;color:var(--grey)}
+.case .bh-intro dd{font-size:clamp(26px,2.4vw,36px);font-weight:500;letter-spacing:-.04em;line-height:1;margin-top:4px}
+.case .bh-label{position:absolute;left:0;right:0;bottom:clamp(70px,11vh,104px);text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
+.case .bh-label.on{opacity:1;transform:none}
+.case .bh-label b{font-weight:500}
+.case .bh-label span{color:var(--grey);margin-left:8px}
+.case .bh-modes{position:absolute;left:50%;bottom:clamp(24px,4.5vh,40px);transform:translateX(-50%);display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.case .bh-modes button{padding:6px 14px;font-size:13px;font-weight:500;color:var(--grey);border-radius:999px;transition:color .2s,background .25s}
+.case .bh-modes button:hover{color:var(--ink)}
+.case .bh-modes button.on{background:var(--ink);color:#fff}
+.case .bh-hint{position:absolute;right:var(--gutter);bottom:clamp(30px,5vh,46px);font-size:12px;color:var(--grey);pointer-events:none;transition:opacity .4s}
+.case .bh.open .bh-intro,.case .bh.open .bh-hint{opacity:0}
+.case .bh-panel{position:absolute;left:52%;right:var(--gutter);top:50%;max-width:520px;transform:translateY(-46%);opacity:0;pointer-events:none;transition:opacity .35s,transform .5s var(--ease)}
+.case .bh-panel.in{opacity:1;transform:translateY(-50%);pointer-events:auto}
+.case .bh-panel .br-dcover{display:none}
+.case .bh-panel .br-dtop{display:block}
+.case .bh-panel .br-detail h2{font-size:clamp(28px,3vw,46px)}
+.case .bh-panel .br-syn{margin:18px 0 20px;font-size:15px;line-height:1.6;max-height:34vh;overflow:auto;scrollbar-width:thin}
+.case .bh-close{display:block;margin-top:22px;font-size:13px;font-weight:500;color:var(--grey);transition:color .2s}
+.case .bh-close:hover{color:var(--accent)}
+@media (max-width:860px){
+  .case .bh-intro{max-width:none;right:var(--gutter)}
+  .case .bh-intro p{font-size:16px}
+  .case .bh-hint{display:none}
+  .case .bh-panel{left:var(--gutter);right:var(--gutter);top:auto;bottom:84px;transform:translateY(10px);max-height:46vh;overflow:auto;background:var(--room)}
+  .case .bh-panel.in{transform:none}
+  .case .bh.open .bh-modes{opacity:0;pointer-events:none}
+}
 .case .br{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,440px);gap:clamp(32px,4.5vw,80px);height:calc(100vh - 110px);min-height:560px}
 .case .br-sec{margin-bottom:56px}
 .case .br-sec h3{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-small);font-weight:500;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:6px}
@@ -2014,30 +2055,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       '<p class="br-src">From <a href="' + BOOKS_URL + '" target="_blank" rel="noopener">Goodreads</a>, ' + esc(BOOKS.synced) + '</p>' +
     '</div>';
   }
-  function booksRoom(c){
-    var IMG = 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/', all = booksAll();
-    function shelf(st, letters){
-      var html = '', last = '';
-      all.filter(function(o){ return o.st === st }).forEach(function(o){   // already A to Z by author
-        var L = o.sur.charAt(0).toUpperCase();
-        if (letters && L !== last) { html += '<span class="br-end" aria-hidden="true"><b>' + L + '</b></span>'; last = L }
-        var id = +o.b[6] || o.i * 97, h = 92 + (id * 7 % 9);   // a little height variety, like real books
-        html += '<button type="button" class="br-book st-' + o.st + '" data-id="' + o.b[6] + '" style="--h:' + h + '%" aria-label="' + esc(o.t[0] + ', ' + o.author) + '">' +
-          '<span class="br-cover"><img src="' + IMG + o.b[2] + '.jpg" alt="" loading="lazy"></span></button>';
-      });
-      return '<div class="br-shelf">' + html + '</div>';
-    }
-    var more = BOOKS.counts.toread - BOOKS.toread.length;
-    return '<div class="br">' +
-      '<div class="br-left">' +
-        '<section class="br-sec"><h3>Reading now<i>' + BOOKS.counts.reading + '</i></h3>' + shelf('reading', false) + '</section>' +
-        '<section class="br-sec"><h3>Read<i>' + BOOKS.counts.read + '</i></h3>' + shelf('read', true) + '</section>' +
-        '<section class="br-sec"><h3>Want to read<i>' + BOOKS.counts.toread + '</i></h3>' + shelf('want', true) +
-          (more > 0 ? '<a class="br-more" href="' + BOOKS_URL + '" target="_blank" rel="noopener">And ' + more + ' more on the list</a>' : '') + '</section>' +
-      '</div>' +
-      '<aside class="br-side"><p class="br-intro">' + esc(c.sub) + '</p><div class="br-panel">' + booksStats() + '</div></aside>' +
-    '</div>';
-  }
   function bookDetail(o){
     var IMG = 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/', b = o.b;
     var st = o.st === 'reading' ? 'Reading now' : o.st === 'read' ? (b[4] ? 'Read ' + b[4] : 'Read') : 'On my want-to-read list';
@@ -2049,31 +2066,120 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       (syn ? '<p class="br-syn">' + esc(syn) + '</p>' : '') +
       '<a class="br-gr" href="https://www.goodreads.com/book/show/' + b[6] + '" target="_blank" rel="noopener">View on Goodreads</a></div>';
   }
+  /* ---------- Books room: a slowly turning halo of covers (or a flat row), click one to open it ---------- */
+  function booksRoom(c){
+    var IMG = 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/';
+    var list = booksAll().filter(function(o){ return o.st === 'reading' || o.st === 'read' });
+    var cards = list.map(function(o, i){
+      return '<button type="button" class="bh-card' + (o.st === 'reading' ? ' now' : '') + '" data-i="' + i + '" aria-label="' + esc(o.t[0] + ', ' + o.author) + '">' +
+        '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager"></button>' }).join('');
+    return '<div class="bh" data-mode="halo">' +
+      '<div class="bh-stage">' + cards + '</div>' +
+      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><dl><div><dt>Read</dt><dd>' + BOOKS.counts.read + '</dd></div><div><dt>Reading now</dt><dd>' + BOOKS.counts.reading + '</dd></div></dl></div>' +
+      '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
+      '<div class="bh-modes" role="group" aria-label="View"><button type="button" data-m="halo" class="on">Halo</button><button type="button" data-m="row">Row</button></div>' +
+      '<p class="bh-hint">Drag to turn, click a book to open it</p>' +
+      '<div class="bh-panel" aria-live="polite"></div>' +
+    '</div>';
+  }
   function bindBooks(){
-    var root = caseInner.querySelector('.br'), panel = root.querySelector('.br-panel'), all = booksAll(), sel = null;
-    function find(id){ for (var i = 0; i < all.length; i++) if (all[i].b[6] === id) return all[i] }
-    function show(id){
-      var books = root.querySelectorAll('.br-book');
-      if (!id || id === sel) { sel = null; [].forEach.call(books, function(x){ x.classList.remove('sel') }); swap(booksStats()); return }
-      sel = id; [].forEach.call(books, function(x){ x.classList.toggle('sel', x.getAttribute('data-id') === id) });
-      swap(bookDetail(find(id)));
-      if (narrow) root.querySelector('.br-side').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    var root = caseInner.querySelector('.bh'), stage = root.querySelector('.bh-stage'), panel = root.querySelector('.bh-panel');
+    var list = booksAll().filter(function(o){ return o.st === 'reading' || o.st === 'read' }), N = list.length;
+    var els = [].slice.call(stage.querySelectorAll('.bh-card'));
+    var st = els.map(function(){ return { x: 0, y: 0, s: .2, r: 0, o: 0, ready: false } });
+    var mode = 'halo', spin = 0, vel = 0, row = 0, rowVel = 0, sel = -1, hover = -1, drag = null, last = performance.now(), born = last;
+    var label = root.querySelector('.bh-label');
+    function setLabel(i){
+      if (i < 0) { label.classList.remove('on'); return }
+      var o = list[i]; label.querySelector('b').textContent = o.t[0]; label.querySelector('span').textContent = o.author + (o.st === 'reading' ? ' · reading now' : ''); label.classList.add('on');
     }
-    function swap(html){
-      panel.classList.add('out');
-      setTimeout(function(){ panel.innerHTML = html; panel.scrollTop = 0; wire(); panel.classList.remove('out') }, reduce ? 0 : 180);
+    function targets(W, H, now){
+      var out = [], cx = W / 2, cy = H * (W > 860 ? .56 : .55), wide = W > 860;
+      var base = wide ? Math.min(Math.min(112, W * .078), H * .14) : Math.min(84, W * .2);
+      if (mode === 'halo') {
+        var Rx = Math.min(W * (wide ? .33 : .42), 520), Ry = Rx * .28;
+        for (var i = 0; i < N; i++) {
+          var a = i / N * Math.PI * 2 + spin, d = (Math.sin(a) + 1) / 2;   // d: 1 at the front of the ring, 0 at the back
+          out.push({ x: cx + Math.cos(a) * Rx, y: cy + Math.sin(a) * Ry - (1 - d) * 18, s: base * (.5 + .62 * d) / base, r: -Math.cos(a) * 38, o: .45 + .55 * d, z: Math.round(d * 1000), w: base });
+        }
+      } else {
+        var w0 = base * .92, gap = w0 * 1.32 + 14, span = gap * N;
+        for (var j = 0; j < N; j++) {
+          var x = ((j * gap - row) % span + span) % span - span / 2;   // a loop: books leaving one side come back on the other
+          var near = 1 - Math.min(1, Math.abs(x) / (W * .6));
+          out.push({ x: cx + x, y: cy + Math.sin(j * 1.7) * 6, s: 1 + near * .08, r: 0, o: Math.abs(x) > W / 2 + w0 ? 0 : 1, z: 500 + Math.round(near * 100), w: w0 });
+        }
+      }
+      if (sel >= 0) {                                        // the open book comes forward on the left, the rest step back
+        for (var k = 0; k < N; k++) { if (k !== sel) { out[k].o *= wide ? .05 : .08; out[k].s *= .8 } }
+        var big = wide ? Math.min(H * .62, W * .3) / 1.5 : H * .24 / 1.5;
+        out[sel] = { x: wide ? W * .3 : cx, y: wide ? cy : H * .2, s: big / out[sel].w, r: 0, o: 1, z: 3000, w: out[sel].w };
+      }
+      if (hover >= 0 && sel < 0) { out[hover].s *= 1.1; out[hover].o = 1; out[hover].z += 2000 }
+      return out;
     }
-    function wire(){
-      [].forEach.call(panel.querySelectorAll('.br-now button'), function(b){ b.addEventListener('click', function(){ show(b.getAttribute('data-id')) }) });
+    function frame(now){
+      if (!root.isConnected) return;                         // the room was closed: stop
+      var dt = Math.min(50, now - last) / 1000; last = now;
+      var W = stage.clientWidth, H = stage.clientHeight;
+      if (!drag) {
+        if (mode === 'halo') { vel += ((sel >= 0 || hover >= 0 ? .015 : .09) - vel) * Math.min(1, dt * 2.5); spin += vel * dt }
+        else { rowVel += ((sel >= 0 || hover >= 0 ? 4 : 26) - rowVel) * Math.min(1, dt * 2.5); row += rowVel * dt }
+      }
+      var T = targets(W, H, now), intro = Math.min(1, (now - born) / 1400);
+      for (var i = 0; i < N; i++) {
+        var t = T[i], c = st[i], k = reduce ? 1 : (.07 + (i % 7) * .006);   // slightly different speeds: the cards unfold, not march
+        if (!c.ready) { c.x = W / 2; c.y = H * .52; c.s = .2; c.ready = true }
+        c.x += (t.x - c.x) * k; c.y += (t.y - c.y) * k; c.s += (t.s - c.s) * k; c.r += (t.r - c.r) * k; c.o += (t.o * intro - c.o) * k;
+        var el = els[i];
+        el.style.width = t.w + 'px';
+        el.style.transform = 'translate3d(' + (c.x - t.w / 2).toFixed(1) + 'px,' + (c.y - t.w * .75).toFixed(1) + 'px,0) perspective(900px) rotateY(' + c.r.toFixed(2) + 'deg) scale(' + c.s.toFixed(4) + ')';
+        el.style.opacity = c.o.toFixed(3); el.style.zIndex = t.z;
+      }
+      requestAnimationFrame(frame);
     }
-    [].forEach.call(root.querySelectorAll('.br-book'), function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); show(b.getAttribute('data-id')) }) });
-    root.querySelector('.br-shelf').addEventListener('click', function(e){ if (!e.target.closest('.br-book') && sel) show(null) });
-    [].forEach.call(root.querySelectorAll('.br-filter button'), function(f){ f.addEventListener('click', function(){
-      [].forEach.call(root.querySelectorAll('.br-filter button'), function(x){ x.classList.toggle('on', x === f) });
-      root.querySelector('.br-shelf').setAttribute('data-f', f.getAttribute('data-f'));
+    requestAnimationFrame(frame);
+
+    function open(i){
+      if (i === sel || i < 0) { close(); return }
+      sel = i; setLabel(-1); root.classList.add('open');
+      panel.classList.remove('in');
+      setTimeout(function(){ panel.innerHTML = bookDetail(list[i]) + '<button type="button" class="bh-close">Close</button>'; panel.classList.add('in');
+        panel.querySelector('.bh-close').addEventListener('click', close) }, reduce ? 0 : 160);
+    }
+    function close(){ sel = -1; root.classList.remove('open'); panel.classList.remove('in') }
+    els.forEach(function(el, i){
+      el.addEventListener('pointerenter', function(){ if (!drag) { hover = i; if (sel < 0) setLabel(i) } });
+      el.addEventListener('pointerleave', function(){ if (hover === i) { hover = -1; setLabel(-1) } });
+      el.addEventListener('click', function(e){ e.stopPropagation(); if (drag && drag.moved) return; open(i) });
+    });
+    // drag (or swipe, or scroll) to turn the halo / slide the row; it keeps a little momentum
+    stage.addEventListener('pointerdown', function(e){ drag = { x: e.clientX, t: performance.now(), moved: false, id: e.pointerId } });
+    addEventListener('pointermove', function(e){
+      if (!drag || !root.isConnected) return;
+      var dx = e.clientX - drag.x, now = performance.now(), dts = Math.max(.008, (now - drag.t) / 1000);
+      if (Math.abs(dx) > 3) drag.moved = true;
+      if (mode === 'halo') { var da = dx / Math.max(320, stage.clientWidth * .4); spin += da; vel = da / dts }
+      else { row -= dx; rowVel = -dx / dts }
+      drag.x = e.clientX; drag.t = now;
+    });
+    addEventListener('pointerup', function(){ if (drag) { var m = drag.moved; setTimeout(function(){ drag = null }, m ? 30 : 0); if (!m) drag = null } });
+    stage.addEventListener('wheel', function(e){
+      e.preventDefault(); var d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
+      if (mode === 'halo') { spin += d * .0016; vel = d * .05 } else { row += d; rowVel = d * 3 }
+    }, { passive: false });
+    stage.addEventListener('click', function(e){ if (!e.target.closest('.bh-card') && sel >= 0) close() });
+    [].forEach.call(root.querySelectorAll('.bh-modes button'), function(b){ b.addEventListener('click', function(){
+      mode = b.getAttribute('data-m'); root.setAttribute('data-mode', mode);
+      root.querySelector('.bh-hint').textContent = mode === 'halo' ? 'Drag to turn, click a book to open it' : 'Drag to browse, click a book to open it';
+      [].forEach.call(root.querySelectorAll('.bh-modes button'), function(x){ x.classList.toggle('on', x === b) });
+      if (mode === 'row' && sel < 0) { row = 0; rowVel = 0 }
     }) });
-    addEventListener('keydown', function(e){ if (e.key === 'Escape' && sel && root.isConnected && caseOpen === 'books') show(null) });
-    wire();
+    addEventListener('keydown', function(e){
+      if (!root.isConnected || caseOpen !== 'books') return;
+      if (e.key === 'Escape' && sel >= 0) { e.stopImmediatePropagation(); close() }
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { var s = e.key === 'ArrowRight' ? 1 : -1; if (mode === 'halo') spin -= s * Math.PI * 2 / N; else row += s * 160; if (sel >= 0) open((sel + s + N) % N) }
+    }, true);
   }
   /* ---------- Photo lab: two slow rails of AI images, a quiet lightbox ---------- */
   function galleryItems(c){ return c.items || AI_IMAGES.map(function(a){ return [a[0], 'images/ai/' + a[1], a[2], a[3], a[4], ''] }) }
@@ -2462,7 +2568,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     caseEl.classList.toggle('room', !!c.room); document.getElementById('top').classList.toggle('dark', !!c.room && !c.chrome); caseInner.setAttribute('data-id', id);
     siteChrome(!!c.chrome);
     document.documentElement.style.setProperty('--room', c.tint || '#D3DAE4');
-    if (caseInner.querySelector('.br')) bindBooks();
+    if (caseInner.querySelector('.bh')) bindBooks();
     if (caseInner.querySelector('.ga')) bindGallery(id, c);
     if (!c.room) { SP.ctrl = null; if (mu.via === 'sp') mu.via = 'audio' }   // leaving the room for another page closes Spotify's player
     if (caseInner.querySelector('.music')) bindMusic();
