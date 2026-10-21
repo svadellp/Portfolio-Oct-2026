@@ -483,10 +483,10 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-counts button:hover b,.case .bh-counts button.on b{color:var(--accent)}
 .case .bh-counts button.on small{color:var(--ink)}
 .case .bh-counts:has(.on) button:not(.on){opacity:.45}
-.case .bh-label{position:absolute;left:0;right:0;bottom:clamp(48px,6.4vh,60px);z-index:6000;text-align:center;font-size:14px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
-.case .bh-label.on{opacity:1;transform:none}
-.case .bh-label b{font-weight:500}
-.case .bh-label span{color:var(--grey);margin-left:8px}
+.case .bh-intro .bh-label{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);min-height:3.6em;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .4s var(--ease)}
+.case .bh-intro .bh-label.on{opacity:1;transform:none}
+.case .bh-label b{display:block;font-size:18px;font-weight:500;line-height:1.25;letter-spacing:-.015em;color:var(--ink)}
+.case .bh-label span{display:block;margin-top:4px;font-size:13px;color:var(--grey)}
 /* the view switch: two words with a tiny dot drawing of each layout; the chosen one turns ink and its drawing blue */
 .case .bh-modes{position:absolute;right:var(--gutter);bottom:clamp(16px,2.6vh,26px);z-index:6000;display:flex;align-items:center;gap:16px;font-size:13px;transition:opacity .4s}
 .case .bh-modes span{font-size:11px;color:var(--grey);margin-right:2px}
@@ -2095,10 +2095,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         '<img src="' + IMG + o.b[2] + '.jpg" alt="" draggable="false" loading="eager">' + (o.st === 'reading' ? '<i class="bh-dot"></i>' : '') + '</button>' }).join('');
     return '<div class="bh" data-mode="halo">' +
       '<div class="bh-stage">' + cards + '</div>' +
-      '<div class="bh-intro"><p>' + esc(c.sub) + '</p></div>' +
+      '<div class="bh-intro"><p>' + esc(c.sub) + '</p><p class="bh-label" aria-live="polite"><b></b><span></span></p></div>' +
       '<div class="bh-counts" role="group" aria-label="Show"><button type="button" data-f="reading" aria-pressed="false"><small>Reading</small><b>' + BOOKS.counts.reading + '</b></button><button type="button" data-f="read" aria-pressed="false"><small>Read</small><b>' + BOOKS.counts.read + '</b></button></div>' +
       '<div class="bh-modes" role="group" aria-label="View"><span>View</span><button type="button" data-m="halo" class="on" aria-pressed="true"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="18.00" cy="6.00" r="1.25"/><circle cx="15.66" cy="8.97" r="1.25"/><circle cx="10.00" cy="10.20" r="1.25"/><circle cx="4.34" cy="8.97" r="1.25"/><circle cx="2.00" cy="6.00" r="1.25"/><circle cx="4.34" cy="3.03" r="1.25"/><circle cx="10.00" cy="1.80" r="1.25"/><circle cx="15.66" cy="3.03" r="1.25"/></svg>Halo</button><button type="button" data-m="row" aria-pressed="false"><svg class="ic" viewBox="0 0 20 12" aria-hidden="true"><circle cx="2.5" cy="6" r="1.25"/><circle cx="7.5" cy="6" r="1.25"/><circle cx="12.5" cy="6" r="1.25"/><circle cx="17.5" cy="6" r="1.25"/></svg>Row</button></div>' +
-      '<p class="bh-label" aria-live="polite"><b></b><span></span></p>' +
       '<nav class="bh-az" aria-label="Browse by author">' + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(function(L){ return '<button type="button" data-l="' + L + '">' + L + '</button>' }).join('') + '</nav>' +
       '<div class="bh-panel" aria-live="polite"></div>' +
     '</div>';
