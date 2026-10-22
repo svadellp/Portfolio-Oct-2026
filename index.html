@@ -29,8 +29,8 @@
   --grey:#8C8C8C;
   --line:#E6E6E6;
   --surface:#F4F4F4;
-  --accent:#7B4FD6;              /* electric blue, from the cold pixel scale */
-  --accent-soft:rgba(123,79,214,.2);
+  --accent:#FF1E1E;              /* electric blue, from the cold pixel scale */
+  --accent-soft:rgba(255,30,30,.2);
 
   --font:'Archiv Grotesk',system-ui,sans-serif;
   --gutter:clamp(20px,3.2vw,48px);
@@ -126,6 +126,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 /* the top bar and the footer get their own, stronger glass, and their copy turns negative over the ink */
 header:not(.over){mix-blend-mode:difference;background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 header:not(.over) nav a{color:#fff}
+header:not(.over) nav a[data-t]:hover,header:not(.over) .hdr-exit[data-t]:hover,.corner:not(.in-case) a:hover,.np:not(.in-case):hover .meta{color:#00E1E1!important}   /* shows as the red accent through the negative blend */
 header:not(.over) .mark circle{fill:#fff}
 .np:not(.in-case),.corner:not(.in-case){mix-blend-mode:difference;color:#fff}
 .corner:not(.in-case) a{color:#fff}
@@ -203,7 +204,7 @@ header:not(.over) .mark circle{fill:#fff}
 /* PROTOTYPE: three floating balls of ideas replace the folders */
 #folders{display:none!important}
 #sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
-#sky [data-c="0"]{--cc:#1F8FBF}#sky [data-c="1"]{--cc:#7A3FB0}#sky [data-c="2"]{--cc:#2433D6}
+#sky [data-c="0"],#sky [data-c="1"],#sky [data-c="2"]{--cc:#FF1E1E}
 #sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .4s,transform .5s var(--ease)}
 #sky .cname b{display:block;font-size:var(--t-h3);font-weight:500;letter-spacing:-.02em;transition:color .3s}
 #sky .cname b i{font-style:normal;color:var(--grey);margin-right:.35em;font-variant-numeric:tabular-nums;transition:color .3s}
@@ -649,7 +650,7 @@ header:not(.over) .mark circle{fill:#fff}
   .case .br-book{width:68px}.case .br-end{height:104px}.case .br-shelf{gap:40px 14px}
 }
 /* The music room: its own darker space */
-.case.room{--paper:var(--room,#D3DAE4);--ink:#0F1626;--grey:#5B667B;--line:rgba(15,22,38,.13);--accent:#7B4FD6;background:var(--room,#D3DAE4);color:var(--ink)}
+.case.room{--paper:var(--room,#D3DAE4);--ink:#0F1626;--grey:#5B667B;--line:rgba(15,22,38,.13);--accent:#FF1E1E;background:var(--room,#D3DAE4);color:var(--ink)}
 .case.room .case-inner{max-width:none;padding:118px var(--gutter) 40px}
 .case.room .c-body{margin-top:0}
 .case.room .c-body > *{max-width:none}
@@ -1767,11 +1768,11 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
                { x: IW * .08, y: IH * .85, R: m * .07 }, { x: IW * .92, y: IH * .88, R: m * .08 }, { x: IW * .74, y: IH * .1, R: m * .06 } ][g];
     }
     function spawn(){   // every drop starts just off screen, each from its own angle
-      var diag = Math.hypot(IW, IH) * .56;
+      var diag = Math.hypot(IW, IH) * .5;
       D.forEach(function(d, i){
         var oi = order.indexOf(i), ang = oi * 2.39996 + .4;
         d.x = IW / 2 + Math.cos(ang) * diag; d.y = IH / 2 + Math.sin(ang) * diag;
-        d.vx = 0; d.vy = 0; d.ph = i * 1.37 + Math.random(); d.start = .3 + oi * .32; d.sv = 0;
+        d.vx = 0; d.vy = 0; d.ph = i * 1.37 + Math.random(); d.start = .2 + oi * .28; d.sv = 0;
       });
       spawned = true;
     }
@@ -1783,47 +1784,56 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       ic.style.opacity = mode === -1 ? 1 : 0;
       var u = smoothstep(.12, 2.15, pr.s), n = 0, hot = netHot, anyOpen = focus >= 0, m0 = Math.min(IW, IH);
       for (var g = 0; g < 3; g++) fold[g] += ((focus === g ? 1 : 0) - fold[g]) * (1 - Math.exp(-dt * 4.5));
+      // the scroll, in two steps: first every drop gathers into one of three big balls high on the screen,
+      // then the three balls travel down into place as the folders
+      var gA = smoothstep(.08, .95, pr.s), gB = smoothstep(.95, 2.1, pr.s);
       for (var i = 0; i < D.length; i++) {
         var d = D[i], age = t - d.start, live = age > 0;
-        var tx, ty, R, r, op = 1, soft, grp, c1 = INK[d.ink][0], c2 = INK[d.ink][1], lift = 0;
+        var tx = d.x, ty = d.y, r, op = 1, soft, grp, c1 = INK[d.ink][0], c2 = INK[d.ink][1], lift = 0, follow = 1;
+        var loose = !d.w && d.g >= 3, gi = d.w ? i % 3 : (loose ? d.near : d.g), mi = d.w ? 3 + ((i / 3) | 0) % 3 : (loose ? 3 : d.k);   // its ball, and its place in it
+        var fh = ballHome(gi), fo = ballOpen(gi), e = fold[gi], ee = e * e * (3 - 2 * e);
+        var big = fh.r * .75, gx = fh.x, gy = IH * .2 + (fh.y - IH * .2) * gB;                       // where its ball is now
+        if (!loose && hot === gi && !anyOpen) big *= 1.08;
+        gx += (fo.x - gx) * ee; gy += (fo.y - gy) * ee; big += (fo.r - big) * ee;
+        // inside a ball the drops keep turning slowly around its middle, close enough to stay merged
+        var ba = t * (.22 + gi * .03) * (hot === gi && !anyOpen ? 1.7 : 1) + mi * 1.047 + Math.sin(t * .31 + d.ph) * .8;
+        var bd = big * (.22 + .1 * Math.sin(t * .27 + d.ph)) * (mi < 3 ? 1 : .8);
+        var bx = gx + Math.cos(ba) * bd, by = gy + Math.sin(ba) * bd * .9, br = big * (mi < 3 ? .34 : .26) * (1 + .1 * Math.sin(t * .41 + d.ph * 2));
         if (d.w) {
-          // wanderers follow a slow current that curls through the screen, and are pulled back gently if they drift off
-          var ang = noise(d.x * .0016 + d.ph, d.y * .0016 + t * .04) * 12.566, spd = d.sp * (1 - .4 * u);
+          // on the hero, wanderers follow a slow current that curls through the screen
+          var ang = noise(d.x * .0016 + d.ph, d.y * .0016 + t * .04) * 12.566, spd = d.sp;
           var fx = Math.cos(ang) * spd, fy = Math.sin(ang) * spd;
-          var ease0 = live ? smoothstep(0, 5, age) : 0; fx *= ease0; fy *= ease0;
-          if (live) { fx += (IW / 2 - d.x) * (d.x < -40 || d.x > IW + 40 ? .22 : .03); fy += (IH / 2 - d.y) * (d.y < -40 || d.y > IH + 40 ? .22 : .04) }
-          else { fx = 0; fy = 0 }
-          d.vx += (fx - d.vx) * Math.min(1, dt * .7); d.vy += (fy - d.vy) * Math.min(1, dt * .7);
-          r = m0 * d.sz * (1 + .25 * Math.sin(t * .5 + d.ph)) * (1 - .35 * u);
-          op = (1 - .45 * u) * (anyOpen ? .35 : 1); soft = .02 + .7 * smoothstep(.4, .95, .5 + .5 * Math.sin(t * .23 + d.ph * 2)); grp = 30;
+          var ease0 = live ? smoothstep(0, 6, age) : 0; fx *= ease0; fy *= ease0;
+          if (live) { fx += (IW / 2 - d.x) * (d.x < -40 || d.x > IW + 40 ? .12 : .02); fy += (IH / 2 - d.y) * (d.y < -40 || d.y > IH + 40 ? .12 : .03) }
+          var hr0 = m0 * d.sz * (1 + .25 * Math.sin(t * .5 + d.ph));
+          d.vx += (fx - d.vx) * Math.min(1, dt * .6) * (1 - gA); d.vy += (fy - d.vy) * Math.min(1, dt * .6) * (1 - gA);
+          tx = bx; ty = by; follow = gA; r = hr0 + (br - hr0) * gA;
+          soft = .02 + .35 * smoothstep(.4, .95, .5 + .5 * Math.sin(t * .23 + d.ph * 2));
         } else {
-          var loose = d.g >= 3, gi = loose ? d.near : d.g;
-          var hs = heroSpot(d.g), fh = ballHome(gi), fo = ballOpen(gi), e = fold[gi], ee = e * e * (3 - 2 * e);
-          var ug = clamp((u - gi * .07) / .86, 0, 1), ux = ug * ug * (3 - 2 * ug);
-          var gs = loose ? heroSpot(d.near) : hs, mt = loose ? smoothstep(0, .45, ug) : 0;
-          var cx = (hs.x + (gs.x - hs.x) * mt) * (1 - ux) + fh.x * ux, cy = (hs.y + (gs.y - hs.y) * mt) * (1 - ux) + fh.y * ux;
-          R = hs.R * (1 - ux) + fh.r * .78 * ux;
-          if (!loose && hot === gi && !anyOpen) R *= 1.08;
-          cx += (fo.x - cx) * ee; cy += (fo.y - cy) * ee; R += (fo.r * .8 - R) * ee;
-          // inside a cluster the drops wind around each other on figure-of-eight paths
-          var sp = (hot === gi && !anyOpen ? 1.7 : 1) * (.26 + gi * .03), a = t * sp + d.k * 2.094 + Math.sin(t * .31 + d.ph) * 1.1;
-          var dist = loose ? 0 : R * (.55 + .25 * Math.sin(t * .23 * (d.k + 1) + d.ph));
-          tx = cx + Math.cos(a) * dist; ty = cy + Math.sin(a * 2) * dist * .55 + Math.sin(a) * dist * .5;
-          r = R * (loose ? .9 : (d.k === 2 ? .32 : .44) * (1 + .13 * Math.sin(t * .41 + d.ph * 2)));
-          if (loose) { var lv = 1 - smoothstep(.15, .55, ug); r *= lv; op *= lv }
-          if (anyOpen && focus !== gi) op *= Math.max(0, 1 - fold[focus] * 1.6);
+          var hs = heroSpot(d.g), R = hs.R;
+          var ha = t * (.26 + gi * .03) + d.k * 2.094 + Math.sin(t * .31 + d.ph) * 1.1;
+          var hd = loose ? 0 : R * (.55 + .25 * Math.sin(t * .23 * (d.k + 1) + d.ph));
+          var hx = hs.x + Math.cos(ha) * hd, hy = hs.y + Math.sin(ha * 2) * hd * .55 + Math.sin(ha) * hd * .5;
+          var hr = R * (loose ? .9 : (d.k === 2 ? .32 : .44) * (1 + .13 * Math.sin(t * .41 + d.ph * 2)));
+          tx = hx + (bx - hx) * gA; ty = hy + (by - hy) * gA; r = hr + (br - hr) * gA;
           soft = .02 + .35 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
-          grp = loose ? 10 + i : gi; lift = .12 * u + .06 * ee;
-          // a soft, under-damped spring: the drop lags behind its path and overshoots, like something moving through water
-          if (live) { var ar = smoothstep(0, 6, age), kk = .5 + 3.2 * ar, cc = 2.4 + (1 - ar) * 1.2; d.vx += ((tx - d.x) * kk - d.vx * cc) * dt; d.vy += ((ty - d.y) * kk - d.vy * cc) * dt }
         }
-        var vm = Math.hypot(d.vx, d.vy); if (vm > 220) { d.vx *= 220 / vm; d.vy *= 220 / vm }   // never in a hurry
+        grp = gA > .02 ? gi : (d.w ? 30 : (loose ? 10 + i : gi));   // once they gather, every drop of a ball merges with the rest
+        if (anyOpen && focus !== gi) op *= Math.max(0, 1 - fold[focus] * 1.6);
+        lift = 0;
+        // a soft spring through water: it lags behind its path and overshoots a little. Tighter while scrolling, so the balls follow you
+        if (live && follow > 0) {
+          var ar = Math.max(smoothstep(0, 7, age), gA), kk = (.35 + 2.6 * ar) * (1 + gA * 2.5), cc = (2.6 + (1 - ar) * 1.6) * (1 + gA * .6);
+          d.vx += ((tx - d.x) * kk - d.vx * cc) * dt * follow; d.vy += ((ty - d.y) * kk - d.vy * cc) * dt * follow;
+        }
+        var cap = Math.max(age < 7 ? 70 + 150 * smoothstep(2, 7, age) : 220, 220 + 900 * gA), vm = Math.hypot(d.vx, d.vy);
+        if (vm > cap) { d.vx *= cap / vm; d.vy *= cap / vm }
         if (live || d.w) { d.x += d.vx * dt; d.y += d.vy * dt }
         if (!live) continue;
-        // grow in as they arrive
-        var gin = smoothstep(0, 3, age); r *= .6 + .4 * gin; op *= smoothstep(0, 1.5, age);
+        // arriving: full size from the start, fading in slowly
+        op *= Math.max(smoothstep(0, 3.5, age), gA);
         if (op < .01 || r < .5) continue;
-        var spv = Math.hypot(d.vx, d.vy); d.sv += (Math.min(1.8, spv / 120) - d.sv) * .08;
+        var spv = Math.hypot(d.vx, d.vy); d.sv += (Math.min(1.8, spv / 120) * smoothstep(4, 8, age) - d.sv) * .08;
         var k1 = rgb(c1), k2 = rgb(c2);
         B[n * 4] = d.x; B[n * 4 + 1] = d.y; B[n * 4 + 2] = r; B[n * 4 + 3] = soft;
         C1[n * 4] = k1[0] + (1 - k1[0]) * lift; C1[n * 4 + 1] = k1[1] + (1 - k1[1]) * lift; C1[n * 4 + 2] = k1[2] + (1 - k1[2]) * lift; C1[n * 4 + 3] = op * .97;
@@ -3384,7 +3394,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   document.addEventListener('visibilitychange', function(){ if (!document.hidden && NOW_PLAYING_URL) load() });
   window.npReload = function(){ if (NOW_PLAYING_URL) load() };
   var levels = [2, 3, 1, 4, 2];
-  var EQ_COLD = ['#7B4FD6', '#C26AD8', '#8EA2F0', '#B4EC86'];
+  var EQ_COLD = ['#FF1E1E', '#FF4A2E', '#FF7A4A', '#FFAA7A'];
   function eqTick(){
     eq.clearRect(0, 0, 5, 4);
     for (var c = 0; c < 5; c++) {
