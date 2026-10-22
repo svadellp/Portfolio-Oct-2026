@@ -172,33 +172,17 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .backbtn:hover span{transform:translateX(-4px)}
 
 /* Focused folder: details of the files, on the right */
-/* PROTOTYPE: constellations replace the folders */
+/* PROTOTYPE: a living network of ideas replaces the folders */
 #folders,.peek{display:none!important}
-#sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none;filter:var(--sblur,none)}
-#sky.live{pointer-events:auto}
-#sky svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-#sky .ln{fill:none;stroke:var(--cc);stroke-opacity:.45;stroke-width:1;stroke-dasharray:2 5;stroke-linecap:round;transition:stroke .35s,opacity .35s}
-#sky .ln.hot{stroke-opacity:1;stroke-dasharray:none;stroke-width:1.4}
-#sky .ln.dim{opacity:.25}
-#sky{--c0:#7B4FD6;--c1:#4FAE6A;--c2:#D9617F}
-#sky [data-c="0"]{--cc:var(--c0)}#sky [data-c="1"]{--cc:var(--c1)}#sky [data-c="2"]{--cc:var(--c2)}
-#sky .st{transform-box:fill-box;transform-origin:center;fill:var(--cc);transition:fill .3s,opacity .35s}
-#sky .st.tw{animation:twinkle var(--tw,3s) ease-in-out infinite;animation-delay:var(--td,0s)}
-@keyframes twinkle{0%,100%{transform:scale(1) rotate(0deg);opacity:1}50%{transform:scale(.72) rotate(12deg);opacity:.7}}
-#sky .st.hot{filter:drop-shadow(0 0 6px var(--cc))}
-#sky .st.dim{fill:rgba(20,24,32,.14)}
-#sky .hit{fill:transparent;cursor:pointer}
-#sky .glow{fill:var(--cc);opacity:0;transform-box:fill-box;transform-origin:center;transition:opacity .35s}
-#sky .glow.on{opacity:.1}
-#sky .lbl{position:absolute;font-size:13px;white-space:nowrap;pointer-events:none;transition:opacity .35s,color .3s,transform .4s var(--ease)}
+#sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
+#sky [data-c="0"]{--cc:#7B4FD6}#sky [data-c="1"]{--cc:#C0569E}#sky [data-c="2"]{--cc:#5E78DB}
+#sky .lbl{position:absolute;font-size:13px;white-space:nowrap;pointer-events:none;transform:translate(14px,-50%);padding:2px 6px;border-radius:4px;background:rgba(248,248,246,.78);transition:opacity .35s,color .3s}
 #sky .lbl small{display:block;font-size:11px;color:var(--grey);margin-top:1px}
-#sky .lbl.hot{color:var(--cc);transform:translateY(-2px)}
-#sky .lbl.dim{opacity:.3}
-#sky .cname{position:absolute;font-size:15px;font-weight:500;letter-spacing:-.01em;pointer-events:none;transition:color .3s,opacity .35s}
+#sky .lbl.hot{color:var(--cc)}
+#sky .lbl.dim{opacity:.18}
+#sky .cname{position:absolute;font-size:16px;font-weight:500;letter-spacing:-.01em;color:var(--cc);pointer-events:none;transform:translate(-50%,0);transition:opacity .35s}
 #sky .cname i{font-style:normal;font-weight:400;color:var(--grey);margin-left:6px;font-size:12px}
-#sky .cname{color:var(--cc)}
-#sky .cname.hot{color:var(--cc)}
-#sky .cname.dim{opacity:.3}
+#sky .cname.dim{opacity:.25}
 #sky .shint{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);font-size:12px;color:var(--grey);pointer-events:none}
 .peek{position:absolute;z-index:4;left:58%;right:var(--gutter);top:50%;transform:translateY(-50%);max-width:480px;opacity:0;pointer-events:none}
 .peek.live{pointer-events:auto}
@@ -1551,72 +1535,108 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var g = rel >= .13 ? 46 - clamp((rel - .14) / .14, 0, 1) * 28 : 30 - clamp((rel + .06) / .1, 0, 1) * 14;
     return [g, g, g + 2];
   }
-  /* PROTOTYPE: each folder is a constellation of ideas; every piece of work is a named star */
-  var SKY = [
-    { g: 0, name: 'Projects', stars: [['ai-agent-hub', .05, .38, 24], ['wains', .19, .12, 22], ['prioticket-website', .34, .34, 20], ['ignite', .4, .82, 20], ['prioticket-brand', .17, .76, 18],
-      [null, .27, .58, 6], [null, .1, .58, 5], [null, .44, .1, 7]],
-      lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 5], [5, 4], [1, 7]] },
-    { g: 1, name: 'Labs', stars: [['3d-lab', .66, .16, 22], ['photo-lab', .9, .3, 22], [null, .78, .06, 7], [null, .8, .42, 5], [null, .97, .1, 6]],
-      lines: [[0, 2], [2, 1], [1, 3], [3, 0], [1, 4]] },
-    { g: 2, name: 'Rooms', stars: [['books', .64, .78, 20], ['music', .86, .68, 20], [null, .75, .95, 6], [null, .96, .88, 5]],
-      lines: [[0, 1], [0, 2], [2, 3], [3, 1]] }
+  /* PROTOTYPE: a living network. Three communities of ideas; every piece of work is a hub; threads curve between them */
+  var NET_C = [   // centre (share of the screen), spread, and the hubs: [id, place around the centre]
+    { name: 'Projects', at: [.37, .54], R: .31, n: 720, hubs: [['ai-agent-hub', -.55, -.35], ['wains', -.05, -.62], ['prioticket-website', .35, -.15], ['prioticket-brand', -.4, .45], ['ignite', .2, .5]] },
+    { name: 'Labs', at: [.65, .34], R: .2, n: 380, hubs: [['3d-lab', -.35, -.2], ['photo-lab', .4, .25]] },
+    { name: 'Rooms', at: [.65, .72], R: .18, n: 330, hubs: [['books', -.4, .1], ['music', .38, -.15]] }
   ];
-  var skyEl, skySvg, skyPos = [], skyHot = null;
-  function skyItem(id){ for (var a = 0; a < FOLDERS.length; a++) for (var b = 0; b < FOLDERS[a].items.length; b++) if (FOLDERS[a].items[b].id === id) return FOLDERS[a].items[b] }
-  function starPath(cx, cy, r, inner){ var o = r, i = r * (inner || .26), pts = [[0, -o], [i, -i], [o, 0], [i, i], [0, o], [-i, i], [-o, 0], [-i, -i]];
-    return 'M' + pts.map(function(p){ return (cx + p[0]).toFixed(1) + ' ' + (cy + p[1]).toFixed(1) }).join(' L') + ' Z' }
-  function skyBuild(){
-    var first = !skyEl;
-    if (first) { skyEl = $('sky'); skyEl.innerHTML = '<svg aria-hidden="true"></svg>' }
-    var gut = parseFloat(getComputedStyle(header0).paddingLeft) || 24, top = narrow ? 130 : 150, bottom = narrow ? 150 : 150, k = narrow ? .7 : 1;
-    skyPos = SKY.map(function(c){ return c.stars.map(function(st){
-      var x = narrow ? gut + st[1] * (W - gut * 2) : gut + 40 + st[1] * (W - gut * 2 - 200), y = top + st[2] * (H - top - bottom);
-      return { id: st[0], x: x, y: y, r: st[3] * k * (narrow ? .9 : Math.min(1.15, W / 1300)) } }) });
-    // lines bend a little, so the constellations feel drawn by hand rather than by ruler
-    var svg = '', html = '';
-    SKY.forEach(function(c, ci){
-      c.lines.forEach(function(l, li){ var a = skyPos[ci][l[0]], b = skyPos[ci][l[1]], mxp = (a.x + b.x) / 2, myp = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y, bend = ((li * 37 + ci * 11) % 7 - 3) * .045;
-        svg += '<path class="ln" data-c="' + ci + '" d="M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ' Q' + (mxp - dy * bend).toFixed(1) + ' ' + (myp + dx * bend).toFixed(1) + ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1) + '"/>' });
+  var HEAT = [[180, 236, 134], [142, 162, 240], [194, 106, 216], [123, 79, 214]];   // Brain Roads, sparse to dense: mint, periwinkle, lilac, violet
+  var net = null, skyEl, netHot = { c: -1, id: null }, netLand = 0, netForce = 0;
+  function rnd(seed){ var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x) }
+  function heatOf(v){ v = clamp(v, 0, .999) * (HEAT.length - 1); var a = Math.floor(v), u = v - a, A = HEAT[a], B = HEAT[a + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u] }
+  function netItem(id){ for (var a = 0; a < FOLDERS.length; a++) for (var b = 0; b < FOLDERS[a].items.length; b++) if (FOLDERS[a].items[b].id === id) return FOLDERS[a].items[b] }
+  function netBuild(){
+    var u = Math.min(W, H * 1.15), nodes = [], edges = [], seed = 1;
+    NET_C.forEach(function(c, ci){
+      var cx = W * c.at[0], cy = H * c.at[1], R = u * c.R;
+      c.cx = cx; c.cy = cy; c.Rp = R; c.first = nodes.length;
+      // hubs: the pieces of work, big and bright
+      c.hubIdx = c.hubs.map(function(h){ nodes.push({ x: cx + h[1] * R, y: cy + h[2] * R, r: (narrow ? 6 : 9) + (ci === 0 ? 2 : 1), c: ci, hub: h[0], heat: 1 }); return nodes.length - 1 });
+      // a few secondary hubs, then a cloud of small ideas, thick in the middle and thinning out
+      for (var k = 0; k < c.n; k++) {
+        var a = rnd(seed++) * 6.283, d = Math.pow(rnd(seed++), .9), sub = k < 14;
+        var x = cx + Math.cos(a) * d * R * (1 + .15 * Math.sin(a * 3 + ci)), y = cy + Math.sin(a) * d * R * .9;
+        nodes.push({ x: x, y: y, r: sub ? 3 + rnd(seed++) * 3.4 : .7 + rnd(seed++) * rnd(seed++) * 2.8, c: ci, heat: Math.max(0, 1 - d * 1.05) });
+      }
+      c.last = nodes.length;
     });
-    SKY.forEach(function(c, ci){
-      skyPos[ci].forEach(function(p, si){
-        var tw = (2.4 + ((si * 7 + ci * 3) % 5) * .5) + 's', td = (-(si * 0.7 + ci)) + 's';
-        if (p.id) svg += '<circle class="glow" data-c="' + ci + '" data-id="' + p.id + '" cx="' + p.x + '" cy="' + p.y + '" r="' + (p.r * 1.7) + '"/>';
-        svg += '<path class="st tw" data-c="' + ci + '"' + (p.id ? ' data-id="' + p.id + '"' : '') + ' style="--tw:' + tw + ';--td:' + td + '" d="' + starPath(p.x, p.y, p.r, p.id ? .24 : .3) + '"/>';
-        if (p.id) {
-          svg += '<circle class="hit" data-id="' + p.id + '" data-c="' + ci + '" cx="' + p.x + '" cy="' + p.y + '" r="' + Math.max(28, p.r * 1.8) + '"/>';
-          var it = skyItem(p.id), right = p.x < W * .78;
-          html += '<p class="lbl" data-id="' + p.id + '" data-c="' + ci + '" style="left:' + (right ? p.x + p.r + 10 : p.x - p.r - 10) + 'px;top:' + (p.y - 10) + 'px;' + (right ? '' : 'transform-origin:right;translate:-100% 0;text-align:right') + '">' + esc(it.title) + '<small>' + esc(it.kind) + '</small></p>';
-        }
-      });
-      var named = skyPos[ci].filter(function(p){ return p.id }), minY = Math.min.apply(null, named.map(function(p){ return p.y })), minX = Math.min.apply(null, named.map(function(p){ return p.x }));
-      html += '<p class="cname" data-c="' + ci + '" style="left:' + (minX - 10) + 'px;top:' + (minY - 62) + 'px">' + c.name + '<i>' + FOLDERS[ci].items.length + '</i></p>';
+    // threads: each idea links to a couple of near neighbours in its community; hubs reach far; a few cross between communities
+    var grid = {}, G = 60;
+    nodes.forEach(function(n, i){ var key = Math.floor(n.x / G) + ',' + Math.floor(n.y / G); (grid[key] = grid[key] || []).push(i) });
+    function near(i, rad){ var n = nodes[i], out = [], gx = Math.floor(n.x / G), gy = Math.floor(n.y / G), rr = Math.ceil(rad / G);
+      for (var yy = -rr; yy <= rr; yy++) for (var xx = -rr; xx <= rr; xx++) (grid[(gx + xx) + ',' + (gy + yy)] || []).forEach(function(j){ if (j !== i) { var d = Math.hypot(nodes[j].x - n.x, nodes[j].y - n.y); if (d < rad) out.push([j, d]) } });
+      return out.sort(function(a, b){ return a[1] - b[1] }) }
+    nodes.forEach(function(n, i){
+      if (n.hub) return;
+      var nb = near(i, 64), want = 1 + Math.floor(rnd(seed++) * 3);
+      for (var k = 0; k < nb.length && want > 0; k++) { var j = nb[k][0]; if (nodes[j].c !== n.c && rnd(seed++) > .12) continue; edges.push([i, j, (rnd(seed++) - .5) * .7]); want-- }
     });
-    skyEl.innerHTML = '<svg aria-hidden="true">' + svg + '</svg>' + html + '<p class="shint">Each piece of work is a star. Hover to light up its constellation</p>';
-    skySvg = skyEl.querySelector('svg');
-    [].forEach.call(skyEl.querySelectorAll('.hit'), function(h){
-      h.addEventListener('pointerenter', function(){ skyLight(h.getAttribute('data-id'), +h.getAttribute('data-c')) });
-      h.addEventListener('pointerleave', function(){ skyLight(null, null) });
-      h.addEventListener('click', function(){ var id = h.getAttribute('data-id'); pixelNav(function(){ showCase(id) }) });
+    NET_C.forEach(function(c, ci){ c.hubIdx.forEach(function(h){
+      for (var k = 0; k < 60; k++) { var j = c.first + Math.floor(rnd(seed++) * (c.last - c.first)); if (j !== h) edges.push([h, j, (rnd(seed++) - .5) * .6, 1]) }
+    }) });
+    for (var x2 = 0; x2 < 60; x2++) {   // ideas that cross over: the dots connecting between worlds
+      var a2 = Math.floor(rnd(seed++) * nodes.length), b2 = Math.floor(rnd(seed++) * nodes.length);
+      if (nodes[a2].c !== nodes[b2].c) edges.push([a2, b2, (rnd(seed++) - .5) * .5, 0, 1]);
+    }
+    nodes.forEach(function(n, i){ n.ph = rnd(seed++) * 6.283; n.sp = .4 + rnd(seed++) * .6; n.amp = n.hub ? 2 : 2 + rnd(seed++) * 5; n.dl = rnd(seed++) * .45;
+      var s0 = NET_C[n.c]; n.sx = s0.cx + (n.x - s0.cx) * .15 + (rnd(seed++) - .5) * 30; n.sy = s0.cy + (n.y - s0.cy) * .15 + (rnd(seed++) - .5) * 30; n.col = heatOf(n.heat * .9 + (n.hub ? .1 : 0)) });
+    net = { nodes: nodes, edges: edges };
+    // labels
+    if (!skyEl) skyEl = $('sky');
+    var html = '';
+    NET_C.forEach(function(c, ci){
+      html += '<p class="cname" data-c="' + ci + '" style="left:' + c.cx + 'px;top:' + (c.cy - c.Rp * .95 - 28) + 'px">' + c.name + '<i>' + FOLDERS[ci].items.length + '</i></p>';
+      c.hubIdx.forEach(function(h){ var n = nodes[h], it = netItem(n.hub); html += '<p class="lbl" data-c="' + ci + '" data-id="' + n.hub + '" style="left:' + n.x + 'px;top:' + n.y + 'px">' + esc(it.title) + '<small>' + esc(it.kind) + '</small></p>' });
     });
+    skyEl.innerHTML = html + '<p class="shint">Every piece of work is a hub of ideas. Hover one to see its world</p>';
   }
-  // light up a star and its whole constellation; everything else steps back
-  function skyLight(id, ci){
-    var any = ci != null;
-    [].forEach.call(skyEl.querySelectorAll('[data-c]'), function(el){ var mine = +el.getAttribute('data-c') === ci; el.classList.toggle('hot', any && mine); el.classList.toggle('dim', any && !mine) });
-    [].forEach.call(skyEl.querySelectorAll('.glow'), function(gl){ gl.classList.toggle('on', !!id && gl.getAttribute('data-id') === id) });
-  }
-  function skyCells(fc){                                     // the pixels gather into the stars and along the lines first
+  function netCells(){                                       // the pixels gather where the ideas will be
     var out = [];
-    SKY.forEach(function(c, ci){
-      skyPos[ci].forEach(function(p){ var R = p.r * 1.35;
-        for (var y = -R; y <= R; y += fc) for (var x = -R; x <= R; x += fc) { var ax = Math.abs(x), ay = Math.abs(y); if (ax / R + ay / R * 3.2 > 1 && ay / R + ax / R * 3.2 > 1) continue;   // a star outline: two thin diamonds
-          out.push([p.x + x, p.y + y, 1, .6, .5, ci]) } });
-      c.lines.forEach(function(l){ var a = skyPos[ci][l[0]], b = skyPos[ci][l[1]], n = Math.floor(Math.hypot(b.x - a.x, b.y - a.y) / (fc * 3));
-        for (var j = 1; j < n; j++) out.push([a.x + (b.x - a.x) * j / n, a.y + (b.y - a.y) * j / n, 0, .3, 0, ci]) });
-    });
+    net.nodes.forEach(function(n){ if (n.hub) { for (var y = -n.r; y <= n.r; y += 3) for (var x = -n.r; x <= n.r; x += 3) if (x * x + y * y <= n.r * n.r) out.push([n.x + x, n.y + y, 1, .6, .5, n.c]) } else out.push([n.x, n.y, 0, .4, 0, n.c]) });
     return out;
   }
+  function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
+  function netDraw(t, alpha, dt){
+    if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; netLand = 0; return }
+    netLand = Math.min(1, netLand + dt * .55);
+    var nd = net.nodes, live = alpha > .7;
+    skyEl.style.opacity = clamp((netLand - .55) / .45, 0, 1) * alpha;
+    // hover: the nearest hub under the pointer
+    var hc = -1, hid = null;
+    if (performance.now() < netForce) { hc = netHot.c } else if (live && mouse.on && netLand > .8) { var bd = 30 * 30; NET_C.forEach(function(c, ci){ c.hubIdx.forEach(function(h){ var n = nd[h], d = (n.px - mouse.tx) * (n.px - mouse.tx) + (n.py - mouse.ty) * (n.py - mouse.ty); if (d < bd) { bd = d; hc = ci; hid = n.hub } }) }) }
+    if (hc !== netHot.c || hid !== netHot.id) {
+      netHot = { c: hc, id: hid }; cv.style.cursor = hid ? 'pointer' : '';
+      [].forEach.call(skyEl.querySelectorAll('[data-c]'), function(el){ var mine = +el.getAttribute('data-c') === hc; el.classList.toggle('hot', hc >= 0 && mine && (!el.getAttribute('data-id') || el.getAttribute('data-id') === hid)); el.classList.toggle('dim', hc >= 0 && !mine) });
+    }
+    // positions: land from the brain's centre, then breathe
+    for (var i = 0; i < nd.length; i++) { var n = nd[i], L = netEase(clamp((netLand - n.dl) / (1 - n.dl), 0, 1));
+      n.px = n.sx + (n.x - n.sx) * L + Math.sin(t * n.sp + n.ph) * n.amp; n.py = n.sy + (n.y - n.sy) * L + Math.cos(t * n.sp * .8 + n.ph) * n.amp }
+    // threads, batched by community so hundreds of curves stay cheap
+    var ec = clamp(netLand * 1.6 - .3, 0, 1) * alpha;
+    for (var pass = 0; pass < 2; pass++) {
+      for (var c = 0; c < 3; c++) {
+        var hotC = netHot.c === c, dimC = netHot.c >= 0 && !hotC;
+        if ((pass === 1) !== hotC) continue;
+        var col = heatOf(.62 + c * .12);
+        ctx.strokeStyle = 'rgba(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ',' + ((hotC ? .42 : dimC ? .035 : .2) * ec).toFixed(3) + ')';
+        ctx.lineWidth = hotC ? .9 : .7; ctx.beginPath();
+        net.edges.forEach(function(e){ var a = nd[e[0]], b = nd[e[1]]; if (a.c !== c) return;
+          var mx2 = (a.px + b.px) / 2, my2 = (a.py + b.py) / 2, dx = b.px - a.px, dy = b.py - a.py;
+          ctx.moveTo(a.px, a.py); ctx.quadraticCurveTo(mx2 - dy * e[2], my2 + dx * e[2], b.px, b.py) });
+        ctx.stroke();
+      }
+    }
+    // nodes: small ideas in their heat colour, hubs big and solid
+    for (i = 0; i < nd.length; i++) { var q = nd[i], dim = netHot.c >= 0 && q.c !== netHot.c, a2 = alpha * (dim ? .22 : 1) * clamp(netLand * 2, 0, 1);
+      var cl = q.hub ? (q.c === 0 ? [123, 79, 214] : q.c === 1 ? [192, 86, 158] : [94, 120, 219]) : q.col, r = q.r * (q.hub && q.hub === netHot.id ? 1.35 : 1);
+      ctx.fillStyle = 'rgba(' + (cl[0] | 0) + ',' + (cl[1] | 0) + ',' + (cl[2] | 0) + ',' + (a2 * (q.hub ? 1 : .85)).toFixed(3) + ')';
+      ctx.beginPath(); ctx.arc(q.px, q.py, r, 0, 6.2832); ctx.fill();
+      if (q.hub && q.hub === netHot.id) { ctx.fillStyle = 'rgba(' + cl.join(',') + ',.14)'; ctx.beginPath(); ctx.arc(q.px, q.py, r * 3, 0, 6.2832); ctx.fill() } }
+    // labels ride with their hubs
+    [].forEach.call(skyEl.querySelectorAll('.lbl'), function(el){ var id = el.getAttribute('data-id'); for (var k = 0; k < nd.length; k++) if (nd[k].hub === id) { el.style.left = nd[k].px + 'px'; el.style.top = nd[k].py + 'px'; break } });
+  }
+  function netLight(ci){ netHot = { c: ci, id: null }; netForce = ci >= 0 ? performance.now() + 2200 : 0; [].forEach.call(skyEl.querySelectorAll('[data-c]'), function(el){ var mine = +el.getAttribute('data-c') === ci; el.classList.toggle('hot', ci >= 0 && mine); el.classList.toggle('dim', ci >= 0 && !mine) }) }
   function folderCells(fb, fc, base){
     var out = [], w = fb.w, h = fb.h, tabW = w * .38, tabH = h * .12, frontTop = h * .26, notch = fc * 2;
     for (var y = 0; y < h; y += fc) for (var x = 0; x < w; x += fc) {
@@ -1690,8 +1710,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     tCellsCache = textCells(tcell); textCount = tCellsCache.length;
     var fc = narrow ? 3 : 3;   // fine pixels, like the cloud
     var fCells = [];
-    skyBuild();
-    fCells = skyCells(fc);
+    netBuild();
+    fCells = netCells();
 
     var bc = narrow ? 3 : 4, bigSets = bigBoxes.map(function(b, i){ return folderCells(b, bc, FOLDER_BASE[i % FOLDER_BASE.length]) });
 
@@ -1934,12 +1954,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 
   /* ---------- Draw ---------- */
   // Pixels are round: a dot as wide as the old square
-  // PROTOTYPE: pixels are tiny four-pointed stars (a touch bigger than the dot they replace, so they read as stars)
-  function dot(g, x, y, s){
-    if (s < 1.6) { g.fillRect(x - s / 2, y - s / 2, s, s); return }
-    var o = s * .78, i = s * .2;
-    g.beginPath(); g.moveTo(x, y - o); g.lineTo(x + i, y - i); g.lineTo(x + o, y); g.lineTo(x + i, y + i); g.lineTo(x, y + o); g.lineTo(x - i, y + i); g.lineTo(x - o, y); g.lineTo(x - i, y - i); g.closePath(); g.fill();
-  }   // too small to see the corners: a square is quicker
+  // Pixels are round: a dot as wide as the old square
+  function dot(g, x, y, s){ if (s < 2.2) { g.fillRect(x - s / 2, y - s / 2, s, s); return } g.beginPath(); g.arc(x, y, s / 2, 0, 6.2832); g.fill() }   // too small to see the corners: a square is quicker
   function draw(now){
     if (!P) { requestAnimationFrame(draw); return }
     var dt = Math.min(64, now - (lastNow || now)); lastNow = now;
@@ -1998,7 +2014,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       h.querySelector('.label').style.opacity = big ? 0 : 1;
       h.classList.toggle('live', big ? sharpBig > .7 : (sharpA > .7 && focus < 0));
     });
-    if (skyEl) { skyEl.style.opacity = reveal.toFixed(3); skyEl.style.setProperty('--sblur', reveal > .995 ? 'none' : 'blur(' + ((1 - reveal) * 8).toFixed(2) + 'px)'); skyEl.classList.toggle('live', sharpA > .7) }
     if (pendingFocus >= 0 && mode === -1 && sharpA > .75) { var pf = pendingFocus; pendingFocus = -1; setFocus(pf) }
     peek.style.opacity = (peekA * (mode === -1 ? 1 : 0)).toFixed(3);
     peek.style.transform = narrow ? 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)' : 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)';
@@ -2123,6 +2138,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         dot(ctx, x + ox[p], y + oy[p], s);
       }
     }
+    netDraw(t, mode === -1 ? reveal : 0, dt / 1000);   // PROTOTYPE: the living network
     requestAnimationFrame(draw);
   }
 
@@ -2140,6 +2156,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (picked >= 0) pick(focus, -1);
   });
   pin.addEventListener('touchend', function(){ mouse.on = false });
+  pin.addEventListener('click', function(){ if (netHot.id) { var id = netHot.id; pixelNav(function(){ showCase(id) }) } });
 
   /* ---------- Case studies ---------- */
   var caseEl = $('case'), caseInner = $('caseInner'), caseOpen = null;
@@ -3071,7 +3088,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function jump(y){ scrollTo({ top: y, behavior: 'instant' }) }
   function navHome(){ closeCase(); closeAbout(); leaveFocusNow(); jump(0); if (location.hash) history.replaceState(null, '', location.pathname + location.search) }
-  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); setTimeout(function(){ if (skyEl) { skyLight(null, k); clearTimeout(navFolder.t); navFolder.t = setTimeout(function(){ skyLight(null, null) }, 2200) } }, 400) }
+  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); setTimeout(function(){ if (skyEl) { netLight(k); clearTimeout(navFolder.t); navFolder.t = setTimeout(function(){ netLight(-1) }, 2200) } }, 400) }
   function navAbout(){ closeCase(); openAbout() }
   function atHome(){ return !caseOpen && !aboutEl.classList.contains('live') && focus < 0 && scrollY < 4 }
   function atFolder(k){ return !caseOpen && !aboutEl.classList.contains('live') && focus === k }
