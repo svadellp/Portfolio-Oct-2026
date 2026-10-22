@@ -2066,7 +2066,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         // How much this pixel belongs to the small folders / the large folder right now
         var wf = (A === S_FOLDERS ? 1 - lt : 0) + (B === S_FOLDERS ? lt : 0);
         var wb = (A >= S_BIG0 ? 1 - lt : 0) + (B >= S_BIG0 ? lt : 0);
-        var vis = Math.max(0, 1 - letGo * wf - letGoB * wb) * (1 - wb);   // PROTOTYPE: when a ball opens, the living network carries it, not the pixels
+        var wbig = ((A >= S_BIG0 && A !== S_BRAIN) ? 1 - lt : 0) + ((B >= S_BIG0 && B !== S_BRAIN) ? lt : 0);   // an open ball (the brain shares the index range)
+        var vis = Math.max(0, 1 - letGo * wf - letGoB * wb) * (1 - wbig);   // PROTOTYPE: when a ball opens, the living network carries it, not the pixels
         var al = (SA[b + 6] + (SB[b + 6] - SA[b + 6]) * lt) * pixA * vis;
         if (s < .3 || al < .02) { ox[p] *= .9; oy[p] *= .9; continue }
         var r = SA[b + 3] + (SB[b + 3] - SA[b + 3]) * lt, g = SA[b + 4] + (SB[b + 4] - SA[b + 4]) * lt, bl = SA[b + 5] + (SB[b + 5] - SA[b + 5]) * lt;
