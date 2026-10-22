@@ -1550,7 +1550,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   /* PROTOTYPE: three balls of ideas, floating, drawn the way the brain is: a halftone of dots that swell with a flowing field,
      warm spots of colour that wander through them, and the odd flash. Click one and it moves left, big, with its pieces on the right */
-  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], ballSig = [[], [], []], ballFlash = [[], [], []];
+  var netT = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], ballSig = [[], [], []], ballFlash = [[], [], []];
   function ballHome(ci){ var b = fboxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .62, H * .2) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .58 } }
   function netBuild(){
@@ -1592,36 +1592,30 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.08) hb = c }
     if (hb !== netHot) { netHot = hb; cv.style.cursor = hb >= 0 ? 'pointer' : ''; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ el.classList.toggle('hot', ci === hb) }) }
     [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', anyOpen) });
-    var base = cell * .8;
+    // the shapes are cut out of the hero's own cloud: same grid, same ink, same breathing field. Only the outline is theirs
+    var sq = cell * .74; netT += dt * .12;   // the field keeps flowing at the hero's pace
     for (c = 0; c < 3; c++) {
       var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
       var ga = anyOpen && focus !== c ? Math.max(0, 1 - ballF[focus] * 1.6) : 1;
       if (ga < .01) continue;
       var L = netEase(clamp(netLand / .9, 0, 1)), hot = netHot === c ? 1 : 0;
       var cx = h.x + (o.x - h.x) * e + Math.sin(t * .35 + c * 2.1) * 6 * (1 - e), cy = h.y + (o.y - h.y) * e + Math.cos(t * .3 + c * 1.7) * 8 * (1 - e);
-      var R = (h.r + (o.r - h.r) * e) * (1 + hot * .04) * (.3 + .7 * L), S = ballSig[c], LB = lobes(c, t), drift = t * .22 + c * 3.7;
-      var sp = cell * 1.05 * (1 + e * .2), ext = R * 1.15;
-      for (var gy = -ext; gy <= ext; gy += sp) for (var gx = -ext; gx <= ext; gx += sp) {
-        var ux = gx / R, uy = gy / R, F = 0;
+      var R = (h.r + (o.r - h.r) * e) * (1 + hot * .04) * (.3 + .7 * L), LB = lobes(c, t * .9), ext = R * 1.2;
+      var x0 = Math.floor((cx - ext) / cell), x1 = Math.ceil((cx + ext) / cell), y0 = Math.floor((cy - ext - 64) / cell), y1 = Math.ceil((cy + ext - 64) / cell);
+      for (var gr = y0; gr <= y1; gr++) for (var gc = x0; gc <= x1; gc++) {
+        var px = gc * cell + cell / 2, py = 64 + gr * cell + cell / 2, ux = (px - cx) / R, uy = (py - cy) / R, F = 0;
         for (var q = 0; q < 4; q++) { var lb = LB[q], dx = ux - lb.x, dy = uy - lb.y; F += lb.r * lb.r / (dx * dx + dy * dy + .02) }
-        F /= 1.6; if (F < 1) continue;
-        var core = clamp((F - 1) / 2.4, 0, 1), rim = 1 - core;
-        // the dots swim: each one wanders on a slow current, more at the rim
-        var wx = (noise(ux * 2.2 + t * .25 + c * 9, uy * 2.2) - .5) * sp * (1.4 + rim * 1.6);
-        var wy = (noise(ux * 2.2 + 31, uy * 2.2 - t * .22 + c * 5) - .5) * sp * (1.4 + rim * 1.6);
-        // and swell and shrink: big, slow breathing inside, small and restless at the edge
-        var v = (field(ux * 300 + c * 900, uy * 300, drift) - .5) * 2.8 + core * .75 + .12 - Math.max(0, 1.25 - F) * 1.6;
-        var w = 0;
-        for (q = 0; q < S.length; q++) { var g = S[q], dd = (ux - g.x) * (ux - g.x) + (uy - g.y) * (uy - g.y), fade = Math.min(1, g.life, g.dur - g.life); w += Math.exp(-dd / .08) * fade * .7 }
-        if (hot) { var pd = Math.hypot(cx + gx - mouse.tx, cy + gy - mouse.ty) / (R * .55); w += Math.max(0, 1 - pd) * .7 }
-        w = Math.min(1, w); v += w * .35;
-        if (v <= .08) continue;
-        var px = cx + gx + wx, py = cy + gy + wy;
-        var sz = Math.min(1.25, v) * base * (1 + e * .25);
-        var col = roads(px, py, t, clamp(rim * 1.05 - .05 - w * .25 + (noise(ux * 1.3 + t * .05, uy * 1.3 + c) - .5) * .3, 0, 1));
-        var tint = Math.min(1, .62 + rim * .3 + w * .3 + e * .15), ink = 1 - tint, a = Math.min(.9, .25 + v * .75) * alpha * ga;
-        ctx.fillStyle = 'rgba(' + ((20 * ink + col[0] * tint) | 0) + ',' + ((24 * ink + col[1] * tint) | 0) + ',' + ((32 * ink + col[2] * tint) | 0) + ',' + a.toFixed(3) + ')';
-        dot(ctx, px, py, sz);
+        F /= 1.6; if (F < .7) continue;
+        var m = smoothstep(.7, 1.6, F);                          // soft edge, like the hero cloud's mask
+        var v = (field(px, py, drift + netT) - .5) * 2.2 * m + m * .42 * (.6 + .4 * smoothstep(1, 3, F));  // the same field the hero breathes with
+        var heatP = 0;
+        if (hot || e > .5) { var pd = Math.hypot(px - mouse.x, py - mouse.y) / (R * .5); heatP = Math.max(0, 1 - pd); heatP = heatP * heatP * (3 - 2 * heatP) * (mouse.on ? 1 : 0) }
+        v = Math.max(v, heatP * .95 * m + heatP * .35);
+        if (v <= .06) continue;
+        var hh = Math.min(1, heatP * 1.4), rc = hh > 0 ? roads(px, py, t) : null;
+        var cr = rc ? 20 + (rc[0] - 20) * hh : 20, cg = rc ? 24 + (rc[1] - 24) * hh : 24, cb = rc ? 32 + (rc[2] - 32) * hh : 32;
+        ctx.fillStyle = 'rgba(' + (cr | 0) + ',' + (cg | 0) + ',' + (cb | 0) + ',' + (Math.min(.85, .18 + v * .8) * alpha * ga).toFixed(3) + ')';
+        dot(ctx, px, py, Math.min(1, v) * sq);
       }
     }
   }
