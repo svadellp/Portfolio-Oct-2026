@@ -1339,6 +1339,22 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function cold(v){ return COLD[Math.round(clamp(v, 0, 1) * 64)] }
 
+  /* PROTOTYPE: the Brain Roads spectrum. Colour is picked by place, not by heat: slow patches of indigo and violet,
+     magenta and pink around them, lime, yellow and mint breaking through, sky and periwinkle in between, a rare salmon/orange.
+     Every dot is nudged a little off its neighbours so it reads as fibres, like the poster. Heat decides how much colour shows */
+  var ROAD_STOPS = ['#3A3CC4','#5148DB','#7B55E2','#9E5CD8','#C264C6','#E07DAE','#EC9486','#D9694C','#E3D574','#C6EC7C','#9EE8AE','#8CCDEA','#90A4F2','#6577E6','#3A3CC4'];
+  var ROAD = [];
+  (function(){ var n = ROAD_STOPS.length - 1; for (var k = 0; k < 256; k++) { var q = k / 256 * n, i = Math.floor(q), u = q - i, a = hex(ROAD_STOPS[i]), b = hex(ROAD_STOPS[i + 1]); ROAD.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u]) } })();
+  function roads(x, y, t){
+    var j = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; j -= Math.floor(j);           // per-dot fibre jitter
+    var n = noise(x * .0042 + t * .025, y * .0048 - t * .018);                             // big patches
+    var m = noise(x * .016 + 11, y * .0035 + 4);                                           // streaky strands
+    var q = n * 1.25 + m * .35 + (j - .5) * .14 + .5;
+    q -= Math.floor(q);
+    // the poster is mostly blue and violet: pull the pick towards that part of the wheel
+    q = q < .5 ? q * .76 : .38 + (q - .5) * 1.24;
+    return ROAD[Math.min(255, Math.max(0, (q * 256) | 0))];
+  }
   /* ---------- Noise and the flowing field ---------- */
   var perm = []; for (var i = 0; i < 512; i++) perm[i] = Math.floor(Math.random() * 256);
   function hash(x, y){ return perm[(perm[x & 255] + y) & 511] / 255 }
@@ -1533,82 +1549,75 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var g = rel >= .13 ? 46 - clamp((rel - .14) / .14, 0, 1) * 28 : 30 - clamp((rel + .06) / .1, 0, 1) * 14;
     return [g, g, g + 2];
   }
-  /* PROTOTYPE: three balls of ideas, floating. Click one and it moves left, big, with its pieces listed on the right */
-  var BALLS = [{ n: 620, col: [123, 79, 214] }, { n: 420, col: [192, 86, 158] }, { n: 420, col: [94, 120, 219] }];
-  var HEAT = [[180, 236, 134], [142, 162, 240], [194, 106, 216], [123, 79, 214]];   // Brain Roads, sparse to dense: mint, periwinkle, lilac, violet
-  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0];
-  function rnd(seed){ var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x) }
-  function heatOf(v){ v = clamp(v, 0, .999) * (HEAT.length - 1); var a = Math.floor(v), u = v - a, A = HEAT[a], B = HEAT[a + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u] }
-  // where each ball sits: in a row where the folders were, or big on the left when opened
+  /* PROTOTYPE: three balls of ideas, floating, drawn the way the brain is: a halftone of dots that swell with a flowing field,
+     warm spots of colour that wander through them, and the odd flash. Click one and it moves left, big, with its pieces on the right */
+  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], ballSig = [[], [], []], ballFlash = [[], [], []];
   function ballHome(ci){ var b = fboxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .62, H * .2) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .58 } }
   function netBuild(){
-    var nodes = [], edges = [], seed = 7;
-    BALLS.forEach(function(B, ci){
-      B.first = nodes.length;
-      for (var k = 0; k < B.n; k++) {                          // a round ball: thick in the middle, wispy at the edge
-        var a = rnd(seed++) * 6.283, d = Math.pow(rnd(seed++), .62), big = k < 9;
-        nodes.push({ ux: Math.cos(a) * d, uy: Math.sin(a) * d, r: big ? 2.6 + rnd(seed++) * 3.2 : .6 + rnd(seed++) * rnd(seed++) * 2.4, c: ci, heat: Math.max(0, 1 - d), big: big,
-          ph: rnd(seed++) * 6.283, sp: .35 + rnd(seed++) * .6, amp: .012 + rnd(seed++) * .03, dl: rnd(seed++) * .45 });
-      }
-      B.last = nodes.length;
-      for (var i = B.first; i < B.last; i++) {                 // threads to near neighbours; the bigger nodes reach further
-        var n = nodes[i], want = n.big ? 22 : 1 + Math.floor(rnd(seed++) * 2.6), tries = 0;
-        while (want > 0 && tries++ < 40) { var j = B.first + Math.floor(rnd(seed++) * (B.last - B.first)), m = nodes[j], d2 = Math.hypot(m.ux - n.ux, m.uy - n.uy);
-          if (j !== i && (n.big || d2 < .32)) { edges.push([i, j, (rnd(seed++) - .5) * .8]); want-- } }
-      }
-    });
-    nodes.forEach(function(n){ n.col = heatOf(n.heat * .95) });
-    net = { nodes: nodes, edges: edges };
+    net = true;
     if (!skyEl) skyEl = $('sky');
     skyEl.innerHTML = FOLDERS.map(function(f, ci){ return '<p class="cname" data-c="' + ci + '"><b><i>' + pad(ci + 1) + '</i>' + esc(f.name) + '</b><span>' + esc(f.count) + '</span></p>' }).join('');
     netPlace();
   }
   function netPlace(){ if (!skyEl) return; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ var h = ballHome(ci); el.style.left = h.x + 'px'; el.style.top = (h.y + h.r + 26) + 'px' }) }
+  function ballEdge(a, ci, t){ return 1 + .05 * Math.sin(a * 3 + t * .4 + ci * 2) + .035 * Math.sin(a * 5 - t * .3 + ci) }   // a soft, slowly changing outline
   function netCells(){                                       // the pixels gather into the three balls first
-    var out = [];
-    net.nodes.forEach(function(n){ var h = ballHome(n.c); out.push([h.x + n.ux * h.r, h.y + n.uy * h.r, n.big ? 1 : 0, .5, .4, n.c]) });
+    var out = [], sp = cell * 1.05;
+    for (var ci = 0; ci < 3; ci++) { var h = ballHome(ci);
+      for (var y = -h.r; y <= h.r; y += sp) for (var x = -h.r; x <= h.r; x += sp) { var d = Math.hypot(x, y); if (d < h.r * ballEdge(Math.atan2(y, x), ci, 0)) out.push([h.x + x, h.y + y, 1, .5, .4, ci]) } }
     return out;
   }
-  function blobCells(b, fc){ var cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) * .58, out = [];   // ...and into the open ball on the left
+  function blobCells(b, fc){ var cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) * .58, out = [];
     for (var y = -R; y <= R; y += fc) for (var x = -R; x <= R; x += fc) { var d = Math.hypot(x, y) / R; if (d <= 1 && Math.random() < 1 - d * .6) out.push([cx + x, cy + y, 1, .5, 1 - d]) }
     return out }
   function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
+  // warm spots wander inside each ball (in its own -1..1 space) and now and then a flash blooms, like the brain's signals
+  function ballLife(ci, dt){
+    var S = ballSig[ci], F = ballFlash[ci];
+    if (S.length < 3 && Math.random() < dt * 2) S.push({ x: (Math.random() - .5) * 1.4, y: (Math.random() - .5) * 1.4, vx: (Math.random() - .5) * .5, vy: (Math.random() - .5) * .5, life: 0, dur: 3 + Math.random() * 3 });
+    for (var i = S.length - 1; i >= 0; i--) { var g = S[i]; g.life += dt; g.x += g.vx * dt; g.y += g.vy * dt; if (g.x * g.x + g.y * g.y > .8) { g.vx *= -1; g.vy *= -1 } if (g.life > g.dur) S.splice(i, 1) }
+    if (Math.random() < dt * .9) F.push({ x: (Math.random() - .5) * 1.3, y: (Math.random() - .5) * 1.3, t: 0 });
+    for (i = F.length - 1; i >= 0; i--) { F[i].t += dt; if (F[i].t > 1.6) F.splice(i, 1) }
+  }
   function netDraw(t, alpha, dt){
     if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; netLand = 0; return }
-    netLand = Math.min(1, netLand + dt * .55);
-    var nd = net.nodes, k = 1 - Math.exp(-dt * 4.5);
-    for (var c = 0; c < 3; c++) ballF[c] += ((focus === c ? 1 : 0) - ballF[c]) * k;      // opening a ball glides it to the left
-    var anyOpen = focus >= 0, settle = clamp((netLand - .5) / .5, 0, 1);
-    skyEl.style.opacity = (settle * alpha).toFixed(3);
-    // hover: which ball is under the pointer (only while all three float)
+    netLand = Math.min(1, netLand + dt * .7);
+    var k = 1 - Math.exp(-dt * 4.5), anyOpen = focus >= 0;
+    for (var c = 0; c < 3; c++) { ballF[c] += ((focus === c ? 1 : 0) - ballF[c]) * k; ballLife(c, dt) }
+    skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.08) hb = c }
     if (hb !== netHot) { netHot = hb; cv.style.cursor = hb >= 0 ? 'pointer' : ''; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ el.classList.toggle('hot', ci === hb) }) }
-    [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ el.classList.toggle('gone', anyOpen) });
-    // each ball: its centre and size (between home and open), how visible it is, and a slow float
-    var G = [0, 1, 2].map(function(ci){ var h = ballHome(ci), o = ballOpen(ci), f = ballF[ci], e = f * f * (3 - 2 * f);
-      var fx = Math.sin(t * .35 + ci * 2.1) * 6 * (1 - e), fy = Math.cos(t * .3 + ci * 1.7) * 8 * (1 - e);
-      return { x: h.x + (o.x - h.x) * e + fx, y: h.y + (o.y - h.y) * e + fy, r: (h.r + (o.r - h.r) * e) * (netHot === ci ? 1.05 : 1), a: anyOpen && focus !== ci ? Math.max(0, 1 - ballF[focus] * 1.6) : 1 } });
-    for (var i = 0; i < nd.length; i++) { var n = nd[i], g = G[n.c], L = netEase(clamp((netLand - n.dl) / (1 - n.dl), 0, 1)), sc = .15 + .85 * L;
-      n.px = g.x + (n.ux * sc + Math.sin(t * n.sp + n.ph) * n.amp) * g.r; n.py = g.y + (n.uy * sc + Math.cos(t * n.sp * .8 + n.ph) * n.amp) * g.r }
-    // threads, one batch per ball
-    var ec = clamp(netLand * 1.6 - .3, 0, 1) * alpha;
+    [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', anyOpen) });
+    var sp = cell * 1.05, base = cell * .74;
     for (c = 0; c < 3; c++) {
-      if (G[c].a < .01) continue;
-      var col = heatOf(.66 + c * .1), hot = netHot === c;
-      ctx.strokeStyle = 'rgba(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ',' + ((hot ? .3 : .19) * ec * G[c].a).toFixed(3) + ')';
-      ctx.lineWidth = .7; ctx.beginPath();
-      net.edges.forEach(function(e){ var a = nd[e[0]], b = nd[e[1]]; if (a.c !== c) return;
-        var mx2 = (a.px + b.px) / 2, my2 = (a.py + b.py) / 2, dx = b.px - a.px, dy = b.py - a.py;
-        ctx.moveTo(a.px, a.py); ctx.quadraticCurveTo(mx2 - dy * e[2], my2 + dx * e[2], b.px, b.py) });
-      ctx.stroke();
+      var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
+      var ga = anyOpen && focus !== c ? Math.max(0, 1 - ballF[focus] * 1.6) : 1;
+      if (ga < .01) continue;
+      var L = netEase(clamp(netLand / .9, 0, 1)), hot = netHot === c ? 1 : 0;
+      var cx = h.x + (o.x - h.x) * e + Math.sin(t * .35 + c * 2.1) * 6 * (1 - e), cy = h.y + (o.y - h.y) * e + Math.cos(t * .3 + c * 1.7) * 8 * (1 - e);
+      var R = (h.r + (o.r - h.r) * e) * (1 + hot * .04) * (.3 + .7 * L), S = ballSig[c], F = ballFlash[c], drift = t * .12 + c * 3.7;
+      for (var y = -R; y <= R; y += sp) for (var x = -R; x <= R; x += sp) {
+        var d = Math.hypot(x, y), edge = R * ballEdge(Math.atan2(y, x), c, t); if (d > edge) continue;
+        var ux = x / R, uy = y / R, rr = d / edge;
+        // size: the same flowing field as the hero, thinning towards the edge of the ball
+        var v = (field(ux * 260 + c * 900, uy * 260, drift) - .5) * 2.6 * (1 - rr * rr * .75) + .18 * (1 - rr);
+        // warmth: wandering spots, flashes that ripple outward, and the pointer
+        var w = 0;
+        for (var q = 0; q < S.length; q++) { var g = S[q], dd = (ux - g.x) * (ux - g.x) + (uy - g.y) * (uy - g.y), fade = Math.min(1, g.life, g.dur - g.life); w += Math.exp(-dd / .05) * fade }
+        for (q = 0; q < F.length; q++) { var fl = F[q], df = Math.hypot(ux - fl.x, uy - fl.y), ring = Math.abs(df - fl.t * .55); w += Math.exp(-ring * ring / .004) * (1 - fl.t / 1.6) * .9 }
+        if (hot) { var pd = Math.hypot(cx + x - mouse.tx, cy + y - mouse.ty) / (R * .5); w += Math.max(0, 1 - pd) * .8 }
+        w = Math.min(1, w);
+        v = Math.max(v, w * .9 + .1 * w);
+        if (v <= .06) continue;
+        var sz = Math.min(1.15, v) * base * (1 + e * .25), col = roads(x + c * 700, y, t), a = Math.min(.85, .2 + v * .8) * alpha * ga;
+        w = Math.min(1, .22 + w * .85 + e * .25);
+        var ink = 1 - w;   // a quiet tint everywhere, the full spectrum where it's warm
+        ctx.fillStyle = 'rgba(' + ((20 * ink + col[0] * w) | 0) + ',' + ((24 * ink + col[1] * w) | 0) + ',' + ((32 * ink + col[2] * w) | 0) + ',' + a.toFixed(3) + ')';
+        dot(ctx, cx + x, cy + y, sz);
+      }
     }
-    // the ideas themselves, coloured by how dense their part of the ball is
-    for (i = 0; i < nd.length; i++) { var q = nd[i], ga = G[q.c].a; if (ga < .01) continue;
-      var cl = q.big ? BALLS[q.c].col : q.col;
-      ctx.fillStyle = 'rgba(' + (cl[0] | 0) + ',' + (cl[1] | 0) + ',' + (cl[2] | 0) + ',' + (alpha * ga * clamp(netLand * 2, 0, 1) * (q.big ? 1 : .85)).toFixed(3) + ')';
-      ctx.beginPath(); ctx.arc(q.px, q.py, q.r * (1 + ballF[q.c] * .5), 0, 6.2832); ctx.fill() }
   }
   function folderCells(fb, fc, base){
     var out = [], w = fb.w, h = fb.h, tabW = w * .38, tabH = h * .12, frontTop = h * .26, notch = fc * 2;
@@ -1919,7 +1928,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       cl.h += (tg - cl.h) * (tg > cl.h ? .2 : .045);
       var v = (.2 + cl.shape * .6 + (field(cl.x, cl.y, t * .12) - .5) * .9 + cl.h * .3) * cl.m;
       v = clamp(v, 0, 1);
-      var b = br.pidx[c] * 7, col = cold(Math.min(1, cl.h * 1.1));
+      var b = br.pidx[c] * 7, rc = roads(cl.x, cl.y, t), hh = Math.min(1, cl.h * 1.4), col = [20 + (rc[0] - 20) * hh, 24 + (rc[1] - 24) * hh, 32 + (rc[2] - 32) * hh];
       st[b + 2] = sq * v; st[b + 3] = col[0]; st[b + 4] = col[1]; st[b + 5] = col[2];
       st[b + 6] = v > .06 ? Math.min(.85, .18 + v * .8) : 0;
     }
@@ -2007,7 +2016,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var v = (field(c.x, c.y, drift) - .5) * 2.4 * c.m;
         v = Math.max(v, c.h * .95 * c.m + c.h * .35) * rev;
         if (v <= .06) continue;
-        var sz = Math.min(1, v) * sq, col = cold(Math.min(1, c.h * 1.1));
+        var sz = Math.min(1, v) * sq, rc = roads(c.x, c.y, t), hh = Math.min(1, c.h * 1.4), col = [20 + (rc[0] - 20) * hh, 24 + (rc[1] - 24) * hh, 32 + (rc[2] - 32) * hh];
         ctx.fillStyle = 'rgba(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ',' + (Math.min(.85, .18 + v * .8) * fieldA).toFixed(3) + ')';
         dot(ctx, c.x, c.y, sz);
       }
@@ -2032,7 +2041,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         tc.tr *= .955;
         if (tc.tr < .02) { tc.tr = 0; continue }
         keep.push(trail[ti]);
-        var tsz = cell * .42 * Math.min(1, .25 + tc.tr * 1.2), tcol = cold(Math.min(1, .3 + tc.tr * .9));   // like the hero cloud: small, saturated
+        var tsz = cell * .42 * Math.min(1, .25 + tc.tr * 1.2), tcol = roads(tc.x, tc.y, 0);   // like the hero cloud: small, saturated
         ctx.fillStyle = 'rgba(' + (tcol[0] | 0) + ',' + (tcol[1] | 0) + ',' + (tcol[2] | 0) + ',' + Math.min(.85, .2 + tc.tr * .8).toFixed(3) + ')';
         dot(ctx, tc.x, tc.y, tsz);
       }
@@ -2107,7 +2116,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var push = Math.min(1, (Math.abs(ox[p]) + Math.abs(oy[p])) / 26);
         heat[p] = Math.max(heat[p] * .965, push, travel);
         var h = heat[p];
-        if (h > .02) { var hc = cold(h); r += (hc[0] - r) * h; g += (hc[1] - g) * h; bl += (hc[2] - bl) * h; s *= 1 - h * .2 }
+        if (h > .02) { var hc = roads(x, y, t); r += (hc[0] - r) * h; g += (hc[1] - g) * h; bl += (hc[2] - bl) * h; s *= 1 - h * .2 }
         ctx.fillStyle = 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ',' + al.toFixed(3) + ')';
         dot(ctx, x + ox[p], y + oy[p], s);
       }
