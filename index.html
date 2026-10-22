@@ -101,7 +101,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 #field{position:absolute;inset:0;width:100%;height:100%;opacity:0}
 /* PROTOTYPE 2: ink drops under a sheet of glass */
 #ink{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none;transition:opacity .6s}
-#glass{position:absolute;inset:0;z-index:1;pointer-events:none;
+#glass{position:fixed;inset:0;z-index:1;pointer-events:none;
   -webkit-backdrop-filter:blur(14px) saturate(185%);backdrop-filter:blur(14px) saturate(185%);
   background:linear-gradient(160deg,rgba(255,255,255,.34),rgba(255,255,255,.06) 48%,rgba(255,255,255,.22)),radial-gradient(90% 60% at 12% 0%,rgba(255,255,255,.45),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(200,210,255,.18),transparent 65%)}
 #glass::after{content:'';position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
@@ -110,26 +110,25 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .hero-line{font-size:var(--t-hero);font-weight:700;line-height:1.02;letter-spacing:-.045em;text-wrap:balance}
 .hero-loc{margin-bottom:clamp(16px,1.8vw,26px);font-size:clamp(13px,1vw,15px);font-weight:500;letter-spacing:.01em;color:var(--ink)}
 .hero-loc span,.services span{color:var(--grey);font-weight:400}
+/* PROTOTYPE 2: the pointer is a vibrant red dot */
+@media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
+#dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#FF1E1E;z-index:100000;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(255,30,30,.25),0 0 18px rgba(255,40,20,.55);opacity:0;transition:width .25s var(--ease),height .25s var(--ease),margin .25s var(--ease),opacity .3s}
+#dot.on{opacity:1}#dot.big{width:34px;height:34px;margin:-17px 0 0 -17px}
+@media not ((hover:hover) and (pointer:fine)){ #dot{display:none} }
 /* PROTOTYPE 2: the copy is drawn as a negative of whatever is behind it, so it reads on paper and on ink */
 .hero-copy{mix-blend-mode:difference}
 .hero-copy .hero-line,.hero-copy .hero-loc,.hero-copy .services{color:#fff}
 .hero-copy .hero-loc span,.hero-copy .services span{color:#757575}
 /* the top bar and the footer get their own, stronger glass, and their copy turns negative over the ink */
-#topglass{position:fixed;left:0;right:0;top:0;height:74px;z-index:28;pointer-events:none;transition:opacity .3s;
-  -webkit-backdrop-filter:blur(22px) saturate(190%);backdrop-filter:blur(22px) saturate(190%);
-  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.2));border-bottom:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
 header:not(.over){mix-blend-mode:difference;background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 header:not(.over) nav a{color:#fff}
 header:not(.over) .mark circle{fill:#fff}
-@media (max-width:860px){.footglass{height:100px}}
-.footglass{position:absolute;left:0;right:0;bottom:0;height:62px;z-index:4;pointer-events:none;
-  -webkit-backdrop-filter:blur(22px) saturate(190%);backdrop-filter:blur(22px) saturate(190%);
-  background:linear-gradient(0deg,rgba(255,255,255,.5),rgba(255,255,255,.2));border-top:1px solid rgba(255,255,255,.6)}
 .np:not(.in-case),.corner:not(.in-case){mix-blend-mode:difference;color:#fff}
 .corner:not(.in-case) a{color:#fff}
 .np:not(.in-case) em,.np:not(.in-case) .meta{color:#fff}
 .np:not(.in-case) #npLabel{color:#757575}
-#glass{-webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--mx,50%) var(--my,50%),rgba(0,0,0,.05) 0,rgba(0,0,0,.35) 45%,#000 100%);mask-image:radial-gradient(circle var(--lr,0px) at var(--mx,50%) var(--my,50%),rgba(0,0,0,.05) 0,rgba(0,0,0,.35) 45%,#000 100%)}
+
 .services{margin-top:clamp(24px,2.6vw,38px);font-size:clamp(15px,1.15vw,17px);color:var(--ink);font-weight:500;letter-spacing:.01em}
 
 /* Folders: invisible hit areas over the pixel folders, with their labels */
@@ -918,6 +917,7 @@ header.dark .hdr-exit{display:inline-flex}
 </style>
 </head>
 <body>
+<div id="dot" aria-hidden="true"></div>
 <div id="protoBadge" style="position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;padding:4px 10px;border-radius:999px;background:#7B4FD6;color:#fff;font:500 11px/1.2 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none">PROTOTYPE 2 · INK</div>
 
 
@@ -936,7 +936,6 @@ header.dark .hdr-exit{display:inline-flex}
   <button type="button" class="hdr-exit" id="exitRoom" data-t="Exit Room">Exit Room</button>
 </header>
 
-<div id="topglass" aria-hidden="true"></div>
 <canvas id="navfx" aria-hidden="true"></canvas>
 <main>
   <section class="stage" id="stage">
@@ -949,7 +948,6 @@ header.dark .hdr-exit{display:inline-flex}
         <h1 class="hero-line" id="heroLine">Curious idea collector.<br>Creative dot connector.<br>Stubborn experience builder.</h1>
         <p class="services"><span>Services:</span> Product design, strategy, creative direction and AI coding. Yes, all of them.</p>
       </div>
-      <div class="footglass" aria-hidden="true"></div>
       <nav class="corner" aria-label="Elsewhere">
         <a href="https://www.linkedin.com/in/saravadellperez" target="_blank" rel="noopener" data-t="LinkedIn">LinkedIn</a>
         <a href="#" class="cv" data-t="CV">CV</a>
@@ -1650,6 +1648,14 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
   }
 
+  (function(){   // the red dot follows the pointer closely and swells over anything clickable
+    var el = $('dot'), x = -100, y = -100, cx = -100, cy = -100;
+    addEventListener('pointermove', function(e){ x = e.clientX; y = e.clientY; el.classList.add('on');
+      var tg = e.target.closest && e.target.closest('a,button,[role=button],.file,.peek li,.cname');
+      el.classList.toggle('big', !!tg || (typeof netHot !== 'undefined' && netHot >= 0)) }, { passive: true });
+    document.addEventListener('pointerleave', function(){ el.classList.remove('on') });
+    (function loop(){ cx += (x - cx) * .35; cy += (y - cy) * .35; el.style.transform = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px)'; requestAnimationFrame(loop) })();
+  })();
   /* ---------- PROTOTYPE 2: ink drops ----------
      Drops of ink swim in from every side and flow like they're suspended in liquid: they lag, overshoot, stretch into
      teardrops when they move fast and pull into each other with thin necks. A sheet of glass lies over everything,
@@ -1686,8 +1692,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       '  float lw=uPx*1.3/r;',
       '  float ln=exp(-pow((e-1.)/lw,2.))*crisp;',
       '  float inner=exp(-pow((e-1.-lw*3.)/(lw*1.6),2.))*crisp;',
-      '  T*=mix(vec3(1.),vec3(.16,.12,.42),ln*.45*op);',
-      '  T*=mix(vec3(1.),vec3(.1,.55,1.),inner*.45*op);',
+      '  T*=mix(vec3(1.),vec3(.25,.05,.04),ln*.35*op);',
+      '  T*=mix(vec3(1.),vec3(1.,.75,.3),inner*.3*op);',
       ' }',
       ' vec3 pv=texture2D(uPrev,gl_FragCoord.xy/uRes).rgb; pv=min(vec3(1.),mix(pv,vec3(1.),uFade)+1.5/255.);',
       ' gl_FragColor=vec4(min(pv,T),1.);',
@@ -1700,8 +1706,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       'vec3 hue(float h){ return clamp(vec3(abs(h*6.-3.)-1.,2.-abs(h*6.-2.),2.-abs(h*6.-4.)),0.,1.); }',
       'void main(){ vec2 uv=gl_FragCoord.xy/uRes;',
       ' float a=.7+.5*sin(uv.x*2.3+uv.y*1.7+uT2*.12)+.25*sin(uv.y*4.1-uT2*.09);',
-      ' vec2 m=(uv-uM)*uRes; float mp=exp(-dot(m,m)/(2.*200.*200.));',
-      ' vec2 dir=normalize(vec2(cos(a),sin(a))*(1.-mp)+normalize(m+1e-3)*mp*1.5);',
+      ' float mp=0.;',
+      ' vec2 dir=vec2(cos(a),sin(a));',
       ' float spread=uAb*(1.+mp*1.4);',
       ' vec3 acc=vec3(0.), ws=vec3(0.);',
       ' for(int k=0;k<12;k++){ float s=float(k)/11.; vec3 w=hue(s*.78); acc+=texture2D(uT,uv+dir*(s-.5)*spread*vec2(1.,uRes.x/uRes.y)).rgb*w; ws+=w; }',
@@ -1728,16 +1734,16 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var B = new Float32Array(NB * 4), C1 = new Float32Array(NB * 4), C2 = new Float32Array(NB * 4), O = new Float32Array(NB * 4), V = new Float32Array(NB * 4);
     function rgb(h){ var c = hex(h); return [c[0] / 255, c[1] / 255, c[2] / 255] }
     var INK = {
-      cyan: ['#00C8FF', '#0A5CFF'], crimson: ['#FF1F5A', '#FF8BC2'], ultra: ['#1A2BFF', '#3DFFB0'], smoke: ['#7A1FFF', '#E07BFF'],
-      pink: ['#FF4FB8', '#3A4BFF'], mint: ['#2CF5A0', '#1E7BFF'], lime: ['#A6FF3B', '#00C2FF'], violet: ['#5B2BFF', '#FF5FD2'], sun: ['#FFD23F', '#FF4FB8']
+      ember: ['#16040C', '#FF6A12'], flame: ['#C8120C', '#FFC23D'], amber: ['#FF5208', '#FFE58A'], rust: ['#4A0808', '#FF8A24'],
+      gold: ['#FF9416', '#FFF3C4'], night: ['#0E0838', '#2B3BFF'], ice: ['#2A1BFF', '#46ECFF'], sun: ['#FFC21F', '#FFFBE0']
     };
     var D = [
-      { g: 0, k: 0, ink: 'cyan' }, { g: 0, k: 1, ink: 'crimson' }, { g: 0, k: 2, ink: 'ultra' },
-      { g: 1, k: 0, ink: 'smoke' }, { g: 1, k: 1, ink: 'lime' }, { g: 1, k: 2, ink: 'pink' },
-      { g: 2, k: 0, ink: 'violet' }, { g: 2, k: 1, ink: 'cyan' }, { g: 2, k: 2, ink: 'mint' },
-      { g: 3, k: 0, ink: 'smoke', near: 1 }, { g: 4, k: 0, ink: 'mint', near: 0 }, { g: 5, k: 0, ink: 'pink', near: 2 },
-      { w: 1, ink: 'cyan', sz: .055, sp: 70 }, { w: 1, ink: 'violet', sz: .03, sp: 105 }, { w: 1, ink: 'lime', sz: .022, sp: 125 },
-      { w: 1, ink: 'crimson', sz: .04, sp: 85 }, { w: 1, ink: 'ultra', sz: .075, sp: 55 }, { w: 1, ink: 'sun', sz: .018, sp: 140 }
+      { g: 0, k: 0, ink: 'ember' }, { g: 0, k: 1, ink: 'amber' }, { g: 0, k: 2, ink: 'ice' },
+      { g: 1, k: 0, ink: 'flame' }, { g: 1, k: 1, ink: 'gold' }, { g: 1, k: 2, ink: 'night' },
+      { g: 2, k: 0, ink: 'rust' }, { g: 2, k: 1, ink: 'sun' }, { g: 2, k: 2, ink: 'flame' },
+      { g: 3, k: 0, ink: 'amber', near: 1 }, { g: 4, k: 0, ink: 'night', near: 0 }, { g: 5, k: 0, ink: 'gold', near: 2 },
+      { w: 1, ink: 'ember', sz: .055, sp: 45 }, { w: 1, ink: 'ice', sz: .03, sp: 60 }, { w: 1, ink: 'sun', sz: .022, sp: 70 },
+      { w: 1, ink: 'flame', sz: .04, sp: 52 }, { w: 1, ink: 'rust', sz: .075, sp: 38 }, { w: 1, ink: 'amber', sz: .018, sp: 80 }
     ];
     var order = [1, 12, 4, 7, 15, 0, 10, 5, 13, 3, 8, 16, 11, 2, 14, 6, 9, 17];
     var born = performance.now(), dpr = 1, IW = 0, IH = 0, last = born, fold = [0, 0, 0], spawned = false;
@@ -1750,11 +1756,11 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
                { x: IW * .14, y: IH * .72, R: m * .07 }, { x: IW * .86, y: IH * .62, R: m * .08 }, { x: IW * .8, y: IH * .16, R: m * .06 } ][g];
     }
     function spawn(){   // every drop starts just off screen, each from its own angle
-      var diag = Math.hypot(IW, IH) * .62;
+      var diag = Math.hypot(IW, IH) * .56;
       D.forEach(function(d, i){
         var oi = order.indexOf(i), ang = oi * 2.39996 + .4;
         d.x = IW / 2 + Math.cos(ang) * diag; d.y = IH / 2 + Math.sin(ang) * diag;
-        d.vx = -Math.cos(ang) * 120; d.vy = -Math.sin(ang) * 120; d.ph = i * 1.37 + Math.random(); d.start = .15 + oi * .16; d.sv = 0;
+        d.vx = 0; d.vy = 0; d.ph = i * 1.37 + Math.random(); d.start = .3 + oi * .32; d.sv = 0;
       });
       spawned = true;
     }
@@ -1764,12 +1770,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var pr = inkPr; if (!pr || !IW || typeof fboxes === 'undefined' || !fboxes || !fboxes.length || !bigBoxes || !bigBoxes.length) return;
       if (!spawned) spawn();
       ic.style.opacity = mode === -1 ? 1 : 0;
-      // the pointer: its speed stirs the liquid, and the glass clears in a soft circle around it
-      if (mouse.on) { mv.vx += ((mouse.tx - mv.px) / Math.max(dt, .001) - mv.vx) * .25; mv.vy += ((mouse.ty - mv.py) / Math.max(dt, .001) - mv.vy) * .25; mv.px = mouse.tx; mv.py = mouse.ty }
-      else { mv.vx *= .9; mv.vy *= .9 }
-      mv.sx += (mouse.tx - mv.sx) * .18; mv.sy += (mouse.ty - mv.sy) * .18;
-      mv.lr += ((mouse.on ? 150 + Math.min(60, Math.hypot(mv.vx, mv.vy) * .05) : 0) - mv.lr) * .08;
-      glassEl.style.setProperty('--mx', mv.sx.toFixed(1) + 'px'); glassEl.style.setProperty('--my', mv.sy.toFixed(1) + 'px'); glassEl.style.setProperty('--lr', mv.lr.toFixed(1) + 'px');
       var u = smoothstep(.12, 2.15, pr.s), n = 0, hot = netHot, anyOpen = focus >= 0, m0 = Math.min(IW, IH);
       for (var g = 0; g < 3; g++) fold[g] += ((focus === g ? 1 : 0) - fold[g]) * (1 - Math.exp(-dt * 4.5));
       for (var i = 0; i < D.length; i++) {
@@ -1779,9 +1779,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           // wanderers follow a slow current that curls through the screen, and are pulled back gently if they drift off
           var ang = noise(d.x * .0016 + d.ph, d.y * .0016 + t * .04) * 12.566, spd = d.sp * (1 - .4 * u);
           var fx = Math.cos(ang) * spd, fy = Math.sin(ang) * spd;
-          if (live) { fx += (IW / 2 - d.x) * (d.x < -40 || d.x > IW + 40 ? .9 : .04); fy += (IH / 2 - d.y) * (d.y < -40 || d.y > IH + 40 ? .9 : .05) }
-          else { fx = d.vx; fy = d.vy }
-          d.vx += (fx - d.vx) * Math.min(1, dt * 1.1); d.vy += (fy - d.vy) * Math.min(1, dt * 1.1);
+          var ease0 = live ? smoothstep(0, 5, age) : 0; fx *= ease0; fy *= ease0;
+          if (live) { fx += (IW / 2 - d.x) * (d.x < -40 || d.x > IW + 40 ? .22 : .03); fy += (IH / 2 - d.y) * (d.y < -40 || d.y > IH + 40 ? .22 : .04) }
+          else { fx = 0; fy = 0 }
+          d.vx += (fx - d.vx) * Math.min(1, dt * .7); d.vy += (fy - d.vy) * Math.min(1, dt * .7);
           r = m0 * d.sz * (1 + .25 * Math.sin(t * .5 + d.ph)) * (1 - .35 * u);
           op = (1 - .45 * u) * (anyOpen ? .35 : 1); soft = .02 + .7 * smoothstep(.4, .95, .5 + .5 * Math.sin(t * .23 + d.ph * 2)); grp = 30;
         } else {
@@ -1803,19 +1804,15 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           soft = .02 + .85 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
           grp = loose ? 10 + i : gi; lift = .12 * u + .06 * ee;
           // a soft, under-damped spring: the drop lags behind its path and overshoots, like something moving through water
-          if (live) { d.vx += ((tx - d.x) * 4.2 - d.vx * 2.1) * dt; d.vy += ((ty - d.y) * 4.2 - d.vy * 2.1) * dt }
+          if (live) { var ar = smoothstep(0, 6, age), kk = .5 + 3.2 * ar, cc = 2.4 + (1 - ar) * 1.2; d.vx += ((tx - d.x) * kk - d.vx * cc) * dt; d.vy += ((ty - d.y) * kk - d.vy * cc) * dt }
         }
-        // the pointer stirs: drops near it are carried along with its movement and nudged aside
-        if (live && mouse.on) {
-          var mdx = d.x - mouse.tx, mdy = d.y - mouse.ty, md = Math.hypot(mdx, mdy) + 1, MR = 240;
-          if (md < MR) { var fall = 1 - md / MR; fall *= fall; d.vx += (mv.vx * 1.6 * fall + mdx / md * 260 * fall) * dt * 2.2; d.vy += (mv.vy * 1.6 * fall + mdy / md * 260 * fall) * dt * 2.2 }
-        }
+        var vm = Math.hypot(d.vx, d.vy); if (vm > 220) { d.vx *= 220 / vm; d.vy *= 220 / vm }   // never in a hurry
         if (live || d.w) { d.x += d.vx * dt; d.y += d.vy * dt }
         if (!live) continue;
         // grow in as they arrive
-        var gin = smoothstep(0, 1.4, age); r *= .55 + .45 * gin; op *= smoothstep(0, .5, age);
+        var gin = smoothstep(0, 3, age); r *= .6 + .4 * gin; op *= smoothstep(0, 1.5, age);
         if (op < .01 || r < .5) continue;
-        var spv = Math.hypot(d.vx, d.vy); d.sv += (Math.min(2.4, spv / 110) - d.sv) * .2;
+        var spv = Math.hypot(d.vx, d.vy); d.sv += (Math.min(1.8, spv / 120) - d.sv) * .08;
         var k1 = rgb(c1), k2 = rgb(c2);
         B[n * 4] = d.x; B[n * 4 + 1] = d.y; B[n * 4 + 2] = r; B[n * 4 + 3] = soft;
         C1[n * 4] = k1[0] + (1 - k1[0]) * lift; C1[n * 4 + 1] = k1[1] + (1 - k1[1]) * lift; C1[n * 4 + 2] = k1[2] + (1 - k1[2]) * lift; C1[n * 4 + 3] = op * .9;
@@ -1834,7 +1831,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.useProgram(cp);
       gl.bindTexture(gl.TEXTURE_2D, tex[nx]); gl.uniform1i(CU.uT, 0); gl.uniform2f(CU.uRes, IW, IH);
-      gl.uniform2f(CU.uM, mv.sx / IW, 1 - mv.sy / IH); gl.uniform1f(CU.uAb, .045); gl.uniform1f(CU.uT2, t);
+       gl.uniform1f(CU.uAb, .045); gl.uniform1f(CU.uT2, t);
       gl.enableVertexAttribArray(cla); gl.vertexAttribPointer(cla, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       cur = nx;
