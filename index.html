@@ -114,6 +114,21 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .hero-copy{mix-blend-mode:difference}
 .hero-copy .hero-line,.hero-copy .hero-loc,.hero-copy .services{color:#fff}
 .hero-copy .hero-loc span,.hero-copy .services span{color:#757575}
+/* the top bar and the footer get their own, stronger glass, and their copy turns negative over the ink */
+#topglass{position:fixed;left:0;right:0;top:0;height:74px;z-index:28;pointer-events:none;transition:opacity .3s;
+  -webkit-backdrop-filter:blur(22px) saturate(190%);backdrop-filter:blur(22px) saturate(190%);
+  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.2));border-bottom:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+header:not(.over){mix-blend-mode:difference;background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+header:not(.over) nav a{color:#fff}
+header:not(.over) .mark circle{fill:#fff}
+@media (max-width:860px){.footglass{height:100px}}
+.footglass{position:absolute;left:0;right:0;bottom:0;height:62px;z-index:4;pointer-events:none;
+  -webkit-backdrop-filter:blur(22px) saturate(190%);backdrop-filter:blur(22px) saturate(190%);
+  background:linear-gradient(0deg,rgba(255,255,255,.5),rgba(255,255,255,.2));border-top:1px solid rgba(255,255,255,.6)}
+.np:not(.in-case),.corner:not(.in-case){mix-blend-mode:difference;color:#fff}
+.corner:not(.in-case) a{color:#fff}
+.np:not(.in-case) em,.np:not(.in-case) .meta{color:#fff}
+.np:not(.in-case) #npLabel{color:#757575}
 #glass{-webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--mx,50%) var(--my,50%),rgba(0,0,0,.05) 0,rgba(0,0,0,.35) 45%,#000 100%);mask-image:radial-gradient(circle var(--lr,0px) at var(--mx,50%) var(--my,50%),rgba(0,0,0,.05) 0,rgba(0,0,0,.35) 45%,#000 100%)}
 .services{margin-top:clamp(24px,2.6vw,38px);font-size:clamp(15px,1.15vw,17px);color:var(--ink);font-weight:500;letter-spacing:.01em}
 
@@ -921,6 +936,7 @@ header.dark .hdr-exit{display:inline-flex}
   <button type="button" class="hdr-exit" id="exitRoom" data-t="Exit Room">Exit Room</button>
 </header>
 
+<div id="topglass" aria-hidden="true"></div>
 <canvas id="navfx" aria-hidden="true"></canvas>
 <main>
   <section class="stage" id="stage">
@@ -933,6 +949,7 @@ header.dark .hdr-exit{display:inline-flex}
         <h1 class="hero-line" id="heroLine">Curious idea collector.<br>Creative dot connector.<br>Stubborn experience builder.</h1>
         <p class="services"><span>Services:</span> Product design, strategy, creative direction and AI coding. Yes, all of them.</p>
       </div>
+      <div class="footglass" aria-hidden="true"></div>
       <nav class="corner" aria-label="Elsewhere">
         <a href="https://www.linkedin.com/in/saravadellperez" target="_blank" rel="noopener" data-t="LinkedIn">LinkedIn</a>
         <a href="#" class="cv" data-t="CV">CV</a>
@@ -1676,11 +1693,19 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       ' gl_FragColor=vec4(min(pv,T),1.);',
       '}'].join('\n');
     // the copy to screen splits red, green and blue apart a little: more towards the edges and around the pointer
+    // chromatic dispersion on the way to the screen: the image is sampled along a flowing direction and every sample is
+    // tinted with its slice of the spectrum, so edges break into red, orange, yellow on one side and cyan, blue, violet on the other
     var CS = [
       'precision highp float;uniform sampler2D uT;uniform vec2 uRes,uM;uniform float uAb,uT2;',
-      'void main(){ vec2 uv=gl_FragCoord.xy/uRes; vec2 c=uv-.5; vec2 m=uv-uM; float mp=exp(-dot(m*uRes,m*uRes)/(2.*180.*180.));',
-      ' vec2 o=(c*uAb+normalize(m+1e-5)*mp*.006+vec2(sin(uT2*.7),cos(uT2*.5))*.0015);',
-      ' gl_FragColor=vec4(texture2D(uT,uv+o).r,texture2D(uT,uv).g,texture2D(uT,uv-o).b,1.);}'].join('');
+      'vec3 hue(float h){ return clamp(vec3(abs(h*6.-3.)-1.,2.-abs(h*6.-2.),2.-abs(h*6.-4.)),0.,1.); }',
+      'void main(){ vec2 uv=gl_FragCoord.xy/uRes;',
+      ' float a=.7+.5*sin(uv.x*2.3+uv.y*1.7+uT2*.12)+.25*sin(uv.y*4.1-uT2*.09);',
+      ' vec2 m=(uv-uM)*uRes; float mp=exp(-dot(m,m)/(2.*200.*200.));',
+      ' vec2 dir=normalize(vec2(cos(a),sin(a))*(1.-mp)+normalize(m+1e-3)*mp*1.5);',
+      ' float spread=uAb*(1.+mp*1.4);',
+      ' vec3 acc=vec3(0.), ws=vec3(0.);',
+      ' for(int k=0;k<12;k++){ float s=float(k)/11.; vec3 w=hue(s*.78); acc+=texture2D(uT,uv+dir*(s-.5)*spread*vec2(1.,uRes.x/uRes.y)).rgb*w; ws+=w; }',
+      ' gl_FragColor=vec4(acc/ws,1.);}'].join('');
     function sh(type, src){ var o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o)); return o }
     function prog(fs){ var o = gl.createProgram(); gl.attachShader(o, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(o, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(o); return o }
     var pg = prog(FS), cp = prog(CS);
@@ -1809,7 +1834,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.useProgram(cp);
       gl.bindTexture(gl.TEXTURE_2D, tex[nx]); gl.uniform1i(CU.uT, 0); gl.uniform2f(CU.uRes, IW, IH);
-      gl.uniform2f(CU.uM, mv.sx / IW, 1 - mv.sy / IH); gl.uniform1f(CU.uAb, .022); gl.uniform1f(CU.uT2, t);
+      gl.uniform2f(CU.uM, mv.sx / IW, 1 - mv.sy / IH); gl.uniform1f(CU.uAb, .045); gl.uniform1f(CU.uT2, t);
       gl.enableVertexAttribArray(cla); gl.vertexAttribPointer(cla, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       cur = nx;
