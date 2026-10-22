@@ -1579,7 +1579,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   /* PROTOTYPE: three balls of ideas, floating, drawn the way the brain is: a halftone of dots that swell with a flowing field,
      warm spots of colour that wander through them, and the odd flash. Click one and it moves left, big, with its pieces on the right */
   var inkPr = null, netT = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], ballSig = [[], [], []], ballFlash = [[], [], []];
-  function ballHome(ci){ var b = fboxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .62, H * .2) } }
+  function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .62, H * .2) };
+    return { x: W * [.19, .5, .81][ci], y: b.y + b.h / 2, r: Math.min(W * .1, H * .18) } }   // spread wide, with room between them
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .58 } }
   function netBuild(){
     net = true;
@@ -1668,7 +1669,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
     var FS = [
       'precision highp float;',
-      'uniform vec2 uRes;uniform float uN,uPx,uFade;uniform sampler2D uPrev;',
+      'uniform vec2 uRes;uniform float uN,uPx,uFade,uTime;uniform sampler2D uPrev;',
       'uniform vec4 uB[20];uniform vec4 uC1[20];uniform vec4 uC2[20];uniform vec4 uO[20];uniform vec4 uV[20];',
       'void main(){',
       ' vec2 p=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);',
@@ -1677,11 +1678,13 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       '  vec2 d=p-uB[i].xy; vec4 v=uV[i];',
       // stretch along the direction of travel: a long tail behind, a rounder head in front, thinner as it stretches
       '  if(v.z>.001){ float a=dot(d,v.xy), b=dot(d,vec2(-v.y,v.x)); a = a<0. ? a/(1.+v.z*1.6) : a/(1.+v.z*.3); b*=1.+v.z*.45; d=vec2(a,b); }',
-      '  dd[i]=d; f[i]=uB[i].z*uB[i].z/(dot(d,d)+1.); }',
+      '  float th=atan(d.y,d.x), ph=uO[i].w, tt=uTime;',
+      '  float wob=1.+.09*sin(2.*th+tt*.35+ph)+.06*sin(3.*th-tt*.27+ph*1.7)+.035*sin(5.*th+tt*.5+ph*2.3);',
+      '  float rr=uB[i].z*wob; dd[i]=d; f[i]=rr*rr/(dot(d,d)+1.); }',
       ' vec3 T=vec3(1.);',
       ' for(int i=0;i<20;i++){ if(float(i)>=uN) break;',
       '  float e=f[i];',
-      '  for(int j=0;j<20;j++){ if(j!=i && float(j)<uN && uC2[j].w==uC2[i].w){ e+=1.7*f[i]*f[j]/(f[i]+f[j]+1e-4); } }',
+      '  for(int j=0;j<20;j++){ if(j!=i && float(j)<uN && uC2[j].w==uC2[i].w){ e+=2.6*f[i]*f[j]/(f[i]+f[j]+1e-4); } }',
       '  float soft=uB[i].w, r=uB[i].z, op=uC1[i].w;',
       '  float a=smoothstep(1.-soft,1.+soft*.2+.02,e);',
       '  float q=length(dd[i]-uO[i].xy*r)/r;',
@@ -1721,7 +1724,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     function prog(fs){ var o = gl.createProgram(); gl.attachShader(o, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(o, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(o); return o }
     var pg = prog(FS), cp = prog(CS);
     var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-    var U = {}; ['uRes','uN','uPx','uB','uC1','uC2','uO','uV','uPrev','uFade'].forEach(function(n){ U[n] = gl.getUniformLocation(pg, n) });
+    var U = {}; ['uRes','uN','uPx','uB','uC1','uC2','uO','uV','uPrev','uFade','uTime'].forEach(function(n){ U[n] = gl.getUniformLocation(pg, n) });
     var CU = {}; ['uT','uRes','uAb','uT2','uN','uB','uV'].forEach(function(n){ CU[n] = gl.getUniformLocation(cp, n) });
     var la = gl.getAttribLocation(pg, 'a'), cla = gl.getAttribLocation(cp, 'a');
     var tex = [], fbo = [], cur = 0;
@@ -1746,8 +1749,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       { g: 1, k: 0, ink: 'flame' }, { g: 1, k: 1, ink: 'gold' }, { g: 1, k: 2, ink: 'night' },
       { g: 2, k: 0, ink: 'rust' }, { g: 2, k: 1, ink: 'sun' }, { g: 2, k: 2, ink: 'flame' },
       { g: 3, k: 0, ink: 'amber', near: 1 }, { g: 4, k: 0, ink: 'night', near: 0 }, { g: 5, k: 0, ink: 'gold', near: 2 },
-      { w: 1, ink: 'ember', sz: .055, sp: 45 }, { w: 1, ink: 'ice', sz: .03, sp: 60 }, { w: 1, ink: 'sun', sz: .022, sp: 70 },
-      { w: 1, ink: 'flame', sz: .04, sp: 52 }, { w: 1, ink: 'rust', sz: .075, sp: 38 }, { w: 1, ink: 'amber', sz: .018, sp: 80 }
+      { w: 1, ink: 'ember', sz: .055, sp: 30 }, { w: 1, ink: 'ice', sz: .03, sp: 38 }, { w: 1, ink: 'sun', sz: .022, sp: 44 },
+      { w: 1, ink: 'flame', sz: .04, sp: 34 }, { w: 1, ink: 'rust', sz: .075, sp: 26 }, { w: 1, ink: 'amber', sz: .018, sp: 48 }
     ];
     var order = [1, 12, 4, 7, 15, 0, 10, 5, 13, 3, 8, 16, 11, 2, 14, 6, 9, 17];
     var born = performance.now(), dpr = 1, IW = 0, IH = 0, last = born, fold = [0, 0, 0], spawned = false;
@@ -1756,8 +1759,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     size(); addEventListener('resize', size);
     function heroSpot(g){
       var m = Math.min(IW, IH);
-      return [ { x: IW * .3, y: IH * .4, R: m * .17 }, { x: IW * .66, y: IH * .34, R: m * .15 }, { x: IW * .52, y: IH * .66, R: m * .16 },
-               { x: IW * .14, y: IH * .72, R: m * .07 }, { x: IW * .86, y: IH * .62, R: m * .08 }, { x: IW * .8, y: IH * .16, R: m * .06 } ][g];
+      return [ { x: IW * .1, y: IH * .3, R: m * .16 }, { x: IW * .9, y: IH * .4, R: m * .15 }, { x: IW * .55, y: IH * .95, R: m * .16 },
+               { x: IW * .08, y: IH * .85, R: m * .07 }, { x: IW * .92, y: IH * .88, R: m * .08 }, { x: IW * .74, y: IH * .1, R: m * .06 } ][g];
     }
     function spawn(){   // every drop starts just off screen, each from its own angle
       var diag = Math.hypot(IW, IH) * .56;
@@ -1775,6 +1778,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (!spawned) spawn();
       ic.style.opacity = mode === -1 ? 1 : 0;
       var u = smoothstep(.12, 2.15, pr.s), n = 0, hot = netHot, anyOpen = focus >= 0, m0 = Math.min(IW, IH);
+      var heroRect = heroCopy.getBoundingClientRect();
       for (var g = 0; g < 3; g++) fold[g] += ((focus === g ? 1 : 0) - fold[g]) * (1 - Math.exp(-dt * 4.5));
       for (var i = 0; i < D.length; i++) {
         var d = D[i], age = t - d.start, live = age > 0;
@@ -1810,6 +1814,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           // a soft, under-damped spring: the drop lags behind its path and overshoots, like something moving through water
           if (live) { var ar = smoothstep(0, 6, age), kk = .5 + 3.2 * ar, cc = 2.4 + (1 - ar) * 1.2; d.vx += ((tx - d.x) * kk - d.vx * cc) * dt; d.vy += ((ty - d.y) * kk - d.vy * cc) * dt }
         }
+        if (live && u < .6) {
+          var hr = heroRect, ex = (d.x - (hr.left + hr.width / 2)) / (hr.width * .5 + 40), ey = (d.y - (hr.top + hr.height / 2)) / (hr.height * .5 + 60), ed = Math.hypot(ex, ey);
+          if (ed < 1.25) { var push = (1.25 - ed) * 520 * (1 - u / .6); d.vx += ex / (ed + .01) * push * dt; d.vy += ey / (ed + .01) * push * dt }
+        }
         var vm = Math.hypot(d.vx, d.vy); if (vm > 220) { d.vx *= 220 / vm; d.vy *= 220 / vm }   // never in a hurry
         if (live || d.w) { d.x += d.vx * dt; d.y += d.vy * dt }
         if (!live) continue;
@@ -1821,7 +1829,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         B[n * 4] = d.x; B[n * 4 + 1] = d.y; B[n * 4 + 2] = r; B[n * 4 + 3] = soft;
         C1[n * 4] = k1[0] + (1 - k1[0]) * lift; C1[n * 4 + 1] = k1[1] + (1 - k1[1]) * lift; C1[n * 4 + 2] = k1[2] + (1 - k1[2]) * lift; C1[n * 4 + 3] = op * .97;
         C2[n * 4] = k2[0] + (1 - k2[0]) * lift; C2[n * 4 + 1] = k2[1] + (1 - k2[1]) * lift; C2[n * 4 + 2] = k2[2] + (1 - k2[2]) * lift; C2[n * 4 + 3] = grp;
-        var la2 = t * .07 + d.ph; O[n * 4] = Math.cos(la2) * .28; O[n * 4 + 1] = Math.sin(la2) * .28 - .1; O[n * 4 + 2] = 1; O[n * 4 + 3] = 0;
+        var la2 = t * .07 + d.ph; O[n * 4] = Math.cos(la2) * .28; O[n * 4 + 1] = Math.sin(la2) * .28 - .1; O[n * 4 + 2] = 1; O[n * 4 + 3] = d.ph * 3.1;
         V[n * 4] = spv > .01 ? d.vx / spv : 1; V[n * 4 + 1] = spv > .01 ? d.vy / spv : 0; V[n * 4 + 2] = d.sv; V[n * 4 + 3] = 0;
         n++;
       }
@@ -1829,7 +1837,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       gl.useProgram(pg); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[nx]); gl.viewport(0, 0, IW, IH);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(U.uPrev, 0);
       gl.uniform1f(U.uFade, 1 - Math.exp(-rdt * 1.3));   // long, slowly fading trails
-      gl.uniform2f(U.uRes, IW, IH); gl.uniform1f(U.uN, n); gl.uniform1f(U.uPx, 1);
+      gl.uniform2f(U.uRes, IW, IH); gl.uniform1f(U.uTime, t); gl.uniform1f(U.uN, n); gl.uniform1f(U.uPx, 1);
       gl.uniform4fv(U.uB, B); gl.uniform4fv(U.uC1, C1); gl.uniform4fv(U.uC2, C2); gl.uniform4fv(U.uO, O); gl.uniform4fv(U.uV, V);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
