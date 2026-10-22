@@ -74,6 +74,9 @@ header.over{background:var(--paper)}
 /* Page-change effect: sits over everything except the top bar */
 #navfx{position:fixed;inset:0;width:100vw;height:100vh;z-index:29;pointer-events:none;display:none}
 #navfx.live{display:block;pointer-events:auto}
+/* page changes: a pool of black ink spreads over the screen, the page swaps underneath, and the ink drains away */
+#inkfx{position:fixed;inset:0;width:100vw;height:100vh;z-index:29;pointer-events:none;display:none;mix-blend-mode:multiply}
+#inkfx.live{display:block;pointer-events:auto}
 html.instant *,html.instant *::before,html.instant *::after{transition:none !important}
 header.solid{background:rgba(248,248,246,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 /* Logo: rising bubbles that trace an S */
@@ -937,6 +940,7 @@ header.dark .hdr-exit{display:inline-flex}
 </header>
 
 <canvas id="navfx" aria-hidden="true"></canvas>
+<canvas id="inkfx" aria-hidden="true"></canvas>
 <main>
   <section class="stage" id="stage">
     <div class="pin" id="pin">
@@ -3222,25 +3226,57 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function paintPixels(list){ ntx.clearRect(0, 0, nt.width / navDpr, nt.height / navDpr); ntx.fillStyle = 'rgb(' + (list.bg || [248, 248, 246]).join(',') + ')'; ntx.fillRect(0, 0, innerWidth, innerHeight);
     for (var i = 0; i < list.length; i++) { var q = list[i]; ntx.fillStyle = 'rgba(' + q[3] + ',' + q[4] + ',' + q[5] + ',' + q[6] + ')'; dot(ntx, q[0], q[1], q[2]) } }
   var navDpr = 1;
+  // Page changes in ink: from where you clicked, black drops swell and merge until they cover the screen (their edges split into
+  // warm and cool colours, like the drops on the page), the next page is set up underneath, then the ink drains away and the page appears
+  var inkNavGL = null, navFrom = { x: innerWidth / 2, y: innerHeight / 2 };
+  addEventListener('pointerdown', function(e){ navFrom.x = e.clientX; navFrom.y = e.clientY }, { passive: true, capture: true });
+  function inkNavSetup(){
+    var c = $('inkfx'), g = c.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
+    if (!g) return null;
+    var vs = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+    var fs = ['precision highp float;uniform vec2 uRes,uO;uniform float uT;uniform vec4 uB[7];',
+      'vec3 hue(float h){ return clamp(vec3(abs(h*6.-3.)-1.,2.-abs(h*6.-2.),2.-abs(h*6.-4.)),0.,1.); }',
+      'float F(vec2 p){ float f=0.; for(int i=0;i<7;i++){ vec2 d=p-uB[i].xy; float th=atan(d.y,d.x); float r=uB[i].z*(1.+.08*sin(3.*th+uT*2.+uB[i].w)+.05*sin(5.*th-uT*1.5+uB[i].w*2.)); f+=r*r/(dot(d,d)+1.); } return f; }',
+      'void main(){ vec2 p=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y); vec2 dir=normalize(p-uO+1e-3); vec3 cv=vec3(0.), ws=vec3(0.);',
+      ' for(int k=0;k<10;k++){ float s=float(k)/9.; vec3 w=hue(s*.8); cv+=smoothstep(.85,1.15,F(p-dir*(s-.5)*70.))*w; ws+=w; }',
+      ' vec3 c=1.-cv/ws; float l=dot(c,vec3(.299,.587,.114)); c=clamp(mix(vec3(l),c,2.4),0.,1.); gl_FragColor=vec4(c,1.); }'].join('');
+    function sh(t, src){ var o = g.createShader(t); g.shaderSource(o, src); g.compileShader(o); return o }
+    var pg = g.createProgram(); g.attachShader(pg, sh(g.VERTEX_SHADER, vs)); g.attachShader(pg, sh(g.FRAGMENT_SHADER, fs)); g.linkProgram(pg); g.useProgram(pg);
+    var b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), g.STATIC_DRAW);
+    var la = g.getAttribLocation(pg, 'a'); g.enableVertexAttribArray(la); g.vertexAttribPointer(la, 2, g.FLOAT, false, 0, 0);
+    return { c: c, g: g, uRes: g.getUniformLocation(pg, 'uRes'), uO: g.getUniformLocation(pg, 'uO'), uT: g.getUniformLocation(pg, 'uT'), uB: g.getUniformLocation(pg, 'uB'), B: new Float32Array(28) };
+  }
   function pixelNav(apply){
     if (navBusy) return;
     if (reduce) { apply(); return }
+    if (!inkNavGL) inkNavGL = inkNavSetup();
+    if (!inkNavGL) { apply(); return }
     navBusy = true;
-    navDpr = Math.min(2, devicePixelRatio || 1);
-    nt.width = innerWidth * navDpr; nt.height = innerHeight * navDpr; ntx.setTransform(navDpr, 0, 0, navDpr, 0, 0);
-    var src = snapshot();
-    paintPixels(src); nt.style.opacity = 0; nt.classList.add('live');
-    var t0 = performance.now(), FADE = 260;
-    // the page turns into pixels…
-    (function fadeIn(now){
-      var k = clamp((now - t0) / FADE, 0, 1); nt.style.opacity = k;
-      if (k < 1) { requestAnimationFrame(fadeIn); return }
-      // …the next page is set up underneath…
-      document.documentElement.classList.add('instant');
-      apply();
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){ requestAnimationFrame(function(){
-        var dst = snapshot(); fly(src, dst);
-      }) }) });
+    var K = inkNavGL, g = K.g, sc = .5, w = Math.ceil(innerWidth * sc), h = Math.ceil(innerHeight * sc);
+    K.c.width = w; K.c.height = h; g.viewport(0, 0, w, h); K.c.classList.add('live');
+    var ox = navFrom.x, oy = navFrom.y, diag = Math.hypot(innerWidth, innerHeight);
+    // the far corner decides where the ink drains to
+    var ax = ox < innerWidth / 2 ? 1 : -1, ay = oy < innerHeight / 2 ? 1 : -1;
+    var seeds = []; for (var i = 0; i < 7; i++) { var an = i / 7 * 6.283 + Math.random() * .5; seeds.push({ a: an, d: .2 + Math.random() * .45, r: .4 + Math.random() * .25, ph: Math.random() * 6.28, dl: i * .04 }) }
+    var t0 = performance.now(), IN = 900, OUT = 1000, swapped = false;
+    function ease(x){ return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2 }
+    (function step(now){
+      var el = now - t0, tt = el / 1000;
+      for (var i = 0; i < 7; i++) {
+        var sd = seeds[i], gi = ease(clamp((el / IN) - sd.dl, 0, 1)), go = ease(clamp((el - IN - 60) / OUT - sd.dl, 0, 1));
+        // spreading out from the click, then sliding off towards the far side as it shrinks
+        var x = ox + Math.cos(sd.a) * diag * sd.d * gi + ax * diag * .9 * go, y = oy + Math.sin(sd.a) * diag * sd.d * gi + ay * diag * .9 * go;
+        var r = diag * sd.r * gi * gi * (1 - go);
+        K.B[i * 4] = x * sc; K.B[i * 4 + 1] = y * sc; K.B[i * 4 + 2] = r * sc; K.B[i * 4 + 3] = sd.ph;
+      }
+      g.uniform2f(K.uRes, w, h); g.uniform2f(K.uO, ox * sc, oy * sc); g.uniform1f(K.uT, tt); g.uniform4fv(K.uB, K.B);
+      g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
+      if (!swapped && el > IN + 20) {               // fully covered: the next page is set up underneath
+        swapped = true; document.documentElement.classList.add('instant'); apply();
+        requestAnimationFrame(function(){ document.documentElement.classList.remove('instant') });
+      }
+      if (el < IN + 120 + OUT * 1.3) { requestAnimationFrame(step); return }
+      K.c.classList.remove('live'); navBusy = false;
     })(t0);
   }
   function fly(src, dst){
