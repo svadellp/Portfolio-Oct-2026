@@ -172,6 +172,31 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .backbtn:hover span{transform:translateX(-4px)}
 
 /* Focused folder: details of the files, on the right */
+/* PROTOTYPE: constellations replace the folders */
+#folders,.peek{display:none!important}
+#sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none;filter:var(--sblur,none)}
+#sky.live{pointer-events:auto}
+#sky svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#sky .ln{fill:none;stroke:rgba(15,22,38,.28);stroke-width:1;stroke-dasharray:2 5;stroke-linecap:round;transition:stroke .35s,opacity .35s}
+#sky .ln.hot{stroke:var(--accent);stroke-dasharray:none;stroke-width:1.3}
+#sky .ln.dim{opacity:.25}
+#sky .st{transform-box:fill-box;transform-origin:center;fill:#14181F;transition:fill .3s,opacity .35s}
+#sky .st.tw{animation:twinkle var(--tw,3s) ease-in-out infinite;animation-delay:var(--td,0s)}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0deg);opacity:1}50%{transform:scale(.72) rotate(12deg);opacity:.7}}
+#sky .st.hot{fill:var(--accent)}
+#sky .st.dim{fill:rgba(20,24,32,.18)}
+#sky .hit{fill:transparent;cursor:pointer}
+#sky .glow{fill:var(--accent);opacity:0;transform-box:fill-box;transform-origin:center;transition:opacity .35s}
+#sky .glow.on{opacity:.1}
+#sky .lbl{position:absolute;font-size:13px;white-space:nowrap;pointer-events:none;transition:opacity .35s,color .3s,transform .4s var(--ease)}
+#sky .lbl small{display:block;font-size:11px;color:var(--grey);margin-top:1px}
+#sky .lbl.hot{color:var(--accent);transform:translateY(-2px)}
+#sky .lbl.dim{opacity:.3}
+#sky .cname{position:absolute;font-size:15px;font-weight:500;letter-spacing:-.01em;pointer-events:none;transition:color .3s,opacity .35s}
+#sky .cname i{font-style:normal;font-weight:400;color:var(--grey);margin-left:6px;font-size:12px}
+#sky .cname.hot{color:var(--accent)}
+#sky .cname.dim{opacity:.3}
+#sky .shint{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);font-size:12px;color:var(--grey);pointer-events:none}
 .peek{position:absolute;z-index:4;left:58%;right:var(--gutter);top:50%;transform:translateY(-50%);max-width:480px;opacity:0;pointer-events:none}
 .peek.live{pointer-events:auto}
 .peek .group{display:none}
@@ -920,6 +945,7 @@ header.dark .hdr-exit{display:inline-flex}
         <span class="meta"><em id="npLabel">Now playing</em> <span id="npTrack">[Track]</span> by <span id="npArtist">[Artist]</span></span>
       </a>
       <div id="folders"></div>
+      <div id="sky" aria-label="My work as constellations"></div>
       <aside class="peek" id="peek" aria-live="polite"></aside>
       <div id="views"></div>
     </div>
@@ -1522,6 +1548,72 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var g = rel >= .13 ? 46 - clamp((rel - .14) / .14, 0, 1) * 28 : 30 - clamp((rel + .06) / .1, 0, 1) * 14;
     return [g, g, g + 2];
   }
+  /* PROTOTYPE: each folder is a constellation of ideas; every piece of work is a named star */
+  var SKY = [
+    { g: 0, name: 'Projects', stars: [['ai-agent-hub', .05, .38, 24], ['wains', .19, .12, 22], ['prioticket-website', .34, .34, 20], ['ignite', .4, .82, 20], ['prioticket-brand', .17, .76, 18],
+      [null, .27, .58, 6], [null, .1, .58, 5], [null, .44, .1, 7]],
+      lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 5], [5, 4], [1, 7]] },
+    { g: 1, name: 'Labs', stars: [['3d-lab', .66, .16, 22], ['photo-lab', .9, .3, 22], [null, .78, .06, 7], [null, .8, .42, 5], [null, .97, .1, 6]],
+      lines: [[0, 2], [2, 1], [1, 3], [3, 0], [1, 4]] },
+    { g: 2, name: 'Rooms', stars: [['books', .64, .78, 20], ['music', .86, .68, 20], [null, .75, .95, 6], [null, .96, .88, 5]],
+      lines: [[0, 1], [0, 2], [2, 3], [3, 1]] }
+  ];
+  var skyEl, skySvg, skyPos = [], skyHot = null;
+  function skyItem(id){ for (var a = 0; a < FOLDERS.length; a++) for (var b = 0; b < FOLDERS[a].items.length; b++) if (FOLDERS[a].items[b].id === id) return FOLDERS[a].items[b] }
+  function starPath(cx, cy, r, inner){ var o = r, i = r * (inner || .26), pts = [[0, -o], [i, -i], [o, 0], [i, i], [0, o], [-i, i], [-o, 0], [-i, -i]];
+    return 'M' + pts.map(function(p){ return (cx + p[0]).toFixed(1) + ' ' + (cy + p[1]).toFixed(1) }).join(' L') + ' Z' }
+  function skyBuild(){
+    var first = !skyEl;
+    if (first) { skyEl = $('sky'); skyEl.innerHTML = '<svg aria-hidden="true"></svg>' }
+    var gut = parseFloat(getComputedStyle(header0).paddingLeft) || 24, top = narrow ? 130 : 150, bottom = narrow ? 150 : 150, k = narrow ? .7 : 1;
+    skyPos = SKY.map(function(c){ return c.stars.map(function(st){
+      var x = narrow ? gut + st[1] * (W - gut * 2) : gut + 40 + st[1] * (W - gut * 2 - 200), y = top + st[2] * (H - top - bottom);
+      return { id: st[0], x: x, y: y, r: st[3] * k * (narrow ? .9 : Math.min(1.15, W / 1300)) } }) });
+    // lines bend a little, so the constellations feel drawn by hand rather than by ruler
+    var svg = '', html = '';
+    SKY.forEach(function(c, ci){
+      c.lines.forEach(function(l, li){ var a = skyPos[ci][l[0]], b = skyPos[ci][l[1]], mxp = (a.x + b.x) / 2, myp = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y, bend = ((li * 37 + ci * 11) % 7 - 3) * .045;
+        svg += '<path class="ln" data-c="' + ci + '" d="M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ' Q' + (mxp - dy * bend).toFixed(1) + ' ' + (myp + dx * bend).toFixed(1) + ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1) + '"/>' });
+    });
+    SKY.forEach(function(c, ci){
+      skyPos[ci].forEach(function(p, si){
+        var tw = (2.4 + ((si * 7 + ci * 3) % 5) * .5) + 's', td = (-(si * 0.7 + ci)) + 's';
+        if (p.id) svg += '<circle class="glow" data-id="' + p.id + '" cx="' + p.x + '" cy="' + p.y + '" r="' + (p.r * 1.7) + '"/>';
+        svg += '<path class="st tw" data-c="' + ci + '"' + (p.id ? ' data-id="' + p.id + '"' : '') + ' style="--tw:' + tw + ';--td:' + td + '" d="' + starPath(p.x, p.y, p.r, p.id ? .24 : .3) + '"/>';
+        if (p.id) {
+          svg += '<circle class="hit" data-id="' + p.id + '" data-c="' + ci + '" cx="' + p.x + '" cy="' + p.y + '" r="' + Math.max(28, p.r * 1.8) + '"/>';
+          var it = skyItem(p.id), right = p.x < W * .78;
+          html += '<p class="lbl" data-id="' + p.id + '" data-c="' + ci + '" style="left:' + (right ? p.x + p.r + 10 : p.x - p.r - 10) + 'px;top:' + (p.y - 10) + 'px;' + (right ? '' : 'transform-origin:right;translate:-100% 0;text-align:right') + '">' + esc(it.title) + '<small>' + esc(it.kind) + '</small></p>';
+        }
+      });
+      var named = skyPos[ci].filter(function(p){ return p.id }), minY = Math.min.apply(null, named.map(function(p){ return p.y })), minX = Math.min.apply(null, named.map(function(p){ return p.x }));
+      html += '<p class="cname" data-c="' + ci + '" style="left:' + (minX - 10) + 'px;top:' + (minY - 62) + 'px">' + c.name + '<i>' + FOLDERS[ci].items.length + '</i></p>';
+    });
+    skyEl.innerHTML = '<svg aria-hidden="true">' + svg + '</svg>' + html + '<p class="shint">Each piece of work is a star. Hover to light up its constellation</p>';
+    skySvg = skyEl.querySelector('svg');
+    [].forEach.call(skyEl.querySelectorAll('.hit'), function(h){
+      h.addEventListener('pointerenter', function(){ skyLight(h.getAttribute('data-id'), +h.getAttribute('data-c')) });
+      h.addEventListener('pointerleave', function(){ skyLight(null, null) });
+      h.addEventListener('click', function(){ var id = h.getAttribute('data-id'); pixelNav(function(){ showCase(id) }) });
+    });
+  }
+  // light up a star and its whole constellation; everything else steps back
+  function skyLight(id, ci){
+    var any = ci != null;
+    [].forEach.call(skyEl.querySelectorAll('[data-c]'), function(el){ var mine = +el.getAttribute('data-c') === ci; el.classList.toggle('hot', any && mine); el.classList.toggle('dim', any && !mine) });
+    [].forEach.call(skyEl.querySelectorAll('.glow'), function(gl){ gl.classList.toggle('on', !!id && gl.getAttribute('data-id') === id) });
+  }
+  function skyCells(fc){                                     // the pixels gather into the stars and along the lines first
+    var out = [];
+    SKY.forEach(function(c, ci){
+      skyPos[ci].forEach(function(p){ var R = p.r * 1.35;
+        for (var y = -R; y <= R; y += fc) for (var x = -R; x <= R; x += fc) { var ax = Math.abs(x), ay = Math.abs(y); if (ax / R + ay / R * 3.2 > 1 && ay / R + ax / R * 3.2 > 1) continue;   // a star outline: two thin diamonds
+          out.push([p.x + x, p.y + y, 1, .6, .5, ci]) } });
+      c.lines.forEach(function(l){ var a = skyPos[ci][l[0]], b = skyPos[ci][l[1]], n = Math.floor(Math.hypot(b.x - a.x, b.y - a.y) / (fc * 3));
+        for (var j = 1; j < n; j++) out.push([a.x + (b.x - a.x) * j / n, a.y + (b.y - a.y) * j / n, 0, .3, 0, ci]) });
+    });
+    return out;
+  }
   function folderCells(fb, fc, base){
     var out = [], w = fb.w, h = fb.h, tabW = w * .38, tabH = h * .12, frontTop = h * .26, notch = fc * 2;
     for (var y = 0; y < h; y += fc) for (var x = 0; x < w; x += fc) {
@@ -1595,7 +1687,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     tCellsCache = textCells(tcell); textCount = tCellsCache.length;
     var fc = narrow ? 3 : 3;   // fine pixels, like the cloud
     var fCells = [];
-    fboxes.forEach(function(b, i){ fCells = fCells.concat(folderCells(b, fc, FOLDER_BASE[i % FOLDER_BASE.length]).map(function(c){ c.push(i); return c })) });
+    skyBuild();
+    fCells = skyCells(fc);
 
     var bc = narrow ? 3 : 4, bigSets = bigBoxes.map(function(b, i){ return folderCells(b, bc, FOLDER_BASE[i % FOLDER_BASE.length]) });
 
@@ -1838,7 +1931,12 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 
   /* ---------- Draw ---------- */
   // Pixels are round: a dot as wide as the old square
-  function dot(g, x, y, s){ if (s < 2.2) { g.fillRect(x - s / 2, y - s / 2, s, s); return } g.beginPath(); g.arc(x, y, s / 2, 0, 6.2832); g.fill() }   // too small to see the corners: a square is quicker
+  // PROTOTYPE: pixels are tiny four-pointed stars (a touch bigger than the dot they replace, so they read as stars)
+  function dot(g, x, y, s){
+    if (s < 1.6) { g.fillRect(x - s / 2, y - s / 2, s, s); return }
+    var o = s * .78, i = s * .2;
+    g.beginPath(); g.moveTo(x, y - o); g.lineTo(x + i, y - i); g.lineTo(x + o, y); g.lineTo(x + i, y + i); g.lineTo(x, y + o); g.lineTo(x - i, y + i); g.lineTo(x - o, y); g.lineTo(x - i, y - i); g.closePath(); g.fill();
+  }   // too small to see the corners: a square is quicker
   function draw(now){
     if (!P) { requestAnimationFrame(draw); return }
     var dt = Math.min(64, now - (lastNow || now)); lastNow = now;
@@ -1897,6 +1995,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       h.querySelector('.label').style.opacity = big ? 0 : 1;
       h.classList.toggle('live', big ? sharpBig > .7 : (sharpA > .7 && focus < 0));
     });
+    if (skyEl) { skyEl.style.opacity = reveal.toFixed(3); skyEl.style.setProperty('--sblur', reveal > .995 ? 'none' : 'blur(' + ((1 - reveal) * 8).toFixed(2) + 'px)'); skyEl.classList.toggle('live', sharpA > .7) }
     if (pendingFocus >= 0 && mode === -1 && sharpA > .75) { var pf = pendingFocus; pendingFocus = -1; setFocus(pf) }
     peek.style.opacity = (peekA * (mode === -1 ? 1 : 0)).toFixed(3);
     peek.style.transform = narrow ? 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)' : 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)';
@@ -2969,7 +3068,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function jump(y){ scrollTo({ top: y, behavior: 'instant' }) }
   function navHome(){ closeCase(); closeAbout(); leaveFocusNow(); jump(0); if (location.hash) history.replaceState(null, '', location.pathname + location.search) }
-  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); focusNow(k) }
+  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); setTimeout(function(){ if (skyEl) { skyLight(null, k); clearTimeout(navFolder.t); navFolder.t = setTimeout(function(){ skyLight(null, null) }, 2200) } }, 400) }
   function navAbout(){ closeCase(); openAbout() }
   function atHome(){ return !caseOpen && !aboutEl.classList.contains('live') && focus < 0 && scrollY < 4 }
   function atFolder(k){ return !caseOpen && !aboutEl.classList.contains('live') && focus === k }
