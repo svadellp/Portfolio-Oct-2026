@@ -172,30 +172,6 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .backbtn:hover span{transform:translateX(-4px)}
 
 /* Focused folder: details of the files, on the right */
-/* PROTOTYPE: the thinking wall replaces the folders */
-#folders,.peek{display:none!important}
-#wall{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none;filter:var(--wblur,none)}
-#wall.live{pointer-events:auto}
-#wall svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-#wall path{fill:none;stroke:rgba(15,22,38,.32);stroke-width:1;transition:stroke .3s,stroke-width .3s,opacity .3s}
-#wall path.hot{stroke:var(--accent);stroke-width:1.6}
-#wall path.dim{opacity:.25}
-#wall .theme{position:absolute;transform:translate(-50%,-50%);opacity:0;z-index:4;font-size:11px;letter-spacing:.02em;color:var(--grey);background:var(--paper);padding:1px 6px;border-radius:999px;pointer-events:none;transition:color .3s,opacity .3s,background .3s}
-#wall .theme.hot{color:#fff;background:var(--accent);opacity:1}
-#wall .theme.dim{opacity:0}
-#wall .wcard{position:absolute;padding:8px 8px 0;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.08),0 18px 30px -18px rgba(16,24,40,.45);cursor:pointer;
-  transform:translate(var(--x),var(--y)) rotate(var(--r));transform-origin:50% 0;transition:transform .5s var(--ease),box-shadow .4s,opacity .35s}
-#wall .wcard img{display:block;width:100%;aspect-ratio:5/6;object-fit:cover;background:#E9EAEC}
-#wall .wcard b{display:block;padding:8px 2px 2px;font-size:13px;font-weight:500;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#wall .wcard small{display:block;padding:0 2px 10px;font-size:11px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#wall .wcard::before{content:"";position:absolute;left:50%;top:-5px;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:#14181F;box-shadow:0 2px 3px rgba(0,0,0,.35);transition:background .3s}
-#wall .wcard:hover,#wall .wcard.hot{transform:translate(var(--x),var(--y)) rotate(0deg) scale(1.06);box-shadow:0 1px 2px rgba(16,24,40,.08),0 30px 44px -20px rgba(16,24,40,.5);z-index:3}
-#wall .wcard.hot::before,#wall .wcard:hover::before{background:var(--accent)}
-#wall .wcard.dim{opacity:.45}
-#wall .zone{position:absolute;font-size:13px;font-weight:500;transform:rotate(-2deg);pointer-events:none;transition:color .3s}
-#wall .zone i{font-style:normal;color:var(--grey);font-weight:400;margin-left:6px}
-#wall .zone.hot{color:var(--accent)}
-#wall .whint{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);font-size:12px;color:var(--grey);pointer-events:none}
 .peek{position:absolute;z-index:4;left:58%;right:var(--gutter);top:50%;transform:translateY(-50%);max-width:480px;opacity:0;pointer-events:none}
 .peek.live{pointer-events:auto}
 .peek .group{display:none}
@@ -944,7 +920,6 @@ header.dark .hdr-exit{display:inline-flex}
         <span class="meta"><em id="npLabel">Now playing</em> <span id="npTrack">[Track]</span> by <span id="npArtist">[Artist]</span></span>
       </a>
       <div id="folders"></div>
-      <div id="wall" aria-label="My work, pinned up"></div>
       <aside class="peek" id="peek" aria-live="polite"></aside>
       <div id="views"></div>
     </div>
@@ -1547,85 +1522,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var g = rel >= .13 ? 46 - clamp((rel - .14) / .14, 0, 1) * 28 : 30 - clamp((rel + .06) / .1, 0, 1) * 14;
     return [g, g, g + 2];
   }
-  /* PROTOTYPE: the thinking wall. Everything pinned up, connected by threads that show what the pieces share */
-  var WALL = [
-    { id: 'ai-agent-hub', g: 0, at: [.02, .1] }, { id: 'wains', g: 0, at: [.21, 0] }, { id: 'prioticket-website', g: 0, at: [.4, .12] },
-    { id: 'prioticket-brand', g: 0, at: [.1, .92] }, { id: 'ignite', g: 0, at: [.31, 1] },
-    { id: '3d-lab', g: 1, at: [.67, .02] }, { id: 'photo-lab', g: 1, at: [.88, .14] },
-    { id: 'books', g: 2, at: [.64, .9] }, { id: 'music', g: 2, at: [.85, 1] }
-  ];
-  var WALL_LINKS = [
-    ['ai-agent-hub', 'wains', 'AI'], ['wains', 'photo-lab', 'AI'], ['ai-agent-hub', 'prioticket-website', 'Product strategy'],
-    ['prioticket-website', 'prioticket-brand', 'Brand'], ['prioticket-brand', 'ignite', 'Brand'], ['ignite', '3d-lab', '3D & motion'],
-    ['ignite', 'music', 'Music'], ['photo-lab', 'books', 'Stories'], ['wains', 'books', 'Wellbeing']
-  ];
-  var wallEl, wallSvg, wallCards = {}, wallBoxes = [], wallHot = null;
-  function wallItem(id){ for (var a = 0; a < FOLDERS.length; a++) for (var b = 0; b < FOLDERS[a].items.length; b++) if (FOLDERS[a].items[b].id === id) return FOLDERS[a].items[b] }
-  function wallImg(id, it){
-    if (id === 'books' && typeof BOOKS !== 'undefined' && BOOKS.reading[0]) return 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/' + BOOKS.reading[0][2] + '.jpg';
-    if (id === 'music' && typeof MUSIC !== 'undefined' && MUSIC[0]) return MUSIC[0][2];
-    if (id === '3d-lab') return 'images/3d-lab-intro.jpg';
-    if (id === 'ai-agent-hub') return 'images/ai-agent-hub.jpg';
-    return it.img;
-  }
-  function wallBuild(){
-    if (!wallEl) {
-      wallEl = $('wall');
-      wallEl.innerHTML = '<svg aria-hidden="true"></svg>' + ['Projects', 'Labs', 'Rooms'].map(function(n, i){ return '<p class="zone" data-g="' + i + '">' + n + '<i>' + FOLDERS[i].items.length + '</i></p>' }).join('') +
-        WALL.map(function(w){ var it = wallItem(w.id); return '<button type="button" class="wcard" data-id="' + w.id + '" data-g="' + w.g + '"><img src="' + wallImg(w.id, it) + '" alt="" draggable="false"><b>' + esc(it.title) + '</b><small>' + esc(it.kind) + '</small></button>' }).join('') +
-        WALL_LINKS.map(function(l, i){ return '<span class="theme" data-l="' + i + '">' + l[2] + '</span>' }).join('') + '<p class="whint">Hover a piece to see what it connects to</p>';
-      wallSvg = wallEl.querySelector('svg');
-      wallSvg.innerHTML = WALL_LINKS.map(function(l, i){ return '<path data-l="' + i + '"></path>' }).join('');
-      [].forEach.call(wallEl.querySelectorAll('.wcard'), function(c){
-        wallCards[c.getAttribute('data-id')] = c;
-        c.addEventListener('pointerenter', function(){ wallLight(c.getAttribute('data-id')) });
-        c.addEventListener('pointerleave', function(){ wallLight(null) });
-        c.addEventListener('click', function(){ var id = c.getAttribute('data-id'); pixelNav(function(){ showCase(id) }) });
-      });
-    }
-    var gut = parseFloat(getComputedStyle(header0).paddingLeft) || 24, top = narrow ? 110 : 120, bottom = narrow ? 110 : 120;
-    var cw = narrow ? Math.min((W - gut * 2) / 3 - 12, 120) : Math.min(W * .105, (H - top - bottom) * .36, 190), chh = cw * 1.2 + 52;
-    wallBoxes = WALL.map(function(w, i){
-      var cx, cy;
-      if (narrow) { var col = i % 3, row = Math.floor(i / 3); cx = gut + (col + .5) * (W - gut * 2) / 3; cy = top + row * (chh + 26) + chh / 2 }
-      else { cx = gut + cw / 2 + w.at[0] * (W - gut * 2 - cw); cy = top + chh / 2 + w.at[1] * (H - top - bottom - chh) }
-      var r = ((i * 47) % 9 - 4) * .9;                          // a little crooked, like things pinned by hand
-      var b = { id: w.id, g: w.g, x: cx - cw / 2, y: cy - chh / 2, w: cw, h: chh, r: r };
-      var el = wallCards[w.id]; el.style.width = cw + 'px'; el.style.left = '0'; el.style.top = '0';
-      el.style.setProperty('--x', b.x + 'px'); el.style.setProperty('--y', b.y + 'px'); el.style.setProperty('--r', r + 'deg');
-      return b;
-    });
-    // group labels sit above the first card of each group
-    [0, 1, 2].forEach(function(gi){ var f = wallBoxes.filter(function(b){ return b.g === gi })[0], z = wallEl.querySelector('.zone[data-g="' + gi + '"]'); z.style.left = f.x + 'px'; z.style.top = (f.y - 34) + 'px' });
-    wallThreads();
-  }
-  function wallPin(id){ var b = wallBoxes.filter(function(q){ return q.id === id })[0]; return [b.x + b.w / 2, b.y + 2] }
-  function wallThreads(){
-    WALL_LINKS.forEach(function(l, i){
-      var a = wallPin(l[0]), b = wallPin(l[1]), mxp = (a[0] + b[0]) / 2, myp = (a[1] + b[1]) / 2 + Math.hypot(b[0] - a[0], b[1] - a[1]) * .14;   // threads sag a little
-      wallSvg.querySelector('path[data-l="' + i + '"]').setAttribute('d', 'M' + a[0] + ' ' + a[1] + ' Q' + mxp + ' ' + (myp + Math.hypot(b[0] - a[0], b[1] - a[1]) * .1) + ' ' + b[0] + ' ' + b[1]);
-      var t = wallEl.querySelector('.theme[data-l="' + i + '"]'); t.style.left = mxp + 'px'; t.style.top = (myp + Math.hypot(b[0] - a[0], b[1] - a[1]) * .05) + 'px';
-    });
-  }
-  // light up a piece, its threads, the themes and everything it connects to (a group lights up when called by the nav)
-  function wallLight(id, group){
-    var on = {}, hotL = {};
-    if (id) { on[id] = 1; WALL_LINKS.forEach(function(l, i){ if (l[0] === id || l[1] === id) { hotL[i] = 1; on[l[0]] = on[l[1]] = 1 } }) }
-    if (group != null) WALL.forEach(function(w){ if (w.g === group) on[w.id] = 1 });
-    var any = id || group != null;
-    WALL.forEach(function(w){ var c = wallCards[w.id]; c.classList.toggle('hot', !!id && w.id === id || group != null && w.g === group); c.classList.toggle('dim', any && !on[w.id]) });
-    WALL_LINKS.forEach(function(l, i){ var hot = !!hotL[i] || group != null && on[l[0]] && on[l[1]], pth = wallSvg.querySelector('path[data-l="' + i + '"]'), th = wallEl.querySelector('.theme[data-l="' + i + '"]');
-      pth.classList.toggle('hot', hot); pth.classList.toggle('dim', any && !hot); th.classList.toggle('hot', hot); th.classList.toggle('dim', any && !hot) });
-    [].forEach.call(wallEl.querySelectorAll('.zone'), function(z){ z.classList.toggle('hot', group != null && +z.getAttribute('data-g') === group) });
-  }
-  function wallCells(b, fc){                                 // the pixels gather into the cards before the real ones appear
-    var out = [], cs = Math.cos(b.r * Math.PI / 180), sn = Math.sin(b.r * Math.PI / 180), ox = b.x + b.w / 2, oy = b.y;
-    for (var y = 0; y < b.h; y += fc) for (var x = 0; x < b.w; x += fc) {
-      var lx = x + fc / 2 - b.w / 2, ly = y + fc / 2, img = ly < b.w * 1.2 + 8;
-      out.push([ox + lx * cs - ly * sn, oy + lx * sn + ly * cs, img ? 1 : 0, img ? .5 + ly / b.h * .3 : .12, img ? ly / b.h : 0]);
-    }
-    return out;
-  }
   function folderCells(fb, fc, base){
     var out = [], w = fb.w, h = fb.h, tabW = w * .38, tabH = h * .12, frontTop = h * .26, notch = fc * 2;
     for (var y = 0; y < h; y += fc) for (var x = 0; x < w; x += fc) {
@@ -1699,8 +1595,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     tCellsCache = textCells(tcell); textCount = tCellsCache.length;
     var fc = narrow ? 3 : 3;   // fine pixels, like the cloud
     var fCells = [];
-    wallBuild();
-    wallBoxes.forEach(function(b){ fCells = fCells.concat(wallCells(b, fc).map(function(c){ c.push(b.g); return c })) });
+    fboxes.forEach(function(b, i){ fCells = fCells.concat(folderCells(b, fc, FOLDER_BASE[i % FOLDER_BASE.length]).map(function(c){ c.push(i); return c })) });
 
     var bc = narrow ? 3 : 4, bigSets = bigBoxes.map(function(b, i){ return folderCells(b, bc, FOLDER_BASE[i % FOLDER_BASE.length]) });
 
@@ -2002,7 +1897,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       h.querySelector('.label').style.opacity = big ? 0 : 1;
       h.classList.toggle('live', big ? sharpBig > .7 : (sharpA > .7 && focus < 0));
     });
-    if (wallEl) { wallEl.style.opacity = reveal.toFixed(3); wallEl.style.setProperty('--wblur', reveal > .995 ? 'none' : 'blur(' + ((1 - reveal) * 10).toFixed(2) + 'px)'); wallEl.classList.toggle('live', sharpA > .7) }
     if (pendingFocus >= 0 && mode === -1 && sharpA > .75) { var pf = pendingFocus; pendingFocus = -1; setFocus(pf) }
     peek.style.opacity = (peekA * (mode === -1 ? 1 : 0)).toFixed(3);
     peek.style.transform = narrow ? 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)' : 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)';
@@ -3075,7 +2969,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function jump(y){ scrollTo({ top: y, behavior: 'instant' }) }
   function navHome(){ closeCase(); closeAbout(); leaveFocusNow(); jump(0); if (location.hash) history.replaceState(null, '', location.pathname + location.search) }
-  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); setTimeout(function(){ if (wallEl) { wallLight(null, k); clearTimeout(navFolder.t); navFolder.t = setTimeout(function(){ wallLight(null) }, 2200) } }, 400) }
+  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); focusNow(k) }
   function navAbout(){ closeCase(); openAbout() }
   function atHome(){ return !caseOpen && !aboutEl.classList.contains('live') && focus < 0 && scrollY < 4 }
   function atFolder(k){ return !caseOpen && !aboutEl.classList.contains('live') && focus === k }
