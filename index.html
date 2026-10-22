@@ -102,8 +102,8 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 /* PROTOTYPE 2: ink drops under a sheet of glass */
 #ink{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none;transition:opacity .6s}
 #glass{position:fixed;inset:0;z-index:1;pointer-events:none;
-  -webkit-backdrop-filter:blur(14px) saturate(185%);backdrop-filter:blur(14px) saturate(185%);
-  background:linear-gradient(160deg,rgba(255,255,255,.34),rgba(255,255,255,.06) 48%,rgba(255,255,255,.22)),radial-gradient(90% 60% at 12% 0%,rgba(255,255,255,.45),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(200,210,255,.18),transparent 65%)}
+  -webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%);
+  background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,0) 48%,rgba(255,255,255,.1)),radial-gradient(90% 60% at 12% 0%,rgba(255,255,255,.45),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(200,210,255,.18),transparent 65%)}
 #glass::after{content:'';position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
 
 .hero-copy{position:absolute;z-index:2;left:50%;top:48%;transform:translate(-50%,-50%);width:min(94vw,1200px);text-align:center;pointer-events:none}
@@ -1692,8 +1692,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       '  float lw=uPx*1.3/r;',
       '  float ln=exp(-pow((e-1.)/lw,2.))*crisp;',
       '  float inner=exp(-pow((e-1.-lw*3.)/(lw*1.6),2.))*crisp;',
-      '  T*=mix(vec3(1.),vec3(.25,.05,.04),ln*.35*op);',
-      '  T*=mix(vec3(1.),vec3(1.,.75,.3),inner*.3*op);',
+      '  ',
+      '  ',
       ' }',
       ' vec3 pv=texture2D(uPrev,gl_FragCoord.xy/uRes).rgb; pv=min(vec3(1.),mix(pv,vec3(1.),uFade)+1.5/255.);',
       ' gl_FragColor=vec4(min(pv,T),1.);',
@@ -1701,23 +1701,28 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     // the copy to screen splits red, green and blue apart a little: more towards the edges and around the pointer
     // chromatic dispersion on the way to the screen: the image is sampled along a flowing direction and every sample is
     // tinted with its slice of the spectrum, so edges break into red, orange, yellow on one side and cyan, blue, violet on the other
+    // chromatic aberration on the way to the screen. Near each drop the split runs along its direction of travel, so the black
+    // ink and its trail break into cyan, blue and violet on one side and red, orange and yellow on the other
     var CS = [
-      'precision highp float;uniform sampler2D uT;uniform vec2 uRes,uM;uniform float uAb,uT2;',
+      'precision highp float;uniform sampler2D uT;uniform vec2 uRes;uniform float uAb,uT2,uN;uniform vec4 uB[20];uniform vec4 uV[20];',
       'vec3 hue(float h){ return clamp(vec3(abs(h*6.-3.)-1.,2.-abs(h*6.-2.),2.-abs(h*6.-4.)),0.,1.); }',
-      'void main(){ vec2 uv=gl_FragCoord.xy/uRes;',
+      'void main(){ vec2 uv=gl_FragCoord.xy/uRes; vec2 pp=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);',
       ' float a=.7+.5*sin(uv.x*2.3+uv.y*1.7+uT2*.12)+.25*sin(uv.y*4.1-uT2*.09);',
-      ' float mp=0.;',
-      ' vec2 dir=vec2(cos(a),sin(a));',
-      ' float spread=uAb*(1.+mp*1.4);',
-      ' vec3 acc=vec3(0.), ws=vec3(0.);',
-      ' for(int k=0;k<12;k++){ float s=float(k)/11.; vec3 w=hue(s*.78); acc+=texture2D(uT,uv+dir*(s-.5)*spread*vec2(1.,uRes.x/uRes.y)).rgb*w; ws+=w; }',
-      ' gl_FragColor=vec4(acc/ws,1.);}'].join('');
+      ' vec2 acc=vec2(0.); float ws=0.;',
+      ' for(int i=0;i<20;i++){ if(float(i)>=uN) break; vec2 d=pp-uB[i].xy; float sg=uB[i].z*3.; float w=exp(-dot(d,d)/(sg*sg)); acc+=w*uV[i].xy*(.35+uV[i].z); ws+=w; }',
+      ' vec2 base=vec2(cos(a),sin(a)); float mag=ws>1e-4?length(acc/ws):0.;',
+      ' vec2 dir=normalize(mix(base*.4,acc/max(ws,1e-4),smoothstep(0.,.05,ws))+1e-4); dir.y=-dir.y;',
+      ' float spread=uAb*(.6+min(1.2,mag));',
+      ' vec3 c=vec3(0.), wt=vec3(0.);',
+      ' for(int k=0;k<16;k++){ float s=float(k)/15.; vec3 w=hue(s*.8); c+=texture2D(uT,uv-dir*s*spread*vec2(uRes.y/uRes.x,1.)).rgb*w; wt+=w; }',
+      ' c/=wt; float l=dot(c,vec3(.299,.587,.114)); c=clamp(mix(vec3(l),c,2.6),0.,1.); c=c*c*(3.-2.*c);',
+      ' gl_FragColor=vec4(c,1.);}'].join('');
     function sh(type, src){ var o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o)); return o }
     function prog(fs){ var o = gl.createProgram(); gl.attachShader(o, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(o, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(o); return o }
     var pg = prog(FS), cp = prog(CS);
     var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
     var U = {}; ['uRes','uN','uPx','uB','uC1','uC2','uO','uV','uPrev','uFade'].forEach(function(n){ U[n] = gl.getUniformLocation(pg, n) });
-    var CU = {}; ['uT','uRes','uM','uAb','uT2'].forEach(function(n){ CU[n] = gl.getUniformLocation(cp, n) });
+    var CU = {}; ['uT','uRes','uAb','uT2','uN','uB','uV'].forEach(function(n){ CU[n] = gl.getUniformLocation(cp, n) });
     var la = gl.getAttribLocation(pg, 'a'), cla = gl.getAttribLocation(cp, 'a');
     var tex = [], fbo = [], cur = 0;
     function makeTargets(w, h){
@@ -1733,10 +1738,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
     var B = new Float32Array(NB * 4), C1 = new Float32Array(NB * 4), C2 = new Float32Array(NB * 4), O = new Float32Array(NB * 4), V = new Float32Array(NB * 4);
     function rgb(h){ var c = hex(h); return [c[0] / 255, c[1] / 255, c[2] / 255] }
-    var INK = {
-      ember: ['#16040C', '#FF6A12'], flame: ['#C8120C', '#FFC23D'], amber: ['#FF5208', '#FFE58A'], rust: ['#4A0808', '#FF8A24'],
-      gold: ['#FF9416', '#FFF3C4'], night: ['#0E0838', '#2B3BFF'], ice: ['#2A1BFF', '#46ECFF'], sun: ['#FFC21F', '#FFFBE0']
-    };
+    // the drops are plain black ink: all the colour comes from the chromatic split around them and along their trails
+    var INK = { ember: ['#000000', '#0A0608'], flame: ['#000000', '#0A0608'], amber: ['#000000', '#0A0608'], rust: ['#000000', '#0A0608'],
+      gold: ['#000000', '#0A0608'], night: ['#000000', '#0A0608'], ice: ['#000000', '#0A0608'], sun: ['#000000', '#0A0608'] };
     var D = [
       { g: 0, k: 0, ink: 'ember' }, { g: 0, k: 1, ink: 'amber' }, { g: 0, k: 2, ink: 'ice' },
       { g: 1, k: 0, ink: 'flame' }, { g: 1, k: 1, ink: 'gold' }, { g: 1, k: 2, ink: 'night' },
@@ -1801,7 +1805,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           r = R * (loose ? .9 : (d.k === 2 ? .32 : .44) * (1 + .13 * Math.sin(t * .41 + d.ph * 2)));
           if (loose) { var lv = 1 - smoothstep(.15, .55, ug); r *= lv; op *= lv }
           if (anyOpen && focus !== gi) op *= Math.max(0, 1 - fold[focus] * 1.6);
-          soft = .02 + .85 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
+          soft = .02 + .35 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
           grp = loose ? 10 + i : gi; lift = .12 * u + .06 * ee;
           // a soft, under-damped spring: the drop lags behind its path and overshoots, like something moving through water
           if (live) { var ar = smoothstep(0, 6, age), kk = .5 + 3.2 * ar, cc = 2.4 + (1 - ar) * 1.2; d.vx += ((tx - d.x) * kk - d.vx * cc) * dt; d.vy += ((ty - d.y) * kk - d.vy * cc) * dt }
@@ -1815,7 +1819,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var spv = Math.hypot(d.vx, d.vy); d.sv += (Math.min(1.8, spv / 120) - d.sv) * .08;
         var k1 = rgb(c1), k2 = rgb(c2);
         B[n * 4] = d.x; B[n * 4 + 1] = d.y; B[n * 4 + 2] = r; B[n * 4 + 3] = soft;
-        C1[n * 4] = k1[0] + (1 - k1[0]) * lift; C1[n * 4 + 1] = k1[1] + (1 - k1[1]) * lift; C1[n * 4 + 2] = k1[2] + (1 - k1[2]) * lift; C1[n * 4 + 3] = op * .9;
+        C1[n * 4] = k1[0] + (1 - k1[0]) * lift; C1[n * 4 + 1] = k1[1] + (1 - k1[1]) * lift; C1[n * 4 + 2] = k1[2] + (1 - k1[2]) * lift; C1[n * 4 + 3] = op * .97;
         C2[n * 4] = k2[0] + (1 - k2[0]) * lift; C2[n * 4 + 1] = k2[1] + (1 - k2[1]) * lift; C2[n * 4 + 2] = k2[2] + (1 - k2[2]) * lift; C2[n * 4 + 3] = grp;
         var la2 = t * .07 + d.ph; O[n * 4] = Math.cos(la2) * .28; O[n * 4 + 1] = Math.sin(la2) * .28 - .1; O[n * 4 + 2] = 1; O[n * 4 + 3] = 0;
         V[n * 4] = spv > .01 ? d.vx / spv : 1; V[n * 4 + 1] = spv > .01 ? d.vy / spv : 0; V[n * 4 + 2] = d.sv; V[n * 4 + 3] = 0;
@@ -1824,14 +1828,14 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var nx = 1 - cur;
       gl.useProgram(pg); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[nx]); gl.viewport(0, 0, IW, IH);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(U.uPrev, 0);
-      gl.uniform1f(U.uFade, 1 - Math.exp(-rdt * 2.2));
+      gl.uniform1f(U.uFade, 1 - Math.exp(-rdt * 1.3));   // long, slowly fading trails
       gl.uniform2f(U.uRes, IW, IH); gl.uniform1f(U.uN, n); gl.uniform1f(U.uPx, 1);
       gl.uniform4fv(U.uB, B); gl.uniform4fv(U.uC1, C1); gl.uniform4fv(U.uC2, C2); gl.uniform4fv(U.uO, O); gl.uniform4fv(U.uV, V);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.useProgram(cp);
       gl.bindTexture(gl.TEXTURE_2D, tex[nx]); gl.uniform1i(CU.uT, 0); gl.uniform2f(CU.uRes, IW, IH);
-       gl.uniform1f(CU.uAb, .045); gl.uniform1f(CU.uT2, t);
+       gl.uniform1f(CU.uAb, .085); gl.uniform1f(CU.uN, n); gl.uniform4fv(CU.uB, B); gl.uniform4fv(CU.uV, V); gl.uniform1f(CU.uT2, t);
       gl.enableVertexAttribArray(cla); gl.vertexAttribPointer(cla, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       cur = nx;
