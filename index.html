@@ -110,6 +110,11 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .hero-line{font-size:var(--t-hero);font-weight:700;line-height:1.02;letter-spacing:-.045em;text-wrap:balance}
 .hero-loc{margin-bottom:clamp(16px,1.8vw,26px);font-size:clamp(13px,1vw,15px);font-weight:500;letter-spacing:.01em;color:var(--ink)}
 .hero-loc span,.services span{color:var(--grey);font-weight:400}
+/* PROTOTYPE 2: the copy is drawn as a negative of whatever is behind it, so it reads on paper and on ink */
+.hero-copy{mix-blend-mode:difference}
+.hero-copy .hero-line,.hero-copy .hero-loc,.hero-copy .services{color:#fff}
+.hero-copy .hero-loc span,.hero-copy .services span{color:#757575}
+#glass{-webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--mx,50%) var(--my,50%),rgba(0,0,0,.05) 0,rgba(0,0,0,.35) 45%,#000 100%);mask-image:radial-gradient(circle var(--lr,0px) at var(--mx,50%) var(--my,50%),rgba(0,0,0,.05) 0,rgba(0,0,0,.35) 45%,#000 100%)}
 .services{margin-top:clamp(24px,2.6vw,38px);font-size:clamp(15px,1.15vw,17px);color:var(--ink);font-weight:500;letter-spacing:.01em}
 
 /* Folders: invisible hit areas over the pixel folders, with their labels */
@@ -1629,28 +1634,34 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
 
   /* ---------- PROTOTYPE 2: ink drops ----------
-     Drops of ink fall onto the hero, spread, and keep drifting, pulling into each other with thin necks. Some edges are crisp with a
-     dark rim, some go soft like smoke. On scroll, three clusters fall down and become Projects, Labs and Rooms */
+     Drops of ink swim in from every side and flow like they're suspended in liquid: they lag, overshoot, stretch into
+     teardrops when they move fast and pull into each other with thin necks. A sheet of glass lies over everything,
+     the colours split slightly into red, green and blue at the edges, and the pointer stirs the liquid and wipes the glass clear.
+     On scroll, three clusters swim down and become Projects, Labs and Rooms */
   (function(){
-    var ic = $('ink'), gl = ic.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
+    var ic = $('ink'), glassEl = $('glass'), gl = ic.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
     if (!gl) return;
     var NB = 20;
     var VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
     var FS = [
       'precision highp float;',
-      'uniform vec2 uRes;uniform float uN,uPx;',
-      'uniform vec4 uB[20];uniform vec4 uC1[20];uniform vec4 uC2[20];uniform vec4 uO[20];uniform sampler2D uPrev;uniform float uFade;',
+      'uniform vec2 uRes;uniform float uN,uPx,uFade;uniform sampler2D uPrev;',
+      'uniform vec4 uB[20];uniform vec4 uC1[20];uniform vec4 uC2[20];uniform vec4 uO[20];uniform vec4 uV[20];',
       'void main(){',
       ' vec2 p=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);',
-      ' float f[20];',
-      ' for(int i=0;i<20;i++){ if(float(i)>=uN){f[i]=0.;continue;} vec2 d=p-uB[i].xy; f[i]=uB[i].z*uB[i].z/(dot(d,d)+1.); }',
+      ' float f[20]; vec2 dd[20];',
+      ' for(int i=0;i<20;i++){ f[i]=0.; dd[i]=vec2(1e4); if(float(i)>=uN) continue;',
+      '  vec2 d=p-uB[i].xy; vec4 v=uV[i];',
+      // stretch along the direction of travel: a long tail behind, a rounder head in front, thinner as it stretches
+      '  if(v.z>.001){ float a=dot(d,v.xy), b=dot(d,vec2(-v.y,v.x)); a = a<0. ? a/(1.+v.z*1.6) : a/(1.+v.z*.3); b*=1.+v.z*.45; d=vec2(a,b); }',
+      '  dd[i]=d; f[i]=uB[i].z*uB[i].z/(dot(d,d)+1.); }',
       ' vec3 T=vec3(1.);',
       ' for(int i=0;i<20;i++){ if(float(i)>=uN) break;',
       '  float e=f[i];',
       '  for(int j=0;j<20;j++){ if(j!=i && float(j)<uN && uC2[j].w==uC2[i].w){ e+=1.7*f[i]*f[j]/(f[i]+f[j]+1e-4); } }',
       '  float soft=uB[i].w, r=uB[i].z, op=uC1[i].w;',
       '  float a=smoothstep(1.-soft,1.+soft*.2+.02,e);',
-      '  vec2 c=uB[i].xy+uO[i].xy*r; float q=length(p-c)/r;',
+      '  float q=length(dd[i]-uO[i].xy*r)/r;',
       '  float g=pow(1.-smoothstep(0.,1.15,q),.8);',
       '  vec3 col=mix(uC2[i].rgb,uC1[i].rgb,g);',
       '  T*=mix(vec3(1.),col,a*op);',
@@ -1664,123 +1675,142 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       ' vec3 pv=texture2D(uPrev,gl_FragCoord.xy/uRes).rgb; pv=min(vec3(1.),mix(pv,vec3(1.),uFade)+1.5/255.);',
       ' gl_FragColor=vec4(min(pv,T),1.);',
       '}'].join('\n');
+    // the copy to screen splits red, green and blue apart a little: more towards the edges and around the pointer
+    var CS = [
+      'precision highp float;uniform sampler2D uT;uniform vec2 uRes,uM;uniform float uAb,uT2;',
+      'void main(){ vec2 uv=gl_FragCoord.xy/uRes; vec2 c=uv-.5; vec2 m=uv-uM; float mp=exp(-dot(m*uRes,m*uRes)/(2.*180.*180.));',
+      ' vec2 o=(c*uAb+normalize(m+1e-5)*mp*.006+vec2(sin(uT2*.7),cos(uT2*.5))*.0015);',
+      ' gl_FragColor=vec4(texture2D(uT,uv+o).r,texture2D(uT,uv).g,texture2D(uT,uv-o).b,1.);}'].join('');
     function sh(type, src){ var o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o)); return o }
-    var pg = gl.createProgram(); gl.attachShader(pg, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pg, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pg); gl.useProgram(pg);
+    function prog(fs){ var o = gl.createProgram(); gl.attachShader(o, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(o, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(o); return o }
+    var pg = prog(FS), cp = prog(CS);
     var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-    var la = gl.getAttribLocation(pg, 'a'); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
-    var U = {}; ['uRes','uN','uPx','uB','uC1','uC2','uO','uPrev','uFade'].forEach(function(n){ U[n] = gl.getUniformLocation(pg, n) });
-    var cp = gl.createProgram(); gl.attachShader(cp, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(cp, sh(gl.FRAGMENT_SHADER, 'precision highp float;uniform sampler2D uT;uniform vec2 uRes;void main(){gl_FragColor=texture2D(uT,gl_FragCoord.xy/uRes);}')); gl.linkProgram(cp);
-    var cpT = gl.getUniformLocation(cp, 'uT'), cpR = gl.getUniformLocation(cp, 'uRes'), cpA = gl.getAttribLocation(cp, 'a');
+    var U = {}; ['uRes','uN','uPx','uB','uC1','uC2','uO','uV','uPrev','uFade'].forEach(function(n){ U[n] = gl.getUniformLocation(pg, n) });
+    var CU = {}; ['uT','uRes','uM','uAb','uT2'].forEach(function(n){ CU[n] = gl.getUniformLocation(cp, n) });
+    var la = gl.getAttribLocation(pg, 'a'), cla = gl.getAttribLocation(cp, 'a');
     var tex = [], fbo = [], cur = 0;
     function makeTargets(w, h){
       for (var k = 0; k < 2; k++) {
         if (tex[k]) { gl.deleteTexture(tex[k]); gl.deleteFramebuffer(fbo[k]) }
         tex[k] = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex[k]);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(w * h * 4).fill(255));
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         fbo[k] = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[k]); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex[k], 0);
       }
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
-    var B = new Float32Array(NB * 4), C1 = new Float32Array(NB * 4), C2 = new Float32Array(NB * 4), O = new Float32Array(NB * 4);
+    var B = new Float32Array(NB * 4), C1 = new Float32Array(NB * 4), C2 = new Float32Array(NB * 4), O = new Float32Array(NB * 4), V = new Float32Array(NB * 4);
     function rgb(h){ var c = hex(h); return [c[0] / 255, c[1] / 255, c[2] / 255] }
-    // ink pairs [core, rim], taken from the reference: cyan, crimson with a pink halo, ultramarine fading to mint, violet smoke, deep teal, pink into blue
     var INK = {
       cyan: ['#00C8FF', '#0A5CFF'], crimson: ['#FF1F5A', '#FF8BC2'], ultra: ['#1A2BFF', '#3DFFB0'], smoke: ['#7A1FFF', '#E07BFF'],
-      teal: ['#00B3A4', '#4C6BFF'], pink: ['#FF4FB8', '#3A4BFF'], mint: ['#2CF5A0', '#1E7BFF'], lime: ['#A6FF3B', '#00C2FF'],
-      violet: ['#5B2BFF', '#FF5FD2'], sun: ['#FFD23F', '#FF4FB8']
+      pink: ['#FF4FB8', '#3A4BFF'], mint: ['#2CF5A0', '#1E7BFF'], lime: ['#A6FF3B', '#00C2FF'], violet: ['#5B2BFF', '#FF5FD2'], sun: ['#FFD23F', '#FF4FB8']
     };
-    // three clusters (they become the folders) and three loose drops that join them on the way down
     var D = [
       { g: 0, k: 0, ink: 'cyan' }, { g: 0, k: 1, ink: 'crimson' }, { g: 0, k: 2, ink: 'ultra' },
       { g: 1, k: 0, ink: 'smoke' }, { g: 1, k: 1, ink: 'lime' }, { g: 1, k: 2, ink: 'pink' },
       { g: 2, k: 0, ink: 'violet' }, { g: 2, k: 1, ink: 'cyan' }, { g: 2, k: 2, ink: 'mint' },
       { g: 3, k: 0, ink: 'smoke', near: 1 }, { g: 4, k: 0, ink: 'mint', near: 0 }, { g: 5, k: 0, ink: 'pink', near: 2 },
-      // wanderers: they roam the whole screen at their own pace and leave a fading trail
-      { w: 1, ink: 'cyan', sz: .055, sp: .045 }, { w: 1, ink: 'violet', sz: .03, sp: .07 }, { w: 1, ink: 'lime', sz: .022, sp: .085 },
-      { w: 1, ink: 'crimson', sz: .04, sp: .055 }, { w: 1, ink: 'ultra', sz: .075, sp: .03 }, { w: 1, ink: 'sun', sz: .018, sp: .1 }
+      { w: 1, ink: 'cyan', sz: .055, sp: 70 }, { w: 1, ink: 'violet', sz: .03, sp: 105 }, { w: 1, ink: 'lime', sz: .022, sp: 125 },
+      { w: 1, ink: 'crimson', sz: .04, sp: 85 }, { w: 1, ink: 'ultra', sz: .075, sp: 55 }, { w: 1, ink: 'sun', sz: .018, sp: 140 }
     ];
-    var order = [1, 4, 7, 0, 10, 5, 3, 8, 11, 2, 6, 9, 12, 13, 14, 15, 16, 17];   // the order the drops fall in
-    D.forEach(function(d, i){ d.ph = i * 1.37 + Math.random(); d.start = .25 + order.indexOf(i) * .2 });
-    var born = performance.now(), dpr = 1, IW = 0, IH = 0, last = born, fold = [0, 0, 0];
-    function size(){ dpr = 1; IW = ic.clientWidth; IH = ic.clientHeight; ic.width = Math.round(IW * dpr); ic.height = Math.round(IH * dpr); gl.viewport(0, 0, ic.width, ic.height); makeTargets(ic.width, ic.height) }
+    var order = [1, 12, 4, 7, 15, 0, 10, 5, 13, 3, 8, 16, 11, 2, 14, 6, 9, 17];
+    var born = performance.now(), dpr = 1, IW = 0, IH = 0, last = born, fold = [0, 0, 0], spawned = false;
+    var mv = { x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, lr: 0, sx: 0, sy: 0 };
+    function size(){ IW = ic.clientWidth; IH = ic.clientHeight; ic.width = IW; ic.height = IH; gl.viewport(0, 0, IW, IH); makeTargets(IW, IH) }
     size(); addEventListener('resize', size);
     function heroSpot(g){
       var m = Math.min(IW, IH);
       return [ { x: IW * .3, y: IH * .4, R: m * .17 }, { x: IW * .66, y: IH * .34, R: m * .15 }, { x: IW * .52, y: IH * .66, R: m * .16 },
                { x: IW * .14, y: IH * .72, R: m * .07 }, { x: IW * .86, y: IH * .62, R: m * .08 }, { x: IW * .8, y: IH * .16, R: m * .06 } ][g];
     }
+    function spawn(){   // every drop starts just off screen, each from its own angle
+      var diag = Math.hypot(IW, IH) * .62;
+      D.forEach(function(d, i){
+        var oi = order.indexOf(i), ang = oi * 2.39996 + .4;
+        d.x = IW / 2 + Math.cos(ang) * diag; d.y = IH / 2 + Math.sin(ang) * diag;
+        d.vx = -Math.cos(ang) * 120; d.vy = -Math.sin(ang) * 120; d.ph = i * 1.37 + Math.random(); d.start = .15 + oi * .16; d.sv = 0;
+      });
+      spawned = true;
+    }
     function frame(now){
       requestAnimationFrame(frame);
-      var t = (now - born) / 1000, rdt = Math.min(.3, (now - last) / 1000), dt = Math.min(.05, rdt); last = now;
+      var t = (now - born) / 1000, rdt = Math.min(.3, (now - last) / 1000), dt = Math.min(.04, rdt); last = now;
       var pr = inkPr; if (!pr || !IW || typeof fboxes === 'undefined' || !fboxes || !fboxes.length || !bigBoxes || !bigBoxes.length) return;
-      var show = mode === -1 && !document.body.classList.contains('incase');
-      ic.style.opacity = show ? 1 : 0;
-      if (!show && ic.style.opacity === '0' && t > 3) { /* keep drawing quietly so it's ready */ }
-      // 0 on the hero, 1 when the clusters have become folders
-      var u = smoothstep(.12, 2.15, pr.s);
-      var n = 0, hot = netHot, anyOpen = focus >= 0;
+      if (!spawned) spawn();
+      ic.style.opacity = mode === -1 ? 1 : 0;
+      // the pointer: its speed stirs the liquid, and the glass clears in a soft circle around it
+      if (mouse.on) { mv.vx += ((mouse.tx - mv.px) / Math.max(dt, .001) - mv.vx) * .25; mv.vy += ((mouse.ty - mv.py) / Math.max(dt, .001) - mv.vy) * .25; mv.px = mouse.tx; mv.py = mouse.ty }
+      else { mv.vx *= .9; mv.vy *= .9 }
+      mv.sx += (mouse.tx - mv.sx) * .18; mv.sy += (mouse.ty - mv.sy) * .18;
+      mv.lr += ((mouse.on ? 150 + Math.min(60, Math.hypot(mv.vx, mv.vy) * .05) : 0) - mv.lr) * .08;
+      glassEl.style.setProperty('--mx', mv.sx.toFixed(1) + 'px'); glassEl.style.setProperty('--my', mv.sy.toFixed(1) + 'px'); glassEl.style.setProperty('--lr', mv.lr.toFixed(1) + 'px');
+      var u = smoothstep(.12, 2.15, pr.s), n = 0, hot = netHot, anyOpen = focus >= 0, m0 = Math.min(IW, IH);
       for (var g = 0; g < 3; g++) fold[g] += ((focus === g ? 1 : 0) - fold[g]) * (1 - Math.exp(-dt * 4.5));
       for (var i = 0; i < D.length; i++) {
-        var d = D[i], age = t - d.start; if (age < 0) continue;
-        if (d.w) {   // a wanderer
-          var m0 = Math.min(IW, IH), wr = m0 * d.sz * (1 + .25 * Math.sin(t * .5 + d.ph)) * (1 - .35 * u);
-          var wx = IW * (-.15 + 1.3 * noise(t * d.sp + d.ph * 3, 3.1 + i)), wy = IH * (-.15 + 1.3 * noise(7.7 + i, t * d.sp * .9 + d.ph * 5));
-          if (mouse.on) { var mdx = wx - mouse.tx, mdy = wy - mouse.ty, md = Math.hypot(mdx, mdy) + 1; if (md < 160) { wx += mdx / md * (160 - md) * .35; wy += mdy / md * (160 - md) * .35 } }
-          var wf = .7, wrm = 1, wyo = 0;
-          if (age < wf) { var wq = age / wf; wyo = -(1 - wq * wq) * (wy + wr * 2); wrm = .4 } else { var wp = age - wf; wrm = 1 - .6 * Math.exp(-wp * 4) }
-          var wop = (1 - .45 * u) * (anyOpen ? .35 : 1), wc1 = rgb(INK[d.ink][0]), wc2 = rgb(INK[d.ink][1]);
-          B[n * 4] = wx * dpr; B[n * 4 + 1] = (wy + wyo) * dpr; B[n * 4 + 2] = wr * wrm * dpr; B[n * 4 + 3] = .02 + .7 * smoothstep(.4, .95, .5 + .5 * Math.sin(t * .23 + d.ph * 2));
-          C1[n * 4] = wc1[0]; C1[n * 4 + 1] = wc1[1]; C1[n * 4 + 2] = wc1[2]; C1[n * 4 + 3] = wop * .9;
-          C2[n * 4] = wc2[0]; C2[n * 4 + 1] = wc2[1]; C2[n * 4 + 2] = wc2[2]; C2[n * 4 + 3] = 30;
-          O[n * 4] = -.25; O[n * 4 + 1] = -.25; O[n * 4 + 2] = 1; O[n * 4 + 3] = 0;
-          n++; continue;
+        var d = D[i], age = t - d.start, live = age > 0;
+        var tx, ty, R, r, op = 1, soft, grp, c1 = INK[d.ink][0], c2 = INK[d.ink][1], lift = 0;
+        if (d.w) {
+          // wanderers follow a slow current that curls through the screen, and are pulled back gently if they drift off
+          var ang = noise(d.x * .0016 + d.ph, d.y * .0016 + t * .04) * 12.566, spd = d.sp * (1 - .4 * u);
+          var fx = Math.cos(ang) * spd, fy = Math.sin(ang) * spd;
+          if (live) { fx += (IW / 2 - d.x) * (d.x < -40 || d.x > IW + 40 ? .9 : .04); fy += (IH / 2 - d.y) * (d.y < -40 || d.y > IH + 40 ? .9 : .05) }
+          else { fx = d.vx; fy = d.vy }
+          d.vx += (fx - d.vx) * Math.min(1, dt * 1.1); d.vy += (fy - d.vy) * Math.min(1, dt * 1.1);
+          r = m0 * d.sz * (1 + .25 * Math.sin(t * .5 + d.ph)) * (1 - .35 * u);
+          op = (1 - .45 * u) * (anyOpen ? .35 : 1); soft = .02 + .7 * smoothstep(.4, .95, .5 + .5 * Math.sin(t * .23 + d.ph * 2)); grp = 30;
+        } else {
+          var loose = d.g >= 3, gi = loose ? d.near : d.g;
+          var hs = heroSpot(d.g), fh = ballHome(gi), fo = ballOpen(gi), e = fold[gi], ee = e * e * (3 - 2 * e);
+          var ug = clamp((u - gi * .07) / .86, 0, 1), ux = ug * ug * (3 - 2 * ug);
+          var gs = loose ? heroSpot(d.near) : hs, mt = loose ? smoothstep(0, .45, ug) : 0;
+          var cx = (hs.x + (gs.x - hs.x) * mt) * (1 - ux) + fh.x * ux, cy = (hs.y + (gs.y - hs.y) * mt) * (1 - ux) + fh.y * ux;
+          R = hs.R * (1 - ux) + fh.r * .78 * ux;
+          if (!loose && hot === gi && !anyOpen) R *= 1.08;
+          cx += (fo.x - cx) * ee; cy += (fo.y - cy) * ee; R += (fo.r * .8 - R) * ee;
+          // inside a cluster the drops wind around each other on figure-of-eight paths
+          var sp = (hot === gi && !anyOpen ? 1.7 : 1) * (.26 + gi * .03), a = t * sp + d.k * 2.094 + Math.sin(t * .31 + d.ph) * 1.1;
+          var dist = loose ? 0 : R * (.55 + .25 * Math.sin(t * .23 * (d.k + 1) + d.ph));
+          tx = cx + Math.cos(a) * dist; ty = cy + Math.sin(a * 2) * dist * .55 + Math.sin(a) * dist * .5;
+          r = R * (loose ? .9 : (d.k === 2 ? .32 : .44) * (1 + .13 * Math.sin(t * .41 + d.ph * 2)));
+          if (loose) { var lv = 1 - smoothstep(.15, .55, ug); r *= lv; op *= lv }
+          if (anyOpen && focus !== gi) op *= Math.max(0, 1 - fold[focus] * 1.6);
+          soft = .02 + .85 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
+          grp = loose ? 10 + i : gi; lift = .12 * u + .06 * ee;
+          // a soft, under-damped spring: the drop lags behind its path and overshoots, like something moving through water
+          if (live) { d.vx += ((tx - d.x) * 4.2 - d.vx * 2.1) * dt; d.vy += ((ty - d.y) * 4.2 - d.vy * 2.1) * dt }
         }
-        var loose = d.g >= 3, gi = loose ? d.near : d.g;
-        var hs = heroSpot(d.g), fh = ballHome(gi), fo = ballOpen(gi), e = fold[gi], ee = e * e * (3 - 2 * e);
-        // each cluster falls with a little delay after the one before it, accelerating like a drop
-        var ug = clamp((u - gi * .07) / .86, 0, 1), ux = ug * ug * (3 - 2 * ug), uy = ug < .5 ? 2 * ug * ug : 1 - Math.pow(-2 * ug + 2, 2) / 2;
-        var land = ug > .85 ? Math.sin((ug - .85) / .15 * Math.PI) * .06 : 0;   // a tiny squash as it arrives
-        var gs = loose ? heroSpot(d.near) : hs;
-        var cx = (loose ? hs.x + (gs.x - hs.x) * smoothstep(0, .45, ug) : hs.x) * (1 - ux) + fh.x * ux;
-        var cy = (loose ? hs.y + (gs.y - hs.y) * smoothstep(0, .45, ug) : hs.y) * (1 - uy) + fh.y * uy;
-        var R = (loose ? hs.R : hs.R) * (1 - ux) + fh.r * .78 * ux;
-        if (!loose && hot === gi && !anyOpen) R *= 1.07;
-        cx += (fo.x - cx) * ee; cy += (fo.y - cy) * ee; R += (fo.r * .8 - R) * ee;
-        // on the hero the drops lean a little towards the pointer
-        if (mouse.on && u < .5) { cx += (mouse.tx - cx) * .025 * (1 - u * 2); cy += (mouse.ty - cy) * .025 * (1 - u * 2) }
-        // inside a cluster the drops circle and pull at each other, like the reference
-        var sp = (hot === gi && !anyOpen ? 1.6 : 1) * (.22 + gi * .03), a = t * sp + d.k * 2.094 + Math.sin(t * .31 + d.ph) * .7;
-        var dist = loose ? 0 : R * (.5 + .2 * Math.sin(t * .23 * (d.k + 1) + d.ph));
-        var x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * 1.1;
-        var r = R * (loose ? .9 : (d.k === 2 ? .32 : .44) * (1 + .13 * Math.sin(t * .41 + d.ph * 2)));
-        // falling in: small and crisp from above, then a splash that spreads and settles
-        var fall = .75, op = 1, rm = 1, yo = 0;
-        if (age < fall) { var q = age / fall; yo = -(1 - q * q) * (y + r * 2); rm = .32 }
-        else { var p2 = age - fall; rm = 1 - .68 * Math.exp(-p2 * 4) + .1 * Math.sin(p2 * 9) * Math.exp(-p2 * 3) }
-        if (loose) { var lv = 1 - smoothstep(.15, .55, ug); rm *= lv; op *= lv; if (lv <= .01) continue; }
-        if (anyOpen && focus !== gi) { op *= Math.max(0, 1 - fold[focus] * 1.6); if (op < .01) continue }
-        // edges breathe between crisp ink and soft smoke
-        var soft = age < fall + .4 ? .02 : .02 + .85 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
-        var c1 = rgb(INK[d.ink][0]), c2 = rgb(INK[d.ink][1]), lift = .12 * u + .06 * ee;   // a little lighter once they are folders
-        B[n * 4] = x * dpr; B[n * 4 + 1] = (y + yo) * dpr; B[n * 4 + 2] = r * rm * (1 + land) * dpr; B[n * 4 + 3] = soft;
-        C1[n * 4] = c1[0] + (1 - c1[0]) * lift; C1[n * 4 + 1] = c1[1] + (1 - c1[1]) * lift; C1[n * 4 + 2] = c1[2] + (1 - c1[2]) * lift; C1[n * 4 + 3] = op * .9;
-        C2[n * 4] = c2[0] + (1 - c2[0]) * lift; C2[n * 4 + 1] = c2[1] + (1 - c2[1]) * lift; C2[n * 4 + 2] = c2[2] + (1 - c2[2]) * lift; C2[n * 4 + 3] = loose ? 10 + i : gi;
+        // the pointer stirs: drops near it are carried along with its movement and nudged aside
+        if (live && mouse.on) {
+          var mdx = d.x - mouse.tx, mdy = d.y - mouse.ty, md = Math.hypot(mdx, mdy) + 1, MR = 240;
+          if (md < MR) { var fall = 1 - md / MR; fall *= fall; d.vx += (mv.vx * 1.6 * fall + mdx / md * 260 * fall) * dt * 2.2; d.vy += (mv.vy * 1.6 * fall + mdy / md * 260 * fall) * dt * 2.2 }
+        }
+        if (live || d.w) { d.x += d.vx * dt; d.y += d.vy * dt }
+        if (!live) continue;
+        // grow in as they arrive
+        var gin = smoothstep(0, 1.4, age); r *= .55 + .45 * gin; op *= smoothstep(0, .5, age);
+        if (op < .01 || r < .5) continue;
+        var spv = Math.hypot(d.vx, d.vy); d.sv += (Math.min(2.4, spv / 110) - d.sv) * .2;
+        var k1 = rgb(c1), k2 = rgb(c2);
+        B[n * 4] = d.x; B[n * 4 + 1] = d.y; B[n * 4 + 2] = r; B[n * 4 + 3] = soft;
+        C1[n * 4] = k1[0] + (1 - k1[0]) * lift; C1[n * 4 + 1] = k1[1] + (1 - k1[1]) * lift; C1[n * 4 + 2] = k1[2] + (1 - k1[2]) * lift; C1[n * 4 + 3] = op * .9;
+        C2[n * 4] = k2[0] + (1 - k2[0]) * lift; C2[n * 4 + 1] = k2[1] + (1 - k2[1]) * lift; C2[n * 4 + 2] = k2[2] + (1 - k2[2]) * lift; C2[n * 4 + 3] = grp;
         var la2 = t * .07 + d.ph; O[n * 4] = Math.cos(la2) * .28; O[n * 4 + 1] = Math.sin(la2) * .28 - .1; O[n * 4 + 2] = 1; O[n * 4 + 3] = 0;
+        V[n * 4] = spv > .01 ? d.vx / spv : 1; V[n * 4 + 1] = spv > .01 ? d.vy / spv : 0; V[n * 4 + 2] = d.sv; V[n * 4 + 3] = 0;
         n++;
       }
       var nx = 1 - cur;
-      gl.useProgram(pg); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[nx]); gl.viewport(0, 0, ic.width, ic.height);
+      gl.useProgram(pg); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[nx]); gl.viewport(0, 0, IW, IH);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(U.uPrev, 0);
-      gl.uniform1f(U.uFade, 1 - Math.exp(-rdt * 2.2));   // how fast the trails fade
-      gl.uniform2f(U.uRes, ic.width, ic.height); gl.uniform1f(U.uN, n); gl.uniform1f(U.uPx, dpr);
-      gl.uniform4fv(U.uB, B); gl.uniform4fv(U.uC1, C1); gl.uniform4fv(U.uC2, C2); gl.uniform4fv(U.uO, O);
+      gl.uniform1f(U.uFade, 1 - Math.exp(-rdt * 2.2));
+      gl.uniform2f(U.uRes, IW, IH); gl.uniform1f(U.uN, n); gl.uniform1f(U.uPx, 1);
+      gl.uniform4fv(U.uB, B); gl.uniform4fv(U.uC1, C1); gl.uniform4fv(U.uC2, C2); gl.uniform4fv(U.uO, O); gl.uniform4fv(U.uV, V);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.useProgram(cp);
-      gl.bindTexture(gl.TEXTURE_2D, tex[nx]); gl.uniform1i(cpT, 0); gl.uniform2f(cpR, ic.width, ic.height);
-      gl.enableVertexAttribArray(cpA); gl.vertexAttribPointer(cpA, 2, gl.FLOAT, false, 0, 0);
+      gl.bindTexture(gl.TEXTURE_2D, tex[nx]); gl.uniform1i(CU.uT, 0); gl.uniform2f(CU.uRes, IW, IH);
+      gl.uniform2f(CU.uM, mv.sx / IW, 1 - mv.sy / IH); gl.uniform1f(CU.uAb, .022); gl.uniform1f(CU.uT2, t);
+      gl.enableVertexAttribArray(cla); gl.vertexAttribPointer(cla, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       cur = nx;
     }
