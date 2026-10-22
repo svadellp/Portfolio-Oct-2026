@@ -98,7 +98,16 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
    ============================================================ */
 .stage{position:relative}
 .pin{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
-#field{position:absolute;inset:0;width:100%;height:100%}
+#field{position:absolute;inset:0;width:100%;height:100%;opacity:0}
+/* PROTOTYPE 2: ink drops under a sheet of glass */
+#ink{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none;transition:opacity .6s}
+.hero-copy{isolation:isolate}
+.hero-copy::before{content:'';position:absolute;z-index:-1;inset:-6vh -4vw;border-radius:36px;opacity:var(--glass,1);
+  background:linear-gradient(135deg,rgba(255,255,255,.62),rgba(255,255,255,.18) 45%,rgba(255,255,255,.42));
+  -webkit-backdrop-filter:blur(34px) saturate(170%);backdrop-filter:blur(34px) saturate(170%);
+  border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.3),0 40px 90px -50px rgba(30,30,80,.35)}
+.hero-copy::after{content:'';position:absolute;z-index:-1;inset:-6vh -4vw;border-radius:36px;opacity:calc(var(--glass,1) * .7);pointer-events:none;
+  background:radial-gradient(120% 70% at 15% 0%,rgba(255,255,255,.55),transparent 55%),radial-gradient(80% 60% at 100% 100%,rgba(190,200,255,.25),transparent 60%)}
 
 .hero-copy{position:absolute;z-index:2;left:50%;top:48%;transform:translate(-50%,-50%);width:min(94vw,1200px);text-align:center;pointer-events:none}
 .hero-line{font-size:var(--t-hero);font-weight:700;line-height:1.02;letter-spacing:-.045em;text-wrap:balance}
@@ -175,7 +184,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 /* PROTOTYPE: three floating balls of ideas replace the folders */
 #folders{display:none!important}
 #sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
-#sky [data-c="0"]{--cc:#7B4FD6}#sky [data-c="1"]{--cc:#C0569E}#sky [data-c="2"]{--cc:#5E78DB}
+#sky [data-c="0"]{--cc:#1F8FBF}#sky [data-c="1"]{--cc:#7A3FB0}#sky [data-c="2"]{--cc:#2433D6}
 #sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .4s,transform .5s var(--ease)}
 #sky .cname b{display:block;font-size:var(--t-h3);font-weight:500;letter-spacing:-.02em;transition:color .3s}
 #sky .cname b i{font-style:normal;color:var(--grey);margin-right:.35em;font-variant-numeric:tabular-nums;transition:color .3s}
@@ -892,7 +901,7 @@ header.dark .hdr-exit{display:inline-flex}
 </style>
 </head>
 <body>
-<div id="protoBadge" style="position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;padding:4px 10px;border-radius:999px;background:#7B4FD6;color:#fff;font:500 11px/1.2 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none">PROTOTYPE</div>
+<div id="protoBadge" style="position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;padding:4px 10px;border-radius:999px;background:#7B4FD6;color:#fff;font:500 11px/1.2 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none">PROTOTYPE 2 · INK</div>
 
 
 <header id="top">
@@ -914,6 +923,7 @@ header.dark .hdr-exit{display:inline-flex}
 <main>
   <section class="stage" id="stage">
     <div class="pin" id="pin">
+      <canvas id="ink" aria-hidden="true"></canvas>
       <canvas id="field" aria-hidden="true"></canvas>
       <div class="hero-copy" id="heroCopy">
         <p class="hero-loc"><span>Working from:</span> Amsterdam, NL</p>
@@ -1550,7 +1560,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   /* PROTOTYPE: three balls of ideas, floating, drawn the way the brain is: a halftone of dots that swell with a flowing field,
      warm spots of colour that wander through them, and the odd flash. Click one and it moves left, big, with its pieces on the right */
-  var netT = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], ballSig = [[], [], []], ballFlash = [[], [], []];
+  var inkPr = null, netT = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], ballSig = [[], [], []], ballFlash = [[], [], []];
   function ballHome(ci){ var b = fboxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .62, H * .2) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .58 } }
   function netBuild(){
@@ -1619,6 +1629,123 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       }
     }
   }
+
+  /* ---------- PROTOTYPE 2: ink drops ----------
+     Drops of ink fall onto the hero, spread, and keep drifting, pulling into each other with thin necks. Some edges are crisp with a
+     dark rim, some go soft like smoke. On scroll, three clusters fall down and become Projects, Labs and Rooms */
+  (function(){
+    var ic = $('ink'), gl = ic.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
+    if (!gl) return;
+    var NB = 12;
+    var VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+    var FS = [
+      'precision highp float;',
+      'uniform vec2 uRes;uniform float uN,uPx;',
+      'uniform vec4 uB[12];uniform vec4 uC1[12];uniform vec4 uC2[12];uniform vec4 uO[12];',
+      'void main(){',
+      ' vec2 p=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);',
+      ' float f[12];',
+      ' for(int i=0;i<12;i++){ if(float(i)>=uN){f[i]=0.;continue;} vec2 d=p-uB[i].xy; f[i]=uB[i].z*uB[i].z/(dot(d,d)+1.); }',
+      ' vec3 T=vec3(1.);',
+      ' for(int i=0;i<12;i++){ if(float(i)>=uN) break;',
+      '  float e=f[i];',
+      '  for(int j=0;j<12;j++){ if(j!=i && float(j)<uN && uC2[j].w==uC2[i].w){ e+=1.7*f[i]*f[j]/(f[i]+f[j]+1e-4); } }',
+      '  float soft=uB[i].w, r=uB[i].z, op=uC1[i].w;',
+      '  float a=smoothstep(1.-soft,1.+soft*.2+.02,e);',
+      '  vec2 c=uB[i].xy+uO[i].xy*r; float q=length(p-c)/r;',
+      '  float g=pow(1.-smoothstep(0.,1.15,q),.8);',
+      '  vec3 col=mix(uC2[i].rgb,uC1[i].rgb,g);',
+      '  T*=mix(vec3(1.),col,a*op);',
+      '  float crisp=(1.-smoothstep(.05,.35,soft))*uO[i].z;',
+      '  float lw=uPx*1.3/r;',
+      '  float ln=exp(-pow((e-1.)/lw,2.))*crisp;',
+      '  float inner=exp(-pow((e-1.-lw*3.)/(lw*1.6),2.))*crisp;',
+      '  T*=mix(vec3(1.),vec3(.12,.12,.34),ln*.7*op);',
+      '  T*=mix(vec3(1.),vec3(.25,.45,1.),inner*.5*op);',
+      ' }',
+      ' gl_FragColor=vec4(T,1.);',
+      '}'].join('\n');
+    function sh(type, src){ var o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o)); return o }
+    var pg = gl.createProgram(); gl.attachShader(pg, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pg, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pg); gl.useProgram(pg);
+    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    var la = gl.getAttribLocation(pg, 'a'); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
+    var U = {}; ['uRes','uN','uPx','uB','uC1','uC2','uO'].forEach(function(n){ U[n] = gl.getUniformLocation(pg, n) });
+    var B = new Float32Array(NB * 4), C1 = new Float32Array(NB * 4), C2 = new Float32Array(NB * 4), O = new Float32Array(NB * 4);
+    function rgb(h){ var c = hex(h); return [c[0] / 255, c[1] / 255, c[2] / 255] }
+    // ink pairs [core, rim], taken from the reference: cyan, crimson with a pink halo, ultramarine fading to mint, violet smoke, deep teal, pink into blue
+    var INK = {
+      cyan: ['#239FC6', '#1C74B4'], crimson: ['#B3163E', '#F27BA6'], ultra: ['#2433D6', '#55E8A6'], smoke: ['#3B1E5E', '#B98FE6'],
+      teal: ['#1C3A3F', '#6F7FD0'], pink: ['#F07AA8', '#2B3CDA'], mint: ['#46DFA0', '#2B5BE0']
+    };
+    // three clusters (they become the folders) and three loose drops that join them on the way down
+    var D = [
+      { g: 0, k: 0, ink: 'cyan' }, { g: 0, k: 1, ink: 'crimson' }, { g: 0, k: 2, ink: 'ultra' },
+      { g: 1, k: 0, ink: 'smoke' }, { g: 1, k: 1, ink: 'ultra' }, { g: 1, k: 2, ink: 'pink' },
+      { g: 2, k: 0, ink: 'teal' }, { g: 2, k: 1, ink: 'cyan' }, { g: 2, k: 2, ink: 'mint' },
+      { g: 3, k: 0, ink: 'smoke', near: 1 }, { g: 4, k: 0, ink: 'mint', near: 0 }, { g: 5, k: 0, ink: 'pink', near: 2 }
+    ];
+    var order = [1, 4, 7, 0, 10, 5, 3, 8, 11, 2, 6, 9];   // the order the drops fall in
+    D.forEach(function(d, i){ d.ph = i * 1.37 + Math.random(); d.start = .25 + order.indexOf(i) * .2 });
+    var born = performance.now(), dpr = 1, IW = 0, IH = 0, last = born, fold = [0, 0, 0];
+    function size(){ dpr = Math.min(1.5, devicePixelRatio || 1); IW = ic.clientWidth; IH = ic.clientHeight; ic.width = Math.round(IW * dpr); ic.height = Math.round(IH * dpr); gl.viewport(0, 0, ic.width, ic.height) }
+    size(); addEventListener('resize', size);
+    function heroSpot(g){
+      var m = Math.min(IW, IH);
+      return [ { x: IW * .3, y: IH * .4, R: m * .17 }, { x: IW * .66, y: IH * .34, R: m * .15 }, { x: IW * .52, y: IH * .66, R: m * .16 },
+               { x: IW * .14, y: IH * .72, R: m * .07 }, { x: IW * .86, y: IH * .62, R: m * .08 }, { x: IW * .8, y: IH * .16, R: m * .06 } ][g];
+    }
+    function frame(now){
+      requestAnimationFrame(frame);
+      var t = (now - born) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
+      var pr = inkPr; if (!pr || !IW || typeof fboxes === 'undefined' || !fboxes || !fboxes.length || !bigBoxes || !bigBoxes.length) return;
+      var show = mode === -1 && !document.body.classList.contains('incase');
+      ic.style.opacity = show ? 1 : 0;
+      if (!show && ic.style.opacity === '0' && t > 3) { /* keep drawing quietly so it's ready */ }
+      // 0 on the hero, 1 when the clusters have become folders
+      var u = smoothstep(.12, 2.15, pr.s);
+      var n = 0, hot = netHot, anyOpen = focus >= 0;
+      for (var g = 0; g < 3; g++) fold[g] += ((focus === g ? 1 : 0) - fold[g]) * (1 - Math.exp(-dt * 4.5));
+      for (var i = 0; i < D.length; i++) {
+        var d = D[i], age = t - d.start; if (age < 0) continue;
+        var loose = d.g >= 3, gi = loose ? d.near : d.g;
+        var hs = heroSpot(d.g), fh = ballHome(gi), fo = ballOpen(gi), e = fold[gi], ee = e * e * (3 - 2 * e);
+        // each cluster falls with a little delay after the one before it, accelerating like a drop
+        var ug = clamp((u - gi * .07) / .86, 0, 1), ux = ug * ug * (3 - 2 * ug), uy = ug < .5 ? 2 * ug * ug : 1 - Math.pow(-2 * ug + 2, 2) / 2;
+        var land = ug > .85 ? Math.sin((ug - .85) / .15 * Math.PI) * .06 : 0;   // a tiny squash as it arrives
+        var gs = loose ? heroSpot(d.near) : hs;
+        var cx = (loose ? hs.x + (gs.x - hs.x) * smoothstep(0, .45, ug) : hs.x) * (1 - ux) + fh.x * ux;
+        var cy = (loose ? hs.y + (gs.y - hs.y) * smoothstep(0, .45, ug) : hs.y) * (1 - uy) + fh.y * uy;
+        var R = (loose ? hs.R : hs.R) * (1 - ux) + fh.r * .78 * ux;
+        if (!loose && hot === gi && !anyOpen) R *= 1.07;
+        cx += (fo.x - cx) * ee; cy += (fo.y - cy) * ee; R += (fo.r * .8 - R) * ee;
+        // on the hero the drops lean a little towards the pointer
+        if (mouse.on && u < .5) { cx += (mouse.tx - cx) * .025 * (1 - u * 2); cy += (mouse.ty - cy) * .025 * (1 - u * 2) }
+        // inside a cluster the drops circle and pull at each other, like the reference
+        var sp = (hot === gi && !anyOpen ? 1.6 : 1) * (.22 + gi * .03), a = t * sp + d.k * 2.094 + Math.sin(t * .31 + d.ph) * .7;
+        var dist = loose ? 0 : R * (.5 + .2 * Math.sin(t * .23 * (d.k + 1) + d.ph));
+        var x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * 1.1;
+        var r = R * (loose ? .9 : (d.k === 2 ? .32 : .44) * (1 + .13 * Math.sin(t * .41 + d.ph * 2)));
+        // falling in: small and crisp from above, then a splash that spreads and settles
+        var fall = .75, op = 1, rm = 1, yo = 0;
+        if (age < fall) { var q = age / fall; yo = -(1 - q * q) * (y + r * 2); rm = .32 }
+        else { var p2 = age - fall; rm = 1 - .68 * Math.exp(-p2 * 4) + .1 * Math.sin(p2 * 9) * Math.exp(-p2 * 3) }
+        if (loose) { var lv = 1 - smoothstep(.15, .55, ug); rm *= lv; op *= lv; if (lv <= .01) continue; }
+        if (anyOpen && focus !== gi) { op *= Math.max(0, 1 - fold[focus] * 1.6); if (op < .01) continue }
+        // edges breathe between crisp ink and soft smoke
+        var soft = age < fall + .4 ? .02 : .02 + .85 * smoothstep(.35, .95, .5 + .5 * Math.sin(t * .19 * (1 + d.k * .35) + d.ph * 3));
+        var c1 = rgb(INK[d.ink][0]), c2 = rgb(INK[d.ink][1]), lift = .28 * u + .1 * ee;   // a little lighter once they are folders
+        B[n * 4] = x * dpr; B[n * 4 + 1] = (y + yo) * dpr; B[n * 4 + 2] = r * rm * (1 + land) * dpr; B[n * 4 + 3] = soft;
+        C1[n * 4] = c1[0] + (1 - c1[0]) * lift; C1[n * 4 + 1] = c1[1] + (1 - c1[1]) * lift; C1[n * 4 + 2] = c1[2] + (1 - c1[2]) * lift; C1[n * 4 + 3] = op * .86;
+        C2[n * 4] = c2[0] + (1 - c2[0]) * lift; C2[n * 4 + 1] = c2[1] + (1 - c2[1]) * lift; C2[n * 4 + 2] = c2[2] + (1 - c2[2]) * lift; C2[n * 4 + 3] = loose ? 10 + i : gi;
+        var la2 = t * .07 + d.ph; O[n * 4] = Math.cos(la2) * .28; O[n * 4 + 1] = Math.sin(la2) * .28 - .1; O[n * 4 + 2] = 1; O[n * 4 + 3] = 0;
+        n++;
+      }
+      gl.uniform2f(U.uRes, ic.width, ic.height); gl.uniform1f(U.uN, n); gl.uniform1f(U.uPx, dpr);
+      gl.uniform4fv(U.uB, B); gl.uniform4fv(U.uC1, C1); gl.uniform4fv(U.uC2, C2); gl.uniform4fv(U.uO, O);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    requestAnimationFrame(frame);
+  })();
 
   function folderCells(fb, fc, base){
     var out = [], w = fb.w, h = fb.h, tabW = w * .38, tabH = h * .12, frontTop = h * .26, notch = fc * 2;
@@ -1966,7 +2093,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 
 
     // HTML layers
-    heroLine.style.opacity = 1 - pr.swap;
+    heroLine.style.opacity = 1 - pr.swap; heroCopy.style.setProperty('--glass', (1 - smoothstep(0, .8, pr.swap)).toFixed(3)); inkPr = pr;
     heroCopy.querySelector('.services').style.opacity = heroCopy.querySelector('.hero-loc').style.opacity = 1 - smoothstep(0, .6, pr.swap);
     // Once the pixels have formed the folders, sharp folders take their place (and hand back when leaving)
     // It starts while the last pixels are landing, and follows the scroll with a little lag so it never pops
