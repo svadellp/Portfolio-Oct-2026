@@ -916,7 +916,6 @@ header.dark .hdr-exit{display:inline-flex}
   </svg></a>
   <nav aria-label="Main">
     <a href="#work" id="workLink" data-t="Projects">Projects</a>
-    <a href="#lab" id="labLink" data-t="Labs">Labs</a>
     <a href="#rooms" id="shelfLink" data-t="Rooms">Rooms</a>
   </nav>
   <button type="button" class="hdr-exit" id="exitRoom" data-t="Exit Room">Exit Room</button>
@@ -1001,22 +1000,16 @@ var FOLDERS = [
       text: 'A techno and art collective I co-founded with three friends. I lead the brand, the 3D sphere identity and the animated event announcements.',
       result: '', id: 'ignite' }
   ]},
-  { name: 'Labs', count: '2 labs', hint: 'Pick a lab to see the experiments', items: [
-    { title: '3D Lab', kind: '3D and motion, since January 2023', img: 'images/furry-ball.jpg',
-      text: 'Self-initiated 3D and motion graphics pieces, ideated, designed and produced in Blender.',
-      result: '', id: '3d-lab' },
-    { title: 'Photo Lab', kind: 'AI image making, creative direction', img: 'images/ai/ai-110.jpg',
-      text: 'A small gallery of images I art-directed with AI: portraits, rituals and quiet surreal scenes.',
-      result: '', id: 'photo-lab' }
-  ]},
-  // Third folder: name to be decided. Change it here; everything else follows.
-  { name: 'Rooms', count: '2 rooms', hint: 'Pick a room to get curious', items: [
+  { name: 'Rooms', count: '3 rooms', hint: 'Pick a room to get curious', items: [
     { title: 'Books', kind: 'Reading, read and want to read', img: 'images/project-2.jpg',
       text: 'My Goodreads shelves: what is on my nightstand, what I have read and the (very long) list of what comes next.',
       result: '', id: 'books' },
     { title: 'Music', kind: 'My Spotify playlists, on vinyl', img: 'images/project-3.jpg',
       text: 'A listening room: pull a record from the crate, drop it on the turntable and flip through my playlists.',
-      result: '', id: 'music' }
+      result: '', id: 'music' },
+    { title: 'Sketchbook', kind: '3D, motion and AI image making', img: 'images/furry-ball.jpg',
+      text: 'Where I play: 3D and motion pieces made in Blender, and images I art-direct with AI. My sketchbook for art direction.',
+      result: '', id: 'sketchbook' }
   ]}
 ];
 
@@ -1564,17 +1557,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      Labs breathes between order and scatter, like an experiment loosening and coming back together;
      Rooms swirls, its bands of dots turning at different speeds like a gas planet, denser at the poles.
      Click one and it moves left, big, with its pieces on the right */
-  var peekShow = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0, sphHot = [0, 0, 0];
+  var NF = FOLDERS.length, SPH_STYLE = NF === 2 ? [2, 1] : [0, 1, 2], peekShow = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0, sphHot = [0, 0, 0];
   function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .5, H * .17) };
-    return { x: W * [.2, .5, .8][ci], y: b.y + b.h / 2, r: Math.min(W * .1, H * .19) } }
+    return { x: W * (NF === 2 ? [.3, .7] : [.2, .5, .8])[ci], y: b.y + b.h / 2, r: Math.min(W * (NF === 2 ? .13 : .1), H * (NF === 2 ? .22 : .19)) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .5 } }
   function sphBuild(){
     var N = narrow ? 520 : 950; SPH = [];
-    for (var c = 0; c < 3; c++) {
-      var P = { x: new Float32Array(N), y: new Float32Array(N), z: new Float32Array(N), a: new Float32Array(N), b: new Float32Array(N), q: new Float32Array(N), n: N };
+    for (var c = 0; c < NF; c++) {
+      var sty = SPH_STYLE[c], P = { x: new Float32Array(N), y: new Float32Array(N), z: new Float32Array(N), a: new Float32Array(N), b: new Float32Array(N), q: new Float32Array(N), n: N, sty: sty };
       for (var i = 0; i < N; i++) {
         var y, r, th;
-        if (c < 2) { y = 1 - 2 * (i + .5) / N; th = i * 2.39996 }                      // an even lattice
+        if (sty < 2) { y = 1 - 2 * (i + .5) / N; th = i * 2.39996 }                      // an even lattice
         else { var u = Math.random() * 2 - 1; y = (u < 0 ? -1 : 1) * Math.pow(Math.abs(u), .55); th = Math.random() * 6.2832 }   // gathered towards the poles
         r = Math.sqrt(Math.max(0, 1 - y * y));
         P.x[i] = Math.cos(th) * r; P.y[i] = y; P.z[i] = Math.sin(th) * r; P.a[i] = th; P.b[i] = Math.random() * 6.2832; P.q[i] = Math.random();
@@ -1584,10 +1577,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   var _p = [0, 0, 0];
   function sphPoint(c, i, t){
-    var P = SPH[c], x = P.x[i], y = P.y[i], z = P.z[i], ph = P.b[i], q = P.q[i];
-    if (c === 0) {                                    // Projects: steady, with ripples travelling from pole to pole
+    var P = SPH[c], x = P.x[i], y = P.y[i], z = P.z[i], ph = P.b[i], q = P.q[i], sty = P.sty;
+    if (sty === 0) {                                    // Projects: steady, with ripples travelling from pole to pole
       var s = 1 + .04 * Math.sin(y * 7 - t * .8); x *= s; y *= s; z *= s;
-    } else if (c === 1) {                             // Labs: loosens into a scatter and gathers back, about every twenty seconds
+    } else if (sty === 1) {                             // Labs: loosens into a scatter and gathers back, about every twenty seconds
       var k = .5 - .5 * Math.cos(t * .3), w = k * k;
       var dx = Math.sin(ph * 3 + t * .4) * .5 + Math.sin(ph * 7 - t * .27) * .25, dy = Math.cos(ph * 5 + t * .33) * .5, dz = Math.sin(ph * 2 - t * .37) * .5;
       var rr = 1 + (q - .5) * .55 * w;
@@ -1597,7 +1590,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       x = Math.cos(lon) * r2 * br; z = Math.sin(lon) * r2 * br; y *= br;
     }
     // turn the whole sphere slowly, tilted towards the viewer
-    var yaw = t * [.12, .08, .04][c], tilt = [.38, .3 + .15 * Math.sin(t * .07), .26][c];
+    var yaw = t * [.12, .08, .04][sty], tilt = [.38, .3 + .15 * Math.sin(t * .07), .26][sty];
     var cy = Math.cos(yaw), sy = Math.sin(yaw), x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
     var ct = Math.cos(tilt), st = Math.sin(tilt), y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
     _p[0] = x1; _p[1] = y2; _p[2] = z2; return _p;
@@ -1611,7 +1604,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function netPlace(){ if (!skyEl) return; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ var h = ballHome(ci); el.style.left = h.x + 'px'; el.style.top = (h.y + h.r + 30) + 'px' }) }
   function netCells(){                                // the pixels from the brain gather into the spheres first
     var out = [];
-    for (var ci = 0; ci < 3; ci++) { var h = ballHome(ci), P = SPH[ci];
+    for (var ci = 0; ci < NF; ci++) { var h = ballHome(ci), P = SPH[ci];
       for (var i = 0; i < P.n; i += 2) { var p = sphPoint(ci, i, 0); if (p[2] < -.25) continue; out.push([h.x + p[0] * h.r, h.y - p[1] * h.r, 1, .5, .4, ci]) } }
     return out;
   }
@@ -1650,7 +1643,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   var heroClock = 0, FLX = null, FLY = null, flowLast = -1;
   // the swarm keeps its own positions: each dot is carried by a slow current that mostly runs sideways and curls into streams
   function flowStep(t, dt){
-    var N = SPH[0].n, M = 3 * N;
+    var N = SPH[0].n, M = NF * N;
     if (!FLX || FLX.length !== M) { FLX = new Float32Array(M); FLY = new Float32Array(M); for (var j = 0; j < M; j++) { FLX[j] = Math.random() * W; FLY[j] = 70 + Math.random() * (H - 140) } }
     if (flowLast === t) return; flowLast = t;
     for (var k = 0; k < M; k++) {
@@ -1679,17 +1672,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
     if (HERO_V === 3) {                                // Sea: a field of dots rolling like water, each third becomes a sphere
       var cc = Math.ceil(Math.sqrt(N * .9)), rc = Math.ceil(N / cc), gz = Math.floor(i / cc) / (rc - 1);
-      var gx = (c + (i % cc + .5) / cc) / 3 * 2.4 - 1.2, wv = .07 * Math.sin(gx * 5 + t * .55) + .05 * Math.sin(gz * 9 - t * .4) + .03 * Math.sin((gx + gz) * 11 + t * .7);
+      var gx = (c + (i % cc + .5) / cc) / NF * 2.4 - 1.2, wv = .07 * Math.sin(gx * 5 + t * .55) + .05 * Math.sin(gz * 9 - t * .4) + .03 * Math.sin((gx + gz) * 11 + t * .7);
       var zf = 1 + gz * 3; out[0] = W / 2 + gx * W * .75 / zf; out[1] = H * .42 + H * .62 / zf - wv * H * .6 / zf; out[2] = 1.6 / zf - .6; out[3] = .75 + .25 / zf; out[4] = (1 - 1 / zf) * .35;
       return out;
     }
     if (HERO_V === 7 || HERO_V === 8) {               // Matrix: a regular grid of dots covering the whole hero, each third of it becomes a sphere
-      var rowsM = Math.max(8, Math.round(Math.sqrt(N * (H - 70) / (W / 3)))), colsM = Math.ceil(N / rowsM), col = i % colsM, row = Math.floor(i / colsM);
-      var gx2 = (c * colsM + col + .5) / (3 * colsM) * W, gy2 = 64 + (row + .5) / rowsM * (H - 70), f = 0, dx2 = 0, dy2 = 0, near = 9;
+      var rowsM = Math.max(8, Math.round(Math.sqrt(N * (H - 70) / (W / NF)))), colsM = Math.ceil(N / rowsM), col = i % colsM, row = Math.floor(i / colsM);
+      var gx2 = (c * colsM + col + .5) / (NF * colsM) * W, gy2 = 64 + (row + .5) / rowsM * (H - 70), f = 0, dx2 = 0, dy2 = 0, near = 9;
       if (HERO_V === 7) {
         // three soft lenses drift under the grid, one for each sphere: the dots swell and lean outward over them
-        for (var k = 0; k < 3; k++) {
-          var lx = W * (.25 + .25 * k) + Math.sin(t * .11 + k * 2.1) * W * .12, ly = H * .5 + Math.sin(t * .09 + k * 1.3) * H * .18, lr = Math.min(W, H) * .2;
+        for (var k = 0; k < NF; k++) {
+          var lx = W * (k + 1) / (NF + 1) + Math.sin(t * .11 + k * 2.1) * W * .12, ly = H * .5 + Math.sin(t * .09 + k * 1.3) * H * .18, lr = Math.min(W, H) * .2;
           var ex = gx2 - lx, ey = gy2 - ly, ed = Math.sqrt(ex * ex + ey * ey), g = Math.exp(-ed * ed / (lr * lr));
           f += g; dx2 += ex * g * .22; dy2 += ey * g * .22; if (k === c) near = ed / lr;
         }
@@ -1706,17 +1699,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
     var x, y, z, R, cx0 = W / 2, cy0 = H * .5, tilt, yaw, dl;
     if (HERO_V === 4) {                                // Galaxy: a slow spiral with three arms, one for each sphere
-      var q2 = ((i * 4241) % 1000) / 1000, r = Math.pow((i + .5) / N, .75) * (.9 + q2 * .2), th = c * 2.0944 + r * 3.4 + (q - .5) * 1.1 * (1.15 - r * .6);
+      var q2 = ((i * 4241) % 1000) / 1000, r = Math.pow((i + .5) / N, .75) * (.9 + q2 * .2), th = c * 6.2832 / NF + r * 3.4 + (q - .5) * 1.1 * (1.15 - r * .6);
       x = Math.cos(th) * r; z = Math.sin(th) * r; y = (((i * 3571) % 1000) / 1000 - .5) * .08 * (1 - r * .7);
       R = m * .5; tilt = 1.05; yaw = t * .05; dl = r * .3;
     } else if (HERO_V === 5) {                         // Silk: one long twisting band of dots drifting across the screen
-      var rows = 10, L = Math.ceil(N / rows), al = i % L, ac = Math.floor(i / L) / (rows - 1) - .5, sv = (c + al / L) / 3;
+      var rows = 10, L = Math.ceil(N / rows), al = i % L, ac = Math.floor(i / L) / (rows - 1) - .5, sv = (c + al / L) / NF;
       var px = (sv * 2 - 1) * 1.35, py = .22 * Math.sin(sv * 5 + t * .3), pz = .35 * Math.cos(sv * 4 - t * .22), ph = sv * 5.5 + t * .18;
       x = px; y = py + Math.cos(ph) * ac * .32; z = pz + Math.sin(ph) * ac * .32;
       R = W * .45; cy0 = H * .5; tilt = .15; yaw = 0; dl = sv * .35;
     } else {                                           // Ring: a large ring of dots, each third becomes a sphere
       var tubes = 14, L2 = Math.ceil(N / tubes), al2 = i % L2, ar = Math.floor(i / L2);
-      var aa = (c + al2 / L2) / 3 * 6.2832, bb = ar / tubes * 6.2832 + t * .25 + aa * 2, rt = .26;
+      var aa = (c + al2 / L2) / NF * 6.2832, bb = ar / tubes * 6.2832 + t * .25 + aa * 2, rt = .26;
       x = (1 + rt * Math.cos(bb)) * Math.cos(aa); z = (1 + rt * Math.cos(bb)) * Math.sin(aa); y = rt * Math.sin(bb);
       R = m * .36; tilt = 1.15; yaw = t * .045; dl = q * .3;
     }
@@ -1728,10 +1721,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   var _h = [0, 0, 0, 0, 0];
   function heroSys(t, dt, pr){
     if (mode !== -1 || focus >= 0 || fTrans || pr.s >= T_FOLDERS - .001 || !SPH.length) return;
-    heroClock += dt; for (var c0 = 0; c0 < 3; c0++) sphT[c0] += dt;
+    heroClock += dt; for (var c0 = 0; c0 < NF; c0++) sphT[c0] += dt;
     if (HERO_V === 9) flowStep(heroClock, Math.min(dt, .05));   // the spheres keep turning while they are still the hero
     var u = smoothstep(.02, T_FOLDERS - .2, pr.s);
-    for (var c = 0; c < 3; c++) {
+    for (var c = 0; c < NF; c++) {
       var h = ballHome(c), P = SPH[c], uc = clamp((u - c * .05) / .9, 0, 1), base = cell * .3;
       for (var i = 0; i < P.n; i++) {
         var p = sphPoint(c, i, sphT[c]), d = (p[2] + 1.2) / 2.2;
@@ -1757,13 +1750,13 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var FO = focus >= 0 ? focus : (lastFocus >= 0 && ballF[lastFocus] > .001 ? lastFocus : -1);
 
     if (focus < 0 && FO < 0) txtFor = -1;
-    for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
+    for (var c = 0; c < NF; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
-    if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
+    if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < NF; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
     if (hb !== netHot) { netHot = hb; cv.style.cursor = hb >= 0 ? 'pointer' : ''; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ el.classList.toggle('hot', ci === hb) }) }
     var namesGone = anyOpen || FO >= 0; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', namesGone) });
-    for (c = 0; c < 3; c++) {
+    for (c = 0; c < NF; c++) {
       var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
       var ga = 1, dis = FO >= 0 && c !== FO && txtPts.length ? ballF[FO] : 0;   // how far this sphere has turned into the list's letters
       if (FO >= 0 && c !== FO && !txtPts.length) { ga = Math.max(0, 1 - ballF[FO] * 1.6); if (ga < .01) continue }
@@ -2542,6 +2535,16 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }, true);
   }
   /* ---------- Photo lab: two slow rails of AI images, a quiet lightbox ---------- */
+  // Sketchbook: the 3D pieces on one rail and the AI images on the other
+  CASES.sketchbook = {
+    title: 'Sketchbook', sub: 'Where I play. 3D and motion pieces I make from scratch, and images I art-direct with AI: a mood, a prompt and a few hundred rewrites.',
+    meta: [], noHero: true, room: true, tint: '#FFFFFF', chrome: true,
+    items: CASES['3d-lab'].items.map(function(a){ return [0, a[1], a[2], a[3], a[4], a[5]] }).concat(AI_IMAGES.map(function(a){ return [1, 'images/ai/' + a[1], a[2], a[3], a[4], ''] })),
+    notes: [['Why I do it', 'It’s my sketchbook for art direction. I love a good challenge, and these pieces let me test a mood, a composition, the light and the motion before anything real gets made.'],
+      ['How I work', 'Every 3D piece is ideated, designed and produced by me, from concept to edit. Every AI image starts with a reference board and a short brief, then rounds of prompting until it reads like a photograph with intent.'],
+      ['Tools', [['Blender', 'Modelling, simulations, materials and rendering'], ['Premiere Pro', 'Editing, timing and sound'], ['Midjourney', 'Image generation, mostly in raw mode']]]],
+    blocks: [['gallery', '']]
+  };
   function galleryItems(c){ return c.items || AI_IMAGES.map(function(a){ return [a[0], 'images/ai/' + a[1], a[2], a[3], a[4], ''] }) }
   function galleryRoom(c, id){
     var items = galleryItems(c);
@@ -3224,7 +3227,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function focusNow(k){
     leaveFocusNow();
-    focus = k; bigIdx = k; sharpA = 1; sharpBig = 1; netLand = 1; for (var bq = 0; bq < 3; bq++) ballF[bq] = bq === k ? 1 : 0;   // arriving by a link: already open and moving
+    focus = k; bigIdx = k; sharpA = 1; sharpBig = 1; netLand = 1; for (var bq = 0; bq < FOLDERS.length; bq++) ballF[bq] = bq === k ? 1 : 0;   // arriving by a link: already open and moving
     fTrans = { from: S_FOLDERS, to: S_BIG0 + k, start: performance.now() - FOCUS_MS * 2 };
     groups.forEach(function(g, i){ g.classList.toggle('on', i === k) }); pick(k, -1);
   }
@@ -3251,7 +3254,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function atHome(){ return !caseOpen && !aboutEl.classList.contains('live') && focus < 0 && scrollY < 4 }
   function atFolder(k){ return !caseOpen && !aboutEl.classList.contains('live') && focus === k }
   document.querySelector('.mark').addEventListener('click', function(e){ e.preventDefault(); if (!atHome()) pixelNav(navHome) });
-  [['workLink', 0], ['labLink', 1], ['shelfLink', 2]].forEach(function(l){
+  [['workLink', 0], ['shelfLink', 1]].forEach(function(l){
     $(l[0]).addEventListener('click', function(e){ e.preventDefault(); if (!atFolder(l[1])) pixelNav(function(){ navFolder(l[1]) }) });
   });
 
