@@ -1642,7 +1642,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      (old) One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
      2 Orbit: the three spheres already circle the tagline, small, passing in front and behind; on scroll they come forward into a row.
      3 Sea: a wide field of dots rolling like water in perspective; on scroll it lifts, row by row, and wraps into the three spheres. */
-  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 6 ? +q : 3 })();
+  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 8 ? +q : 7 })();
   var heroClock = 0;
   function heroPos(c, i, t, out){
     var P = SPH[c], N = P.n, m = Math.min(W, H), q = ((i * 7919) % 1000) / 1000;
@@ -1650,6 +1650,27 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var cc = Math.ceil(Math.sqrt(N * .9)), rc = Math.ceil(N / cc), gz = Math.floor(i / cc) / (rc - 1);
       var gx = (c + (i % cc + .5) / cc) / 3 * 2.4 - 1.2, wv = .07 * Math.sin(gx * 5 + t * .55) + .05 * Math.sin(gz * 9 - t * .4) + .03 * Math.sin((gx + gz) * 11 + t * .7);
       var zf = 1 + gz * 3; out[0] = W / 2 + gx * W * .75 / zf; out[1] = H * .42 + H * .62 / zf - wv * H * .6 / zf; out[2] = 1.6 / zf - .6; out[3] = .75 + .25 / zf; out[4] = (1 - 1 / zf) * .35;
+      return out;
+    }
+    if (HERO_V === 7 || HERO_V === 8) {               // Matrix: a regular grid of dots covering the whole hero, each third of it becomes a sphere
+      var rowsM = Math.max(8, Math.round(Math.sqrt(N * (H - 70) / (W / 3)))), colsM = Math.ceil(N / rowsM), col = i % colsM, row = Math.floor(i / colsM);
+      var gx2 = (c * colsM + col + .5) / (3 * colsM) * W, gy2 = 64 + (row + .5) / rowsM * (H - 70), f = 0, dx2 = 0, dy2 = 0, near = 9;
+      if (HERO_V === 7) {
+        // three soft lenses drift under the grid, one for each sphere: the dots swell and lean outward over them
+        for (var k = 0; k < 3; k++) {
+          var lx = W * (.25 + .25 * k) + Math.sin(t * .11 + k * 2.1) * W * .12, ly = H * .5 + Math.sin(t * .09 + k * 1.3) * H * .18, lr = Math.min(W, H) * .2;
+          var ex = gx2 - lx, ey = gy2 - ly, ed = Math.sqrt(ex * ex + ey * ey), g = Math.exp(-ed * ed / (lr * lr));
+          f += g; dx2 += ex * g * .22; dy2 += ey * g * .22; if (k === c) near = ed / lr;
+        }
+        f += .12 * (Math.sin(gx2 * .012 + t * .4) + Math.sin(gy2 * .015 - t * .3)) + .1;
+      } else {
+        // slow rings spread out from behind the tagline across the grid
+        var rx = gx2 - W / 2, ry = (gy2 - H * .48) * 1.25, rd = Math.sqrt(rx * rx + ry * ry), wave = Math.sin(rd * .028 - t * .9);
+        f = .5 + .5 * wave * Math.exp(-rd / (Math.max(W, H) * .9)); var push = wave * 4 / (rd + 1);
+        dx2 = rx * push; dy2 = ry * push / 1.25; near = rd / Math.max(W, H);
+      }
+      f = Math.max(0, Math.min(1.2, f));
+      out[0] = gx2 + dx2; out[1] = gy2 + dy2; out[2] = -1 + 2 * Math.min(1, f) * .9; out[3] = .35 + .5 * Math.min(1, f); out[4] = Math.min(1, near) * .35;
       return out;
     }
     var x, y, z, R, cx0 = W / 2, cy0 = H * .5, tilt, yaw, dl;
@@ -3240,10 +3261,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 </script>
 <div id="heroPick" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.08);font:500 12px/1 system-ui,sans-serif">
   <span style="padding:7px 8px 7px 10px;color:#888">Hero</span>
-  <button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
+  <button type="button" data-v="7">Matrix</button><button type="button" data-v="8">Ripple</button><button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
 </div>
 <style>#heroPick button{font:inherit;border:0;border-radius:999px;padding:7px 12px;background:transparent;color:#111}#heroPick button.on{background:#111;color:#fff}</style>
-<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 6 ? q : '3';
+<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 8 ? q : '7';
   [].forEach.call(document.querySelectorAll('#heroPick button'), function(b){ b.classList.toggle('on', b.getAttribute('data-v') === String(q));
     b.addEventListener('click', function(){ try { localStorage.setItem('heroV', b.getAttribute('data-v')) } catch (e) {} location.search = '?hero=' + b.getAttribute('data-v') }) }) })();</script>
 <div id="dot" aria-hidden="true"></div>
