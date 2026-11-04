@@ -1562,7 +1562,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     return { x: W * (NF === 2 ? [.3, .7] : [.2, .5, .8])[ci], y: b.y + b.h / 2, r: Math.min(W * (NF === 2 ? .13 : .1), H * (NF === 2 ? .22 : .19)) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .5 } }
   function sphBuild(){
-    var N = narrow ? 520 : 950; SPH = [];
+    var N = narrow ? 520 : (NF === 2 ? 1500 : 950); SPH = [];
     for (var c = 0; c < NF; c++) {
       var sty = SPH_STYLE[c], P = { x: new Float32Array(N), y: new Float32Array(N), z: new Float32Array(N), a: new Float32Array(N), b: new Float32Array(N), q: new Float32Array(N), n: N, sty: sty };
       for (var i = 0; i < N; i++) {
@@ -1639,7 +1639,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      (old) One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
      2 Orbit: the three spheres already circle the tagline, small, passing in front and behind; on scroll they come forward into a row.
      3 Sea: a wide field of dots rolling like water in perspective; on scroll it lifts, row by row, and wraps into the three spheres. */
-  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 9 ? +q : 9 })();
+  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d+)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 10 ? +q : 10 })();
   var heroClock = 0, FLX = null, FLY = null, flowLast = -1;
   // the swarm keeps its own positions: each dot is carried by a slow current that mostly runs sideways and curls into streams
   function flowStep(t, dt){
@@ -1657,8 +1657,31 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       FLX[k] = x; FLY[k] = y;
     }
   }
+  var nameMask = null, nameKey = '';
+  function nameAt(x, y){   // how much of the word "Sara" covers this point (0..1), drawn once in the page's own heavy type
+    var key = W + 'x' + H;
+    if (nameKey !== key) {
+      nameKey = key; var oc = document.createElement('canvas'), w = Math.ceil(W / 2), h = Math.ceil(H / 2); oc.width = w; oc.height = h;
+      var g = oc.getContext('2d'), fam = getComputedStyle(heroLine).fontFamily, fs = h * .62;
+      g.font = '700 ' + fs + 'px ' + fam; var tw = g.measureText('Sara').width; if (tw > w * .86) { fs *= w * .86 / tw; g.font = '700 ' + fs + 'px ' + fam }
+      if (g.letterSpacing !== undefined) g.letterSpacing = (-fs * .04) + 'px';
+      g.fillStyle = '#000'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Sara', w / 2, h * .52);
+      nameMask = { d: g.getImageData(0, 0, w, h).data, w: w, h: h };
+    }
+    var mx = Math.round(x / 2), my = Math.round(y / 2); if (mx < 0 || my < 0 || mx >= nameMask.w || my >= nameMask.h) return 0;
+    return nameMask.d[(my * nameMask.w + mx) * 4 + 3] / 255;
+  }
   function heroPos(c, i, t, out){
     var P = SPH[c], N = P.n, m = Math.min(W, H), q = ((i * 7919) % 1000) / 1000;
+    if (HERO_V === 10) {
+      var rowsM = Math.max(8, Math.round(Math.sqrt(N * (H - 70) / (W / NF)))), colsM = Math.ceil(N / rowsM), col = i % colsM, row = Math.floor(i / colsM);
+      var gx = (c * colsM + col + .5) / (NF * colsM) * W, gy = 64 + (row + .5) / rowsM * (H - 70);
+      var inName = nameAt(gx, gy), write = smoothstep(0, 1, (t * .45 - gx / W) * 3 + .3);          // the name writes itself in, left to right
+      var shimmer = .5 + .5 * Math.sin(gx * .012 + gy * .006 - t * .7);                              // a slow light passing through it
+      var f = inName * write * (.75 + .25 * shimmer);
+      out[0] = gx; out[1] = gy; out[2] = -.55 + 1.55 * f; out[3] = .42 + .5 * f; out[4] = (1 - inName) * .25 + (gx / W) * .1;
+      return out;
+    }
     if (HERO_V === 9) {
       // three loose ribbons, one per sphere: each follows a slow, mostly horizontal path; its dots trail behind it,
       // tight near the head and spreading out along the tail, like a swarm moving through water
@@ -3302,10 +3325,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 </script>
 <div id="heroPick" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.08);font:500 12px/1 system-ui,sans-serif">
   <span style="padding:7px 8px 7px 10px;color:#888">Hero</span>
-  <button type="button" data-v="9">Flow</button><button type="button" data-v="7">Matrix</button><button type="button" data-v="8">Ripple</button><button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
+  <button type="button" data-v="10">Name</button><button type="button" data-v="9">Flow</button><button type="button" data-v="7">Matrix</button><button type="button" data-v="8">Ripple</button><button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
 </div>
 <style>#heroPick button{font:inherit;border:0;border-radius:999px;padding:7px 12px;background:transparent;color:#111}#heroPick button.on{background:#111;color:#fff}</style>
-<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 9 ? q : '9';
+<script>(function(){ var q = (location.search.match(/hero=(\d+)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 10 ? q : '10';
   [].forEach.call(document.querySelectorAll('#heroPick button'), function(b){ b.classList.toggle('on', b.getAttribute('data-v') === String(q));
     b.addEventListener('click', function(){ try { localStorage.setItem('heroV', b.getAttribute('data-v')) } catch (e) {} location.search = '?hero=' + b.getAttribute('data-v') }) }) })();</script>
 <div id="dot" aria-hidden="true"></div>
