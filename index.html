@@ -268,7 +268,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 @media (max-width:860px){ .about-inner{display:block;padding-top:130px} .about-inner > div + div{margin-top:44px} }
 
 /* Case study pages, inside the site */
-.case{position:fixed;inset:0;z-index:26;background:var(--paper);overflow:auto;opacity:0;pointer-events:none}
+.case{position:fixed;inset:0;z-index:26;background:var(--paper);overflow:auto;opacity:0;pointer-events:none;transition:opacity .5s var(--ease)}
 .case.live{opacity:1;pointer-events:auto}
 .case .backbtn{position:fixed;left:0;right:0;top:62px;z-index:2;opacity:1;pointer-events:auto;transform:none;background:var(--paper);padding:12px var(--gutter)}
 .case .backbtn,.about-layer .backbtn{box-shadow:0 -16px 0 var(--paper)}
@@ -3229,8 +3229,24 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     groups.forEach(function(g, i){ g.classList.toggle('on', i === k) }); pick(k, -1);
   }
   function jump(y){ scrollTo({ top: y, behavior: 'instant' }) }
-  function navHome(){ closeCase(); closeAbout(); leaveFocusNow(); jump(0); if (location.hash) history.replaceState(null, '', location.pathname + location.search) }
-  function navFolder(k){ closeCase(); closeAbout(); jump(folderScrollTop()); focusNow(k) }
+  // a smooth, eased scroll, so the hero and the spheres turn into each other on the way
+  var scrollAnim = 0;
+  function animScroll(y, ms, done){ var y0 = scrollY, t0 = performance.now(), id = ++scrollAnim;
+    (function st(n){ if (id !== scrollAnim) return; var k = clamp((n - t0) / ms, 0, 1), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      scrollTo(0, y0 + (y - y0) * e); if (k < 1) requestAnimationFrame(st); else if (done) done() })(t0) }
+  function atFolders(){ return Math.abs(scrollY - folderScrollTop()) < 6 }
+  function navHome(){
+    closeCase(); closeAbout(); if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    function up(){ animScroll(0, clamp(scrollY / H * 650, 450, 1800)) }
+    if (focus >= 0) { setFocus(-1, true); setTimeout(up, 1150) } else up();   // the open sphere glides back first
+  }
+  function navFolder(k){
+    closeCase(); closeAbout();
+    if (focus === k) return;
+    if (focus >= 0) { setFocus(-1, true); setTimeout(function(){ setFocus(k, true) }, 1200); return }   // one sphere goes back, the other comes forward
+    if (atFolders()) { setFocus(k, true); return }
+    animScroll(folderScrollTop(), clamp(Math.abs(folderScrollTop() - scrollY) / H * 650, 450, 1800), function(){ setTimeout(function(){ setFocus(k, true) }, 120) });
+  }
   function navAbout(){ closeCase(); openAbout() }
   function atHome(){ return !caseOpen && !aboutEl.classList.contains('live') && focus < 0 && scrollY < 4 }
   function atFolder(k){ return !caseOpen && !aboutEl.classList.contains('live') && focus === k }
