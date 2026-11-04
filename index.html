@@ -1623,6 +1623,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     while ((nd = walker.nextNode())) {
       var txt = nd.nodeValue; if (!txt || !txt.trim()) continue;
       var el = nd.parentElement, cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      var hid = false; for (var up = el; up && up !== peek; up = up.parentElement) { var us = getComputedStyle(up); if (us.opacity === '0' || us.maxHeight === '0px' || (us.overflow === 'hidden' && up.getBoundingClientRect().height < 2)) { hid = true; break } } if (hid) continue;   // skip text that is folded away
       var rg = document.createRange(); rg.selectNodeContents(nd); var rs = rg.getClientRects(); if (!rs.length) continue;
       g.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
       if (g.letterSpacing !== undefined) g.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing;
@@ -1654,7 +1655,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
       var ga = 1, dis = FO >= 0 && c !== FO && txtPts.length ? ballF[FO] : 0;   // how far this sphere has turned into the list's letters
       if (FO >= 0 && c !== FO && !txtPts.length) { ga = Math.max(0, 1 - ballF[FO] * 1.6); if (ga < .01) continue }
-      if (dis > .999) continue;
+      if (dis > .999 && (focus < 0 || peekOp > .98)) continue;   // the dots stay until the real text has fully appeared
       var L = netEase(clamp(netLand / .9, 0, 1)), hot = netHot === c ? 1 : 0;
       var cx = h.x + (o.x - h.x) * e, cy = h.y + (o.y - h.y) * e + Math.sin(t * .4 + c * 2.1) * 4 * (1 - e);   // a slow float
       var R = (h.r + (o.r - h.r) * e) * (1 + hot * .05) * (.3 + .7 * L), P = SPH[c], st = sphT[c], base = cell * (.3 + .1 * e);
@@ -1669,7 +1670,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           var a2 = a + (.85 - a) * ue; a2 *= 1 - (focus >= 0 ? clamp(peekOp, 0, 1) : smoothstep(.85, 1, dis));   // they hand over to the real text as it appears
           if (a2 < .02) continue;
           ctx.fillStyle = 'rgba(17,17,17,' + a2.toFixed(3) + ')';
-          dot(ctx, px2, py2, base * (.6 + .8 * d) * (1 - ue) + 1.5 * ue);
+          var vz = ((i * 2654435761) % 1000) / 1000;   // like the spheres: some dots bigger and darker, others small and faint
+          a2 *= .55 + .45 * vz + (1 - ue) * .2;
+          dot(ctx, px2, py2, base * (.6 + .8 * d) * (1 - ue) + (.8 + 1.9 * vz * vz) * ue);
           continue;
         }
         var g = (40 * (1 - d)) | 0;
@@ -2057,7 +2060,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (pendingFocus >= 0 && mode === -1 && sharpA > .75) { var pf = pendingFocus; pendingFocus = -1; setFocus(pf) }
     peekGate = focus >= 0 && txtPts.length && txtFor === focus ? smoothstep(.62, 1, ballF[focus]) : 1;
     peekOp = peekA * peekGate * (mode === -1 ? 1 : 0); peek.style.opacity = peekOp.toFixed(3);
-    peek.style.transform = narrow ? 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)' : 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)';
+    peek.style.transform = 'translateY(0px)';   // its resting place, from the start
     peek.classList.toggle('live', peekA > .6 && mode === -1);
 
     // 1) Live field in the hero
