@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sara Vadell · Product Designer</title>
+<title>Prototype · Sara Vadell · Product Designer</title>
 <!-- Favicon: the Float S mark -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%222.3%20-0.2%2096.3%2096.3%22%3E%3Cg%20fill=%22%23000%22%3E%3Ccircle%20cx=%2226%22%20cy=%2282%22%20r=%224%22/%3E%3Ccircle%20cx=%2244%22%20cy=%2286%22%20r=%225%22/%3E%3Ccircle%20cx=%2262%22%20cy=%2280%22%20r=%226%22/%3E%3Ccircle%20cx=%2268%22%20cy=%2266%22%20r=%226.5%22/%3E%3Ccircle%20cx=%2256%22%20cy=%2254%22%20r=%227%22/%3E%3Ccircle%20cx=%2240%22%20cy=%2246%22%20r=%227.5%22/%3E%3Ccircle%20cx=%2232%22%20cy=%2232%22%20r=%228%22/%3E%3Ccircle%20cx=%2244%22%20cy=%2218%22%20r=%229%22/%3E%3Ccircle%20cx=%2268%22%20cy=%2216%22%20r=%2211%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC50lEQVR4nLXXS6iVVRQH8N+5x0eaRi8JUhAKolEOippkFA164USDyqkgWc0CQWjUTBwURNAkauatcZMGgtCLghRKEEEngfSiULyU5j33NNhr8e3z+d1zzz3n3j98fOdbe+21/+ux196H6dCLp41+h2xuJUPTLLxULTioxoZ4CI/jGk5hIUgsmRE12TuwqZKnl+/ivyAyxCXsjbGxkVgJOfk+zOM3XMTblc7BWHQJNysif+Jey6dtYgJ9fKXxLp8jofONko6b1ViSOBQ6G5bzbBz6YeRRPIlFjZcDHA69HUbTIb4H2D3Os3HoVQT6LXnO3RLv8yFfjO9MRx8/VrKpcCe249vKcIb5ndDZ69b0DPEDNgfhiWsgC2YLPsQfuID38KWS26t4X/Ewo/MSflLSs4DPlMJllbsgDZ7o8OgFPIidrTm5QE/pBbtaDk2MWvmS4u0ibiihn+8gutz3imHvCsuwkl/ExiCQxr6Osds0XTAx0BRodr+pCi8X24NfNOH/Gfs04Z26sUyCNL4Dr+E4LgeRK3g5xvtKg+k6iGZGnaLvjHa3v3H3eixaI7fjPfhH2V75DPGAUguv4rnWvDVDhvak0e14GltxppJ9EroznXxtZBS24yOcw+e4C2/GwteVnTLEY0F64yTGbzmdOpDb6Bpeb41tXmbOIJ41uYgk8mCiEJ9TivCsJgUfx/hTeLiaty5Iw1vxCp4Pgl8EmRuao3pdtmhNIrG/WnyI34Ngly4mq4FxGIbhTUrO19zTSc/wWmfeKlIwznhes9u/k1gWXo7djhfxq7Ilr2puSVPfhO5X9n9Ntm4y/ZBvw/cVqTdifKJe0EaG6xml358PIvU9cLfSnhPPxsILSpu+bPSCsipkYR7VePREZeww/lVCnfJd+KvS/7TlzKqQrXebcgS/Vcko3uVF42Q17xHl/nhMqYeZ/oh0Ib35QOPpwZDNup070TN60ehV7wN4uiWfC/0N1rH9tjHzQv8DjYm1Du2PyU0AAAAASUVORK5CYII=">
@@ -179,6 +179,16 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .backbtn:hover span{transform:translateX(-4px)}
 
 /* Focused folder: details of the files, on the right */
+/* PROTOTYPE: three floating balls of ideas replace the folders */
+#folders{display:none!important}
+#sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
+#sky [data-c]{--cc:#FF1E1E}
+#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .4s,transform .5s var(--ease)}
+#sky .cname b{display:block;font-size:var(--t-h3);font-weight:500;letter-spacing:-.02em;transition:color .3s}
+#sky .cname b i{font-style:normal;color:var(--grey);margin-right:.35em;font-variant-numeric:tabular-nums;transition:color .3s}
+#sky .cname span{display:block;margin-top:2px;font-size:var(--t-small);color:var(--grey)}
+#sky .cname.hot b,#sky .cname.hot b i{color:var(--cc)}
+#sky .cname.gone{opacity:0;transform:translate(-50%,8px)}
 .peek{position:absolute;z-index:4;left:58%;right:var(--gutter);top:50%;transform:translateY(-50%);max-width:480px;opacity:0;pointer-events:none}
 .peek.live{pointer-events:auto}
 .peek .group{display:none}
@@ -406,7 +416,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bs-shelf{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0 3px;row-gap:34px}
 .case .bk{position:relative;display:block;width:var(--w);height:var(--h);margin-bottom:6px}
 .case .bk::after{content:"";position:absolute;left:0;right:-3px;bottom:-8px;height:5px;
-  background:linear-gradient(90deg,#191919,#4E4E4E 45%,#A5A5A5);
+  background:linear-gradient(90deg,#191919,#4A4A4A 45%,#A3A3A3);
   -webkit-mask:repeating-linear-gradient(90deg,#000 0 4px,transparent 4px 6px);mask:repeating-linear-gradient(90deg,#000 0 4px,transparent 4px 6px)}
 .case .bk-sp{position:absolute;inset:0;border-radius:2px 2px 1px 1px;background-color:#E3E3E3;background-size:auto 100%;background-position:center;
   box-shadow:inset 3px 0 4px -2px rgba(255,255,255,.45),inset -4px 0 6px -3px rgba(0,0,0,.45),0 1px 0 rgba(0,0,0,.1);
@@ -482,7 +492,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 .case .bh-card::before{content:"";position:absolute;left:4%;right:4%;bottom:-9%;height:14%;z-index:-1;pointer-events:none;background:radial-gradient(50% 50% at 50% 50%,rgba(22,22,22,.32),rgba(22,22,22,0))}
 /* reading now: a solid blue dot, a little bigger on the open book, breathing gently instead of blinking off */
 .case .bh-dot{position:absolute;right:0;top:0;z-index:2;width:max(12px,6%);aspect-ratio:1;border-radius:50%;background:var(--accent);
-  transform:translate(40%,-40%);box-shadow:0 2px 6px rgba(105,105,105,.45);animation:bhDot 2.2s ease-in-out infinite}
+  transform:translate(40%,-40%);box-shadow:0 2px 6px rgba(98,98,98,.45);animation:bhDot 2.2s ease-in-out infinite}
 @keyframes bhDot{0%,100%{transform:translate(40%,-40%) scale(1)}50%{transform:translate(40%,-40%) scale(1.18)}}
 .case .bh-intro{position:absolute;left:var(--gutter);top:clamp(16px,4vh,36px);z-index:5000;max-width:27ch;transition:opacity .4s}
 .case .bh-intro p{font-size:14px;line-height:1.5;color:var(--ink)}
@@ -743,7 +753,7 @@ header.dark .hdr-exit{display:inline-flex}
   background:conic-gradient(from 300deg,transparent 0 8%,rgba(255,255,255,.18) 13%,transparent 20% 52%,rgba(255,255,255,.12) 60%,transparent 68%);mix-blend-mode:screen;
   -webkit-mask:radial-gradient(circle,transparent 0 33%,#000 34%);mask:radial-gradient(circle,transparent 0 33%,#000 34%)}
 .case .mu-disc.has ~ .mu-sheen{opacity:1}
-.case .mu-label{background-color:#696969;z-index:1}
+.case .mu-label{background-color:#626262;z-index:1}
 .case .mu-spindle{position:absolute;left:50%;top:50%;width:2.6%;height:2.6%;margin:-1.3% 0 0 -1.3%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#9C9C9C 70%);box-shadow:0 1px 2px rgba(0,0,0,.5)}
 /* Tonearm */
 .case .mu-arm{position:absolute;right:6%;top:2.5%;height:76%;transform-origin:50% 18.2%;transform:rotate(-6deg);transition:transform 1.1s cubic-bezier(.5,0,.2,1);filter:drop-shadow(3px 8px 5px rgba(0,0,0,.22))}
@@ -754,18 +764,18 @@ header.dark .hdr-exit{display:inline-flex}
 .case .mu-screen{position:absolute;right:5%;bottom:6%;width:24%;padding:1.8% 2%;border-radius:6px;background:linear-gradient(#1A1A1A,#0F0F0F);box-shadow:inset 0 2px 4px rgba(0,0,0,.6),0 1px 0 #fff}
 .case .mu-eq{display:grid;grid-template-columns:repeat(14,1fr);gap:2px}
 .case .mu-eq i{aspect-ratio:1;background:rgba(255,255,255,.06)}
-.case .mu-eq i.l0{background:#4E4E4E}.case .mu-eq i.l1{background:#696969}.case .mu-eq i.l2{background:#A5A5A5}.case .mu-eq i.l3{background:#CECECE}
+.case .mu-eq i.l0{background:#4A4A4A}.case .mu-eq i.l1{background:#626262}.case .mu-eq i.l2{background:#A3A3A3}.case .mu-eq i.l3{background:#D9D9D9}
 .case .mu-ctrl{position:absolute;right:5%;bottom:6%;display:flex;gap:10px}
 .case .mu-np{margin:34px auto 0;max-width:420px;text-align:center}
 .case .mu-np b{display:block;font-size:var(--t-small);font-weight:500;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .case .mu-np span{display:block;margin-top:3px;font-size:12px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .case .mu-np .mu-prog{margin:14px auto 0;width:120px;height:2px;background:var(--line)}
 .case .mu-np .mu-prog i{background:var(--ink)}
-.case .mu-lcd{display:flex;gap:6px;align-items:baseline;white-space:nowrap;overflow:hidden;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;line-height:1.3;color:#CECECE}
+.case .mu-lcd{display:flex;gap:6px;align-items:baseline;white-space:nowrap;overflow:hidden;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;line-height:1.3;color:#D9D9D9}
 .case .mu-lcd b{font-weight:600;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0}
 .case .mu-lcd span{color:rgba(206,206,206,.55);overflow:hidden;text-overflow:ellipsis;min-width:0}
 .case .mu-screen .mu-prog{margin:5px 0 6px;height:2px;background:rgba(255,255,255,.1)}
-.case .mu-screen .mu-prog i{background:#A5A5A5}
+.case .mu-screen .mu-prog i{background:#A3A3A3}
 .case .mu-brand,.case .mu-speed,.case .mu-pitch{display:none !important}
 .case .mu-ctrl button,.case .mu-play,.case .mu-speed span{background:linear-gradient(180deg,#FFFFFF,#CDCDCD 45%,#F4F4F4 60%,#B3B3B3);box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.15),0 3px 0 #B2B2B2,0 5px 8px -2px rgba(0,0,0,.25);color:#2A2A2A;transition:transform .12s,box-shadow .12s,color .2s}
 .case .mu-ctrl button{width:32px;height:32px;border-radius:50%;display:grid;place-items:center}
@@ -889,7 +899,8 @@ header.dark .hdr-exit{display:inline-flex}
 </style>
 </head>
 <body>
-<div id="protoBadge" style="position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;padding:4px 10px;border-radius:999px;background:#000;color:#fff;font:500 11px/1.2 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none">PROTOTYPE · PIXELS</div>
+<div id="protoBadge" style="position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;padding:4px 10px;border-radius:999px;background:#000;color:#fff;font:500 11px/1.2 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none">PROTOTYPE · SPHERES</div>
+
 
 <header id="top">
   <a class="mark" href="#" aria-label="Sara Vadell, home"><svg viewBox="0 0 100 100" aria-hidden="true">
@@ -926,6 +937,7 @@ header.dark .hdr-exit{display:inline-flex}
         <span class="meta"><em id="npLabel">Now playing</em> <span id="npTrack">[Track]</span> by <span id="npArtist">[Artist]</span></span>
       </a>
       <div id="folders"></div>
+      <div id="sky" aria-label="My work as constellations"></div>
       <aside class="peek" id="peek" aria-live="polite"></aside>
       <div id="views"></div>
     </div>
@@ -1047,7 +1059,7 @@ var FILE_BLUES = [                        // one hue, the site accent, in tonal 
   ['#EBEBEB', '#DADADA', '#C8C8C8', '#393939'],
   ['#CFCFCF', '#B9B9B9', '#A6A6A6', '#393939'],
   ['#ACACAC', '#949494', '#828282', '#FFFFFF'],
-  ['#898989', '#747474', '#696969', '#FFFFFF'],
+  ['#898989', '#747474', '#626262', '#FFFFFF'],
   ['#6D6D6D', '#585858', '#464646', '#FFFFFF']
 ];
 
@@ -1323,7 +1335,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   document.querySelector('.cv').addEventListener('click', noLink);   // CV link: add the file when ready
 
   /* ---------- Cold scale: black → navy → blue → electric blue → cyan ---------- */
-  var COLD_STOPS = [[0,'#000000'],[.5,'#0D0D0D'],[1,'#1C1C1C']];   // black and white: warmth only makes the pixels bigger and blacker
+  var COLD_STOPS = [[0,'#000000'],[.5,'#0D0D0D'],[1,'#1C1C1C']];   // black and white: warmth only makes the pixels bigger and blacker   // PROTOTYPE: Brain Roads palette
   function hex(h){ return [parseInt(h.substr(1,2),16), parseInt(h.substr(3,2),16), parseInt(h.substr(5,2),16)] }
   var COLD = [];
   for (var k = 0; k <= 64; k++) {
@@ -1334,6 +1346,21 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function cold(v){ return COLD[Math.round(clamp(v, 0, 1) * 64)] }
 
+  /* PROTOTYPE: the Brain Roads spectrum. Colour is picked by place, not by heat: slow patches of indigo and violet,
+     magenta and pink around them, lime, yellow and mint breaking through, sky and periwinkle in between, a rare salmon/orange.
+     Every dot is nudged a little off its neighbours so it reads as fibres, like the poster. Heat decides how much colour shows */
+  // an ordered ramp, cool end to light end: deep indigo, violet, a touch of orchid, periwinkle, sky, mint, lime. Warm tones only as a hint
+  var ROAD_STOPS = ['#343434','#434343','#545454','#626262','#6D6D6D','#797979','#8F8F8F','#A6A6A6','#BEBEBE','#D1D1D1','#DCDCDC'];
+  var ROAD = [];
+  (function(){ var n = ROAD_STOPS.length - 1; for (var k = 0; k < 256; k++) { var q = k / 256 * n, i = Math.floor(q), u = q - i, a = hex(ROAD_STOPS[i]), b = hex(ROAD_STOPS[i + 1]); ROAD.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u]) } })();
+  function roadAt(q){ return ROAD[Math.min(255, Math.max(0, (q * 256) | 0))] }
+  // colour with a direction: it flows top to bottom in soft bands that bend slowly, with a little fibre jitter. edge (0 core .. 1 rim) overrides it for shapes
+  function roads(x, y, t, edge){
+    var j = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; j -= Math.floor(j);
+    var warp = (noise(x * .0022 + t * .02, y * .0022) - .5) * .5;
+    var q = edge == null ? .5 + .45 * Math.sin(y * .0035 + x * .0012 + warp * 3 - t * .08) : edge * .95 + warp * .35;
+    return roadAt(clamp(q + (j - .5) * .06, 0, 1));
+  }
   /* ---------- Noise and the flowing field ---------- */
   var perm = []; for (var i = 0; i < 512; i++) perm[i] = Math.floor(Math.random() * 256);
   function hash(x, y){ return perm[(perm[x & 255] + y) & 511] / 255 }
@@ -1528,6 +1555,93 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var g = rel >= .13 ? 46 - clamp((rel - .14) / .14, 0, 1) * 28 : 30 - clamp((rel + .06) / .1, 0, 1) * 14;
     return [g, g, g + 2];
   }
+  /* PROTOTYPE: three spheres of dots instead of folders. Each one moves in its own way, always slowly:
+     Projects is precise, a lattice turning steadily with soft ripples running pole to pole;
+     Labs breathes between order and scatter, like an experiment loosening and coming back together;
+     Rooms swirls, its bands of dots turning at different speeds like a gas planet, denser at the poles.
+     Click one and it moves left, big, with its pieces on the right */
+  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0];
+  function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .5, H * .17) };
+    return { x: W * [.2, .5, .8][ci], y: b.y + b.h / 2, r: Math.min(W * .1, H * .19) } }
+  function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .5 } }
+  function sphBuild(){
+    var N = narrow ? 520 : 950; SPH = [];
+    for (var c = 0; c < 3; c++) {
+      var P = { x: new Float32Array(N), y: new Float32Array(N), z: new Float32Array(N), a: new Float32Array(N), b: new Float32Array(N), q: new Float32Array(N), n: N };
+      for (var i = 0; i < N; i++) {
+        var y, r, th;
+        if (c < 2) { y = 1 - 2 * (i + .5) / N; th = i * 2.39996 }                      // an even lattice
+        else { var u = Math.random() * 2 - 1; y = (u < 0 ? -1 : 1) * Math.pow(Math.abs(u), .55); th = Math.random() * 6.2832 }   // gathered towards the poles
+        r = Math.sqrt(Math.max(0, 1 - y * y));
+        P.x[i] = Math.cos(th) * r; P.y[i] = y; P.z[i] = Math.sin(th) * r; P.a[i] = th; P.b[i] = Math.random() * 6.2832; P.q[i] = Math.random();
+      }
+      SPH.push(P);
+    }
+  }
+  var _p = [0, 0, 0];
+  function sphPoint(c, i, t){
+    var P = SPH[c], x = P.x[i], y = P.y[i], z = P.z[i], ph = P.b[i], q = P.q[i];
+    if (c === 0) {                                    // Projects: steady, with ripples travelling from pole to pole
+      var s = 1 + .04 * Math.sin(y * 7 - t * .8); x *= s; y *= s; z *= s;
+    } else if (c === 1) {                             // Labs: loosens into a scatter and gathers back, about every twenty seconds
+      var k = .5 - .5 * Math.cos(t * .3), w = k * k;
+      var dx = Math.sin(ph * 3 + t * .4) * .5 + Math.sin(ph * 7 - t * .27) * .25, dy = Math.cos(ph * 5 + t * .33) * .5, dz = Math.sin(ph * 2 - t * .37) * .5;
+      var rr = 1 + (q - .5) * .55 * w;
+      x = x * rr + dx * .32 * w; y = y * rr + dy * .32 * w; z = z * rr + dz * .32 * w;
+    } else {                                          // Rooms: bands turning at their own pace, breathing a little
+      var lon = P.a[i] + t * (.05 + .2 * (1 - y * y)), r2 = Math.sqrt(Math.max(0, 1 - y * y)), br = 1 + .03 * Math.sin(t * .45 + y * 2.5);
+      x = Math.cos(lon) * r2 * br; z = Math.sin(lon) * r2 * br; y *= br;
+    }
+    // turn the whole sphere slowly, tilted towards the viewer
+    var yaw = t * [.12, .08, .04][c], tilt = [.38, .3 + .15 * Math.sin(t * .07), .26][c];
+    var cy = Math.cos(yaw), sy = Math.sin(yaw), x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
+    var ct = Math.cos(tilt), st = Math.sin(tilt), y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
+    _p[0] = x1; _p[1] = y2; _p[2] = z2; return _p;
+  }
+  function netBuild(){
+    net = true; sphBuild();
+    if (!skyEl) skyEl = $('sky');
+    skyEl.innerHTML = FOLDERS.map(function(f, ci){ return '<p class="cname" data-c="' + ci + '"><b><i>' + pad(ci + 1) + '</i>' + esc(f.name) + '</b><span>' + esc(f.count) + '</span></p>' }).join('');
+    netPlace();
+  }
+  function netPlace(){ if (!skyEl) return; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ var h = ballHome(ci); el.style.left = h.x + 'px'; el.style.top = (h.y + h.r + 30) + 'px' }) }
+  function netCells(){                                // the pixels from the brain gather into the spheres first
+    var out = [];
+    for (var ci = 0; ci < 3; ci++) { var h = ballHome(ci), P = SPH[ci];
+      for (var i = 0; i < P.n; i += 2) { var p = sphPoint(ci, i, 0); if (p[2] < -.25) continue; out.push([h.x + p[0] * h.r, h.y - p[1] * h.r, 1, .5, .4, ci]) } }
+    return out;
+  }
+  function blobCells(b, fc){ var cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) * .5, out = [], N = 700;
+    for (var i = 0; i < N; i++) { var y = 1 - 2 * (i + .5) / N, r = Math.sqrt(1 - y * y), th = i * 2.39996, z = Math.sin(th) * r; if (z < -.2) continue; out.push([cx + Math.cos(th) * r * R, cy - y * R, 1, .5, (z + 1) / 2]) }
+    return out }
+  function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
+  function netDraw(t, alpha, dt){
+    if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; netLand = 0; return }
+    netLand = Math.min(1, netLand + dt * .7);
+    var k = 1 - Math.exp(-dt * 4.5), anyOpen = focus >= 0;
+    for (var c = 0; c < 3; c++) { ballF[c] += ((focus === c ? 1 : 0) - ballF[c]) * k; sphT[c] += dt * (netHot === c ? 1.8 : 1) }   // hovering wakes a sphere up a little
+    skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
+    var hb = -1;
+    if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
+    if (hb !== netHot) { netHot = hb; cv.style.cursor = hb >= 0 ? 'pointer' : ''; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ el.classList.toggle('hot', ci === hb) }) }
+    [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', anyOpen) });
+    for (c = 0; c < 3; c++) {
+      var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
+      var ga = anyOpen && focus !== c ? Math.max(0, 1 - ballF[focus] * 1.6) : 1;
+      if (ga < .01) continue;
+      var L = netEase(clamp(netLand / .9, 0, 1)), hot = netHot === c ? 1 : 0;
+      var cx = h.x + (o.x - h.x) * e, cy = h.y + (o.y - h.y) * e + Math.sin(t * .4 + c * 2.1) * 4 * (1 - e);   // a slow float
+      var R = (h.r + (o.r - h.r) * e) * (1 + hot * .05) * (.3 + .7 * L), P = SPH[c], st = sphT[c], base = cell * (.3 + .1 * e);
+      for (var i = 0; i < P.n; i++) {
+        var p = sphPoint(c, i, st), d = (p[2] + 1.2) / 2.2;                   // depth: the near side is bigger and darker
+        var a = (.2 + .75 * d * d) * alpha * ga; if (a < .02) continue;
+        var g = (40 * (1 - d)) | 0;
+        ctx.fillStyle = 'rgba(' + g + ',' + g + ',' + g + ',' + a.toFixed(3) + ')';
+        dot(ctx, cx + p[0] * R, cy - p[1] * R, base * (.6 + .8 * d));
+      }
+    }
+  }
+
   function folderCells(fb, fc, base){
     var out = [], w = fb.w, h = fb.h, tabW = w * .38, tabH = h * .12, frontTop = h * .26, notch = fc * 2;
     for (var y = 0; y < h; y += fc) for (var x = 0; x < w; x += fc) {
@@ -1601,9 +1715,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     tCellsCache = textCells(tcell); textCount = tCellsCache.length;
     var fc = narrow ? 3 : 3;   // fine pixels, like the cloud
     var fCells = [];
-    fboxes.forEach(function(b, i){ fCells = fCells.concat(folderCells(b, fc, FOLDER_BASE[i % FOLDER_BASE.length]).map(function(c){ c.push(i); return c })) });
+    netBuild();
+    fCells = netCells();
 
-    var bc = narrow ? 3 : 4, bigSets = bigBoxes.map(function(b, i){ return folderCells(b, bc, FOLDER_BASE[i % FOLDER_BASE.length]) });
+    var bc = narrow ? 3 : 4, bigSets = bigBoxes.map(function(b, i){ return blobCells(b, bc) });   // PROTOTYPE: the open ball
 
     // Brain (side view, facing left): nodes on and inside the outline, joined to their neighbours
     var BR = [[180,500],[175,440],[222,350],[240,320],[296,218],[345,200],[385,183],[485,126],[640,118],[723,97],[830,107],[985,130],[1030,152],[1145,208],[1230,320],[1270,395],[1328,425],[1355,598],[1235,700],[1075,832],[1060,845],[1028,690],[1000,780],[1015,945],[935,945],[850,770],[815,692],[720,707],[517,718],[450,635],[403,622],[293,612]];
@@ -1836,13 +1951,14 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       cl.h += (tg - cl.h) * (tg > cl.h ? .2 : .045);
       var v = (.2 + cl.shape * .6 + (field(cl.x, cl.y, t * .12) - .5) * .9 + cl.h * .3) * cl.m;
       v = clamp(v, 0, 1);
-      var b = br.pidx[c] * 7, col = cold(Math.min(1, cl.h * 1.1));
+      var b = br.pidx[c] * 7, rc = roads(cl.x, cl.y, t), hh = Math.min(1, cl.h * 1.4), col = [20 + (rc[0] - 20) * hh, 24 + (rc[1] - 24) * hh, 32 + (rc[2] - 32) * hh];
       st[b + 2] = sq * v; st[b + 3] = col[0]; st[b + 4] = col[1]; st[b + 5] = col[2];
       st[b + 6] = v > .06 ? Math.min(.85, .18 + v * .8) : 0;
     }
   }
 
   /* ---------- Draw ---------- */
+  // Pixels are round: a dot as wide as the old square
   // Pixels are round: a dot as wide as the old square
   function dot(g, x, y, s){ if (s < 2.2) { g.fillRect(x - s / 2, y - s / 2, s, s); return } g.beginPath(); g.arc(x, y, s / 2, 0, 6.2832); g.fill() }   // too small to see the corners: a square is quicker
   function draw(now){
@@ -1923,7 +2039,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var v = (field(c.x, c.y, drift) - .5) * 2.4 * c.m;
         v = Math.max(v, c.h * .95 * c.m + c.h * .35) * rev;
         if (v <= .06) continue;
-        var sz = Math.min(1, v) * sq, col = cold(Math.min(1, c.h * 1.1));
+        var sz = Math.min(1, v) * sq, rc = roads(c.x, c.y, t), hh = Math.min(1, c.h * 1.4), col = [20 + (rc[0] - 20) * hh, 24 + (rc[1] - 24) * hh, 32 + (rc[2] - 32) * hh];
         ctx.fillStyle = 'rgba(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ',' + (Math.min(.85, .18 + v * .8) * fieldA).toFixed(3) + ')';
         dot(ctx, c.x, c.y, sz);
       }
@@ -1948,7 +2064,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         tc.tr *= .955;
         if (tc.tr < .02) { tc.tr = 0; continue }
         keep.push(trail[ti]);
-        var tsz = cell * .42 * Math.min(1, .25 + tc.tr * 1.2), tcol = cold(Math.min(1, .3 + tc.tr * .9));   // like the hero cloud: small, saturated
+        var tsz = cell * .42 * Math.min(1, .25 + tc.tr * 1.2), tcol = roads(tc.x, tc.y, 0);   // like the hero cloud: small, saturated
         ctx.fillStyle = 'rgba(' + (tcol[0] | 0) + ',' + (tcol[1] | 0) + ',' + (tcol[2] | 0) + ',' + Math.min(.85, .2 + tc.tr * .8).toFixed(3) + ')';
         dot(ctx, tc.x, tc.y, tsz);
       }
@@ -1982,7 +2098,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         // How much this pixel belongs to the small folders / the large folder right now
         var wf = (A === S_FOLDERS ? 1 - lt : 0) + (B === S_FOLDERS ? lt : 0);
         var wb = (A >= S_BIG0 ? 1 - lt : 0) + (B >= S_BIG0 ? lt : 0);
-        var vis = Math.max(0, 1 - letGo * wf - letGoB * wb);
+        var wbig = ((A >= S_BIG0 && A !== S_BRAIN) ? 1 - lt : 0) + ((B >= S_BIG0 && B !== S_BRAIN) ? lt : 0);   // an open ball (the brain shares the index range)
+        var vis = Math.max(0, 1 - letGo * wf - letGoB * wb) * (1 - wbig);   // PROTOTYPE: when a ball opens, the living network carries it, not the pixels
         var al = (SA[b + 6] + (SB[b + 6] - SA[b + 6]) * lt) * pixA * vis;
         if (s < .3 || al < .02) { ox[p] *= .9; oy[p] *= .9; continue }
         var r = SA[b + 3] + (SB[b + 3] - SA[b + 3]) * lt, g = SA[b + 4] + (SB[b + 4] - SA[b + 4]) * lt, bl = SA[b + 5] + (SB[b + 5] - SA[b + 5]) * lt;
@@ -2022,11 +2139,12 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var push = Math.min(1, (Math.abs(ox[p]) + Math.abs(oy[p])) / 26);
         heat[p] = Math.max(heat[p] * .965, push, travel);
         var h = heat[p];
-        if (h > .02) { var hc = cold(h); r += (hc[0] - r) * h; g += (hc[1] - g) * h; bl += (hc[2] - bl) * h; s *= 1 - h * .2 }
+        if (h > .02) { var hc = roads(x, y, t); r += (hc[0] - r) * h; g += (hc[1] - g) * h; bl += (hc[2] - bl) * h; s *= 1 - h * .2 }
         ctx.fillStyle = 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ',' + al.toFixed(3) + ')';
         dot(ctx, x + ox[p], y + oy[p], s);
       }
     }
+    netDraw(t, mode === -1 ? Math.max(reveal, revealB) : 0, dt / 1000);   // PROTOTYPE: the balls of ideas
     requestAnimationFrame(draw);
   }
 
@@ -2044,6 +2162,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (picked >= 0) pick(focus, -1);
   });
   pin.addEventListener('touchend', function(){ mouse.on = false });
+  pin.addEventListener('click', function(e){ if (netHot >= 0 && focus < 0 && !e.target.closest('.peek')) setFocus(netHot) });
 
   /* ---------- Case studies ---------- */
   var caseEl = $('case'), caseInner = $('caseInner'), caseOpen = null;
@@ -3038,12 +3157,11 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 </script>
 <div id="dot" aria-hidden="true"></div>
 <script>
-(function(){   // the red dot follows the pointer closely and swells over anything clickable
+(function(){   // the red dot follows the pointer closely and swells over anything clickable (the spheres too)
   var el = document.getElementById('dot'), x = -100, y = -100, cx = -100, cy = -100;
   addEventListener('pointermove', function(e){ x = e.clientX; y = e.clientY; el.classList.add('on');
-    var tg = e.target.closest && e.target.closest('a,button,[role=button],.folder-hit,.file,.ftab,.peek li,.card,label,input,summary');
-    var cur = getComputedStyle(e.target).cursor;
-    el.classList.toggle('big', !!tg) }, { passive: true });
+    var tg = e.target.closest && e.target.closest('a,button,[role=button],.file,.ftab,.peek li,.card,label,input,summary');
+    el.classList.toggle('big', !!tg || document.getElementById('field').style.cursor === 'pointer') }, { passive: true });
   document.addEventListener('pointerleave', function(){ el.classList.remove('on') });
   (function loop(){ cx += (x - cx) * .35; cy += (y - cy) * .35; el.style.transform = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px)'; requestAnimationFrame(loop) })();
 })();
