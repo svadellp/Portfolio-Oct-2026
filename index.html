@@ -19,6 +19,10 @@
 @font-face{font-family:'Archiv Grotesk';src:url(fonts/archiv-grotesk-600.woff) format('woff');font-weight:600;font-display:swap}
 @font-face{font-family:'Archiv Grotesk';src:url(fonts/archiv-grotesk-700.woff) format('woff');font-weight:700;font-display:swap}
 
+/* instant navigation: no sliding or fading layers */
+.case .case-inner,.about-layer .about-inner{transition:none!important;transform:none!important}
+#peek,#peek *{transition:none!important}
+
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
 #dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#ED155A;z-index:100000;pointer-events:none;
@@ -183,7 +187,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 #folders{display:none!important}
 #sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
 #sky [data-c]{--cc:#ED155A}
-#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .35s}
+#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none}
 #sky .cname b{display:block;font-size:var(--t-h3);font-weight:500;letter-spacing:-.02em;transition:color .3s}
 #sky .cname b i{font-style:normal;color:var(--grey);margin-right:.35em;font-variant-numeric:tabular-nums;transition:color .3s}
 #sky .cname span{display:block;margin-top:2px;font-size:var(--t-small);color:var(--grey)}
@@ -242,7 +246,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 
 
 /* About: a quiet layer over the stage */
-.about-layer{position:fixed;inset:0;z-index:25;background:var(--paper);overflow:auto;opacity:0;pointer-events:none;transition:opacity .45s var(--ease)}
+.about-layer{position:fixed;inset:0;z-index:25;background:var(--paper);overflow:auto;opacity:0;pointer-events:none}
 .about-layer.live{opacity:1;pointer-events:auto}
 .about-inner{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(32px,6vw,120px);padding:150px var(--gutter) 100px;
   transform:translateY(14px);transition:transform .6s var(--ease)}
@@ -262,7 +266,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 @media (max-width:860px){ .about-inner{display:block;padding-top:130px} .about-inner > div + div{margin-top:44px} }
 
 /* Case study pages, inside the site */
-.case{position:fixed;inset:0;z-index:26;background:var(--paper);overflow:auto;opacity:0;pointer-events:none;transition:opacity .45s var(--ease)}
+.case{position:fixed;inset:0;z-index:26;background:var(--paper);overflow:auto;opacity:0;pointer-events:none}
 .case.live{opacity:1;pointer-events:auto}
 .case .backbtn{position:fixed;left:0;right:0;top:62px;z-index:2;opacity:1;pointer-events:auto;transform:none;background:var(--paper);padding:12px var(--gutter)}
 .case .backbtn,.about-layer .backbtn{box-shadow:0 -16px 0 var(--paper)}
@@ -1642,10 +1646,37 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      (old) One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
      2 Orbit: the three spheres already circle the tagline, small, passing in front and behind; on scroll they come forward into a row.
      3 Sea: a wide field of dots rolling like water in perspective; on scroll it lifts, row by row, and wraps into the three spheres. */
-  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 8 ? +q : 7 })();
-  var heroClock = 0;
+  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 9 ? +q : 9 })();
+  var heroClock = 0, FLX = null, FLY = null, flowLast = -1;
+  // the swarm keeps its own positions: each dot is carried by a slow current that mostly runs sideways and curls into streams
+  function flowStep(t, dt){
+    var N = SPH[0].n, M = 3 * N;
+    if (!FLX || FLX.length !== M) { FLX = new Float32Array(M); FLY = new Float32Array(M); for (var j = 0; j < M; j++) { FLX[j] = Math.random() * W; FLY[j] = 70 + Math.random() * (H - 140) } }
+    if (flowLast === t) return; flowLast = t;
+    for (var k = 0; k < M; k++) {
+      var x = FLX[k], y = FLY[k];
+      var a = (noise(x * .0011 + t * .012, y * .0021 - t * .008) - .5) * 5.2;     // the direction of the current, changing slowly
+      var sp = 18 + 34 * noise(x * .002 + 9, y * .002 + t * .02);                // faster in the streams, lazy elsewhere
+      var vx = Math.cos(a) * sp + 14, vy = Math.sin(a) * sp * .45;               // a steady drift to the right, mostly horizontal
+      vy += (H * .5 - y) * .02;                                                  // kept loosely in the middle band
+      x += vx * dt; y += vy * dt;
+      if (x > W + 30) { x = -30; y = 70 + Math.random() * (H - 140) } else if (x < -30) x = W + 30;
+      FLX[k] = x; FLY[k] = y;
+    }
+  }
   function heroPos(c, i, t, out){
     var P = SPH[c], N = P.n, m = Math.min(W, H), q = ((i * 7919) % 1000) / 1000;
+    if (HERO_V === 9) {
+      // three loose ribbons, one per sphere: each follows a slow, mostly horizontal path; its dots trail behind it,
+      // tight near the head and spreading out along the tail, like a swarm moving through water
+      var lam = Math.pow(((i * 4241) % 1000) / 1000, 1.3), tl = t - lam * 14 - c * 7;
+      function lead(tt, o){ o[0] = W * (.5 + .46 * Math.sin(tt * .055 + c * 2.2) + .06 * Math.sin(tt * .17 + c)); o[1] = H * (.5 + .2 * Math.sin(tt * .09 + c * 1.4) + .07 * Math.sin(tt * .21 + c * 3)); return o }
+      var A0 = lead(tl, [0, 0]), A1 = lead(tl + .3, [0, 0]), tx0 = A1[0] - A0[0], ty0 = A1[1] - A0[1], tn = Math.hypot(tx0, ty0) + 1e-3, nx0 = -ty0 / tn, ny0 = tx0 / tn;
+      var spread = 16 + 130 * lam, n1 = noise(i * .37 + t * .05, c * 10 + lam * 3) - .5, n2 = noise(i * .53 - t * .04, c * 7 + 5) - .5;
+      out[0] = A0[0] + nx0 * n1 * 2 * spread + tx0 / tn * n2 * spread * .8; out[1] = A0[1] + ny0 * n1 * 2 * spread + ty0 / tn * n2 * spread * .8;
+      out[2] = -.7 + 1.5 * (1 - lam) * (.4 + .6 * q); out[3] = .55 + .4 * (1 - lam); out[4] = lam * .35;
+      return out;
+    }
     if (HERO_V === 3) {                                // Sea: a field of dots rolling like water, each third becomes a sphere
       var cc = Math.ceil(Math.sqrt(N * .9)), rc = Math.ceil(N / cc), gz = Math.floor(i / cc) / (rc - 1);
       var gx = (c + (i % cc + .5) / cc) / 3 * 2.4 - 1.2, wv = .07 * Math.sin(gx * 5 + t * .55) + .05 * Math.sin(gz * 9 - t * .4) + .03 * Math.sin((gx + gz) * 11 + t * .7);
@@ -1697,7 +1728,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   var _h = [0, 0, 0, 0, 0];
   function heroSys(t, dt, pr){
     if (mode !== -1 || focus >= 0 || fTrans || pr.s >= T_FOLDERS - .001 || !SPH.length) return;
-    heroClock += dt; for (var c0 = 0; c0 < 3; c0++) sphT[c0] += dt;   // the spheres keep turning while they are still the hero
+    heroClock += dt; for (var c0 = 0; c0 < 3; c0++) sphT[c0] += dt;
+    if (HERO_V === 9) flowStep(heroClock, Math.min(dt, .05));   // the spheres keep turning while they are still the hero
     var u = smoothstep(.02, T_FOLDERS - .2, pr.s);
     for (var c = 0; c < 3; c++) {
       var h = ballHome(c), P = SPH[c], uc = clamp((u - c * .05) / .9, 0, 1), base = cell * .3;
@@ -1725,7 +1757,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var FO = focus >= 0 ? focus : (lastFocus >= 0 && ballF[lastFocus] > .001 ? lastFocus : -1);
 
     if (focus < 0 && FO < 0) txtFor = -1;
-    for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
+    for (var c = 0; c < 3; c++) { ballF[c] = focus === c ? 1 : 0; /* no animation: it is simply there */ sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
@@ -2125,7 +2157,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (reduce) sharpBig = bigTarget;
     if (bigIdx >= 0 && focus < 0 && sharpBig < .01) bigIdx = -1;
     var solidB = smoothstep(0, .55, sharpBig), revealB = smoothstep(.25, 1, sharpBig), letGoB = smoothstep(.55, 1, sharpBig);
-    var peekA = focus >= 0 ? smoothstep(.6, 1, pr.focusT < 0 ? 1 : pr.focusT) : 0;
+    var peekA = focus >= 0 ? 1 : 0;
     hits.forEach(function(h, i){
       var big = i === bigIdx && sharpA < .05, bt = bigT[i];
       h.style.transform = big ? 'translate(' + bt.tx.toFixed(2) + 'px,' + bt.ty.toFixed(2) + 'px) scale(' + bt.sc.toFixed(4) + ')' : '';
@@ -3261,10 +3293,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 </script>
 <div id="heroPick" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.08);font:500 12px/1 system-ui,sans-serif">
   <span style="padding:7px 8px 7px 10px;color:#888">Hero</span>
-  <button type="button" data-v="7">Matrix</button><button type="button" data-v="8">Ripple</button><button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
+  <button type="button" data-v="9">Flow</button><button type="button" data-v="7">Matrix</button><button type="button" data-v="8">Ripple</button><button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
 </div>
 <style>#heroPick button{font:inherit;border:0;border-radius:999px;padding:7px 12px;background:transparent;color:#111}#heroPick button.on{background:#111;color:#fff}</style>
-<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 8 ? q : '7';
+<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 9 ? q : '9';
   [].forEach.call(document.querySelectorAll('#heroPick button'), function(b){ b.classList.toggle('on', b.getAttribute('data-v') === String(q));
     b.addEventListener('click', function(){ try { localStorage.setItem('heroV', b.getAttribute('data-v')) } catch (e) {} location.search = '?hero=' + b.getAttribute('data-v') }) }) })();</script>
 <div id="dot" aria-hidden="true"></div>
