@@ -1560,7 +1560,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      Labs breathes between order and scatter, like an experiment loosening and coming back together;
      Rooms swirls, its bands of dots turning at different speeds like a gas planet, denser at the poles.
      Click one and it moves left, big, with its pieces on the right */
-  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0;
+  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0, sphHot = [0, 0, 0];
   function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .5, H * .17) };
     return { x: W * [.2, .5, .8][ci], y: b.y + b.h / 2, r: Math.min(W * .1, H * .19) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .5 } }
@@ -1636,16 +1636,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     for (var i = pts.length - 1; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0, tq = pts[i]; pts[i] = pts[j]; pts[j] = tq }   // shuffle, so every dot finds a different letter
     return pts;
   }
+  function pr0s(){ var r = stage.getBoundingClientRect(); return clamp(-r.top, 0, stage.offsetHeight - H) / H }
   function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
   function netDraw(t, alpha, dt){
-    if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; netLand = 0; return }
+    if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; if (pr0s() < T_FOLDERS - .3) netLand = 0; return }   // only replay the landing after scrolling away
     netLand = Math.min(1, netLand + dt * .7);
     var anyOpen = focus >= 0;
     if (focus >= 0) lastFocus = focus;
     var FO = focus >= 0 ? focus : (lastFocus >= 0 && ballF[lastFocus] > .001 ? lastFocus : -1);
     if (focus >= 0 && txtFor !== focus && peek.textContent.trim()) { txtPts = peekTargets(); txtFor = focus }
     if (focus < 0 && FO < 0) txtFor = -1;
-    for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1) }   // hovering wakes a sphere up a little
+    for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
@@ -1675,8 +1676,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           dot(ctx, px2, py2, base * (.6 + .8 * d) * (1 - ue) + (.8 + 1.9 * vz * vz) * ue);
           continue;
         }
-        var g = (40 * (1 - d)) | 0;
-        ctx.fillStyle = 'rgba(' + g + ',' + g + ',' + g + ',' + a.toFixed(3) + ')';
+        var g = (40 * (1 - d)) | 0, hr = sphHot[c];
+        ctx.fillStyle = 'rgba(' + ((g + (255 - g) * hr) | 0) + ',' + ((g + (30 - g) * hr) | 0) + ',' + ((g + (30 - g) * hr) | 0) + ',' + a.toFixed(3) + ')';
         dot(ctx, cx + p[0] * R, cy - p[1] * R, base * (.6 + .8 * d));
       }
     }
@@ -2032,7 +2033,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     // It starts while the last pixels are landing, and follows the scroll with a little lag so it never pops
     var sharpTarget = 0;
     if (mode === -1) {
-      if (A === S_FOLDERS && B === S_FOLDERS) sharpTarget = 1;
+      if ((A === S_FOLDERS && B === S_FOLDERS) || focus >= 0 || fTrans) sharpTarget = 1;   // open or closing a sphere: the pixels stay away
       else if (A === S_HERO && B === S_FOLDERS) sharpTarget = smoothstep(.88, 1, tt);
     }
     sharpA += (sharpTarget - sharpA) * (sharpTarget > sharpA ? .07 : .16);
@@ -3131,7 +3132,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function focusNow(k){
     leaveFocusNow();
-    focus = k; bigIdx = k; sharpA = 0; sharpBig = 1;
+    focus = k; bigIdx = k; sharpA = 1; sharpBig = 1; netLand = 1; for (var bq = 0; bq < 3; bq++) ballF[bq] = bq === k ? 1 : 0;   // arriving by a link: already open and moving
     fTrans = { from: S_FOLDERS, to: S_BIG0 + k, start: performance.now() - FOCUS_MS * 2 };
     groups.forEach(function(g, i){ g.classList.toggle('on', i === k) }); pick(k, -1);
   }
