@@ -12,6 +12,9 @@
 <link rel="preload" href="fonts/archiv-grotesk-500.woff" as="font" type="font/woff" crossorigin>
 <style>
 /* Archiv Grotesk (Plusminus Type). Its "Normal" is the book weight and "Regular" sits a step heavier, so they map to 400 and 500 */
+@font-face{font-family:'Commit Mono';src:url(fonts/commit-mono-400.woff) format('woff');font-weight:100 500;font-style:normal;font-display:swap}
+@font-face{font-family:'Commit Mono';src:url(fonts/commit-mono-700.woff) format('woff');font-weight:600 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Commit Mono';src:url(fonts/commit-mono-400i.woff) format('woff');font-weight:100 900;font-style:italic;font-display:swap}
 @font-face{font-family:'Poppins';src:url(fonts/poppins-300.woff) format('woff');font-weight:300;font-display:swap}
 @font-face{font-family:'Poppins';src:url(fonts/poppins-400.woff) format('woff');font-weight:400;font-display:swap}
 @font-face{font-family:'Poppins';src:url(fonts/poppins-500.woff) format('woff');font-weight:500 600;font-display:swap}
@@ -50,7 +53,8 @@
 /* no numbers: just the names */
 .peek h2 i,.peek .row i,#sky .cname b i{display:none!important}
 /* Helvetica throughout */
-html:root{--font:'Poppins',Helvetica,Arial,sans-serif;--accent:#000;--accent-soft:rgba(91,227,143,.45);--mint:#5BE38F}
+html:root{--font:'Commit Mono',ui-monospace,Menlo,monospace;--accent:#000;--accent-soft:rgba(91,227,143,.45);--mint:#5BE38F}
+.hero-line{letter-spacing:-.03em!important}
 
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
@@ -62,11 +66,11 @@ html:root{--font:'Poppins',Helvetica,Arial,sans-serif;--accent:#000;--accent-sof
 /* ---------- CV style ---------- */
 body{letter-spacing:0}
 header{border-bottom:2px solid #000;padding-top:14px;padding-bottom:14px;background:var(--paper)}
-.wm{font-size:clamp(22px,1.9vw,28px);font-weight:700;letter-spacing:-.045em;line-height:1;color:#000;display:inline-flex;align-items:baseline}
+.wm{font-size:clamp(20px,1.7vw,26px);font-weight:700;letter-spacing:-.04em;line-height:1;color:#000;display:inline-flex;align-items:baseline}
 .wm i{display:inline-block;width:.3em;height:.3em;border-radius:50%;background:var(--mint);margin-left:.06em}
 nav a[data-t],.hdr-exit{font-size:11px!important;font-weight:600;letter-spacing:.32em;text-transform:uppercase}
 nav a[data-t]::after,.hdr-exit[data-t]::after{letter-spacing:.32em}
-.hero-line{font-weight:700;letter-spacing:-.05em;line-height:1.04}
+.hero-line{font-weight:700;letter-spacing:-.03em!important;line-height:1.08}
 .hero-loc{font-size:11px;font-weight:600;letter-spacing:.32em;text-transform:uppercase}
 .hero-loc span{font-weight:400}
 .roles{display:inline-flex;align-items:center;gap:18px;margin-top:clamp(26px,2.6vw,40px);font-size:11px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:#000}
