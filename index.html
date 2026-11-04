@@ -1586,11 +1586,13 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var rr = 1 + (q - .5) * .55 * w;
       x = x * rr + dx * .32 * w; y = y * rr + dy * .32 * w; z = z * rr + dz * .32 * w;
     } else {                                          // Rooms: bands turning at their own pace, breathing a little
-      var lon = P.a[i] + t * (.05 + .2 * (1 - y * y)), r2 = Math.sqrt(Math.max(0, 1 - y * y)), br = 1 + .03 * Math.sin(t * .45 + y * 2.5);
+      var lon = P.a[i] + t * (.05 + .2 * (1 - y * y)) + .7 * Math.sin(t * .13) * y;      // the bands turn at their own pace and twist back and forth
+      var lobe = 1 + .07 * Math.sin(lon * 3 - t * .5 + y * 2) + .04 * Math.sin(y * 5 + t * .37);   // soft lobes rolling around it
+      var r2 = Math.sqrt(Math.max(0, 1 - y * y)), br = (1 + .03 * Math.sin(t * .45 + y * 2.5)) * lobe;
       x = Math.cos(lon) * r2 * br; z = Math.sin(lon) * r2 * br; y *= br;
     }
     // turn the whole sphere slowly, tilted towards the viewer
-    var yaw = t * [.12, .08, .04][sty], tilt = [.38, .3 + .15 * Math.sin(t * .07), .26][sty];
+    var yaw = t * [.12, .08, .05][sty], tilt = [.38, .3 + .15 * Math.sin(t * .07), .26 + .16 * Math.sin(t * .09)][sty];   // its axis wanders slowly
     var cy = Math.cos(yaw), sy = Math.sin(yaw), x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
     var ct = Math.cos(tilt), st = Math.sin(tilt), y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
     _p[0] = x1; _p[1] = y2; _p[2] = z2; return _p;
@@ -1639,7 +1641,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      (old) One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
      2 Orbit: the three spheres already circle the tagline, small, passing in front and behind; on scroll they come forward into a row.
      3 Sea: a wide field of dots rolling like water in perspective; on scroll it lifts, row by row, and wraps into the three spheres. */
-  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d+)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 11 ? +q : 11 })();
+  var HERO_V = 11, HERO_V_OLD = (function(){ var q = (location.search.match(/hero=(\d+)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 11 ? +q : 11 })();
   var heroClock = 0, FLX = null, FLY = null, flowLast = -1;
   // the swarm keeps its own positions: each dot is carried by a slow current that mostly runs sideways and curls into streams
   function flowStep(t, dt){
@@ -1675,10 +1677,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var P = SPH[c], N = P.n, m = Math.min(W, H), q = ((i * 7919) % 1000) / 1000;
     if (HERO_V === 11) {
       var k3 = c * N + i + 1, h1 = Math.sin(k3 * 12.9898) * 43758.5453, h2 = Math.sin(k3 * 78.233) * 24634.6345, h3 = Math.sin(k3 * 39.425) * 17321.137; h1 -= Math.floor(h1); h2 -= Math.floor(h2); h3 -= Math.floor(h3); var ph3 = h1 * 6.28;   // well-mixed random, no visible lines
-      var z3 = Math.pow(h3, 2.2);                                                     // depth: most dots far away and small, a few close and big
+      var z3 = Math.pow(Math.max(0, Math.min(1, h3 + .14 * Math.sin(t * (.06 + .05 * h2) + ph3 * 2.3))), 2.2);   // depth: most far and small, a few close and big, slowly coming and going
       var span = W + 80, x3 = h1 * span + t * (3 + 9 * z3) + Math.sin(t * (.05 + .05 * h2) + ph3) * (30 + 40 * z3);
       x3 = ((x3 % span) + span) % span - 40;
-      var y3 = 70 + h2 * (H - 140) + Math.cos(t * (.04 + .04 * h1) + ph3 * 1.7) * (24 + 36 * z3) + Math.sin(t * .03 + h3 * 9) * 12;
+      var y3 = 70 + h2 * (H - 140) + Math.cos(t * (.045 + .05 * h1) + ph3 * 1.7) * (34 + 50 * z3) + Math.sin(t * .035 + h3 * 9) * 22;   // a gentle rise and fall
       out[0] = x3; out[1] = y3; out[2] = -.8 + 2.5 * z3; out[3] = .35 + .6 * z3; out[4] = (1 - z3) * .3;
       return out;
     }
@@ -3332,14 +3334,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   eqTick(); setInterval(eqTick, 160);
 })();
 </script>
-<div id="heroPick" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.08);font:500 12px/1 system-ui,sans-serif">
-  <span style="padding:7px 8px 7px 10px;color:#888">Hero</span>
-  <button type="button" data-v="11">Float</button><button type="button" data-v="10">Name</button><button type="button" data-v="9">Flow</button><button type="button" data-v="7">Matrix</button><button type="button" data-v="8">Ripple</button><button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
-</div>
-<style>#heroPick button{font:inherit;border:0;border-radius:999px;padding:7px 12px;background:transparent;color:#111}#heroPick button.on{background:#111;color:#fff}</style>
-<script>(function(){ var q = (location.search.match(/hero=(\d+)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 11 ? q : '11';
-  [].forEach.call(document.querySelectorAll('#heroPick button'), function(b){ b.classList.toggle('on', b.getAttribute('data-v') === String(q));
-    b.addEventListener('click', function(){ try { localStorage.setItem('heroV', b.getAttribute('data-v')) } catch (e) {} location.search = '?hero=' + b.getAttribute('data-v') }) }) })();</script>
 <div id="dot" aria-hidden="true"></div>
 <script>
 (function(){   // the red dot follows the pointer closely and swells over anything clickable (the spheres too)
