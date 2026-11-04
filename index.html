@@ -1007,9 +1007,9 @@ var FOLDERS = [
     { title: 'Music', kind: 'My Spotify playlists, on vinyl', img: 'images/project-3.jpg',
       text: 'A listening room: pull a record from the crate, drop it on the turntable and flip through my playlists.',
       result: '', id: 'music' },
-    { title: 'Sketchbook', kind: '3D, motion and AI image making', img: 'images/furry-ball.jpg',
-      text: 'Where I play: 3D and motion pieces made in Blender, and images I art-direct with AI. My sketchbook for art direction.',
-      result: '', id: 'sketchbook' }
+    { title: 'Gallery', kind: 'AI image making, creative direction', img: 'images/ai/ai-110.jpg',
+      text: 'A small gallery of images I art-directed with Midjourney: portraits, rituals and quiet surreal scenes.',
+      result: '', id: 'photo-lab' }
   ]}
 ];
 
@@ -1272,7 +1272,7 @@ var CASES = {
   },
 
   'photo-lab': {
-    title: 'Photo Lab', sub: 'For fun, I do creative direction with AI: a mood, a prompt and a few hundred rewrites, until the image feels like a still from a film nobody has shot yet.',
+    title: 'Gallery', sub: 'For fun, I do creative direction with AI: a mood, a prompt and a few hundred rewrites, until the image feels like a still from a film nobody has shot yet.',
     meta: [], noHero: true, room: true, tint: '#FFFFFF', chrome: true,
     notes: [['Why I do it', 'It’s my sketchbook for art direction. Before anything gets made, I can test a mood, a composition, the casting, the styling and the light, and see what holds up. It keeps my eye sharp and my references honest.'],
       ['How I work', 'Every image starts with a reference board and a short brief. Then it’s rounds of prompting and editing until it reads like a photograph with intent, not a lucky accident.'],
@@ -2535,16 +2535,6 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }, true);
   }
   /* ---------- Photo lab: two slow rails of AI images, a quiet lightbox ---------- */
-  // Sketchbook: the 3D pieces on one rail and the AI images on the other
-  CASES.sketchbook = {
-    title: 'Sketchbook', sub: 'Where I play. 3D and motion pieces I make from scratch, and images I art-direct with AI: a mood, a prompt and a few hundred rewrites.',
-    meta: [], noHero: true, room: true, tint: '#FFFFFF', chrome: true,
-    items: CASES['3d-lab'].items.map(function(a){ return [0, a[1], a[2], a[3], a[4], a[5]] }).concat(AI_IMAGES.map(function(a){ return [1, 'images/ai/' + a[1], a[2], a[3], a[4], ''] })),
-    notes: [['Why I do it', 'It’s my sketchbook for art direction. I love a good challenge, and these pieces let me test a mood, a composition, the light and the motion before anything real gets made.'],
-      ['How I work', 'Every 3D piece is ideated, designed and produced by me, from concept to edit. Every AI image starts with a reference board and a short brief, then rounds of prompting until it reads like a photograph with intent.'],
-      ['Tools', [['Blender', 'Modelling, simulations, materials and rendering'], ['Premiere Pro', 'Editing, timing and sound'], ['Midjourney', 'Image generation, mostly in raw mode']]]],
-    blocks: [['gallery', '']]
-  };
   function galleryItems(c){ return c.items || AI_IMAGES.map(function(a){ return [a[0], 'images/ai/' + a[1], a[2], a[3], a[4], ''] }) }
   function galleryRoom(c, id){
     var items = galleryItems(c);
