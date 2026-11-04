@@ -22,7 +22,7 @@
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
 #dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#FF1E1E;z-index:100000;pointer-events:none;
-  box-shadow:0 0 0 1px rgba(255,30,30,.25),0 0 18px rgba(255,40,20,.55);opacity:0;transition:width .25s var(--ease),height .25s var(--ease),margin .25s var(--ease),opacity .3s}
+  opacity:0;transition:width .25s var(--ease),height .25s var(--ease),margin .25s var(--ease),opacity .3s}
 #dot.on{opacity:1}#dot.big{width:34px;height:34px;margin:-17px 0 0 -17px}
 @media not ((hover:hover) and (pointer:fine)){ #dot{display:none} }
 </style>
@@ -1618,8 +1618,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function netDraw(t, alpha, dt){
     if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; netLand = 0; return }
     netLand = Math.min(1, netLand + dt * .7);
-    var k = 1 - Math.exp(-dt * 4.5), anyOpen = focus >= 0;
-    for (var c = 0; c < 3; c++) { ballF[c] += ((focus === c ? 1 : 0) - ballF[c]) * k; sphT[c] += dt * (netHot === c ? 1.8 : 1) }   // hovering wakes a sphere up a little
+    var anyOpen = focus >= 0;
+    for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
@@ -1893,9 +1893,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       return o;
     }
     if (s < T_TEXT) return o;
-    if (s < T_BRAIN) { o.A = S_HERO; o.B = S_BRAIN; o.t = (s - T_TEXT) / (T_BRAIN - T_TEXT); return o }
-    if (s < T_ZOOM) { o.A = o.B = S_BRAIN; return o }
-    if (s < T_FOLDERS) { o.A = S_BRAIN; o.B = S_FOLDERS; o.t = (s - T_ZOOM) / (T_FOLDERS - T_ZOOM); o.zoom = true; o.folders = smoothstep(.8, 1, o.t); return o }
+    if (s < T_FOLDERS) { o.A = S_HERO; o.B = S_FOLDERS; o.t = (s - T_TEXT) / (T_FOLDERS - T_TEXT); o.folders = smoothstep(.8, 1, o.t); return o }   // no brain: the hero's dots go straight into the spheres
     o.A = o.B = S_FOLDERS; o.folders = 1;
     return o;
   }
@@ -1984,7 +1982,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     mouse.s += ((mouse.on ? 1 : 0) - mouse.s) * .08;
     var inView = mode >= 0 && !(A !== B);
     var onFolders = mode === -1 && A === S_FOLDERS && B === S_FOLDERS;
-    var str = mouse.s * (inView ? 0 : onFolders ? .25 : 1);   // gentler over folders and open work
+    var str = 0;   // the pointer leaves the pixels alone: it is just the red dot
 
 
     // HTML layers
@@ -1995,7 +1993,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var sharpTarget = 0;
     if (mode === -1) {
       if (A === S_FOLDERS && B === S_FOLDERS) sharpTarget = 1;
-      else if (A === S_BRAIN && B === S_FOLDERS) sharpTarget = smoothstep(.86, 1, tt);
+      else if (A === S_HERO && B === S_FOLDERS) sharpTarget = smoothstep(.88, 1, tt);
     }
     sharpA += (sharpTarget - sharpA) * (sharpTarget > sharpA ? .07 : .16);
     if (reduce) sharpA = sharpTarget;
@@ -2046,7 +2044,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
 
     // 1b) On the folders, a faint trail of small pixels follows the pointer (quieter than the hero)
-    if (pr.swap >= 1 && mouse.s > .01 && !reduce) {
+    if (false) {   // no trail of pixels behind the pointer
       var TR = clamp(W * .07, 60, 110), c0 = Math.max(0, Math.floor((mouse.x - TR) / cell)), c1 = Math.min(ncols - 1, Math.ceil((mouse.x + TR) / cell));
       var r0 = Math.max(0, Math.floor((mouse.y - TR - 64) / cell)), r1 = Math.min(nrows - 1, Math.ceil((mouse.y + TR - 64) / cell));
       for (var rr = r0; rr <= r1; rr++) for (var cc = c0; cc <= c1; cc++) {
@@ -2099,7 +2097,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var wf = (A === S_FOLDERS ? 1 - lt : 0) + (B === S_FOLDERS ? lt : 0);
         var wb = (A >= S_BIG0 ? 1 - lt : 0) + (B >= S_BIG0 ? lt : 0);
         var wbig = ((A >= S_BIG0 && A !== S_BRAIN) ? 1 - lt : 0) + ((B >= S_BIG0 && B !== S_BRAIN) ? lt : 0);   // an open ball (the brain shares the index range)
-        var vis = Math.max(0, 1 - letGo * wf - letGoB * wb) * (1 - wbig);   // PROTOTYPE: when a ball opens, the living network carries it, not the pixels
+        var vis = Math.max(0, 1 - letGo * wf - letGoB * wb) * (1 - wbig) * (pr.focusT >= 0 || A >= S_BIG0 || B >= S_BIG0 ? 0 : 1);   // PROTOTYPE: when a ball opens, the living network carries it, not the pixels
         var al = (SA[b + 6] + (SB[b + 6] - SA[b + 6]) * lt) * pixA * vis;
         if (s < .3 || al < .02) { ox[p] *= .9; oy[p] *= .9; continue }
         var r = SA[b + 3] + (SB[b + 3] - SA[b + 3]) * lt, g = SA[b + 4] + (SB[b + 4] - SA[b + 4]) * lt, bl = SA[b + 5] + (SB[b + 5] - SA[b + 5]) * lt;
@@ -2120,7 +2118,11 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         }
         if (!reduce && !calm) { var fl = still ? (onA ? .5 : 1.2) : 2.4; x += Math.sin(t * 1.3 + phase[p]) * fl; y += Math.cos(t * 1.1 + phase[p] * 1.3) * fl }
         // Between folder states the pixels wander across the screen on a curved path, like the hero field
-        if (!reduce && !still && pr.focusT >= 0) {
+        if (!reduce && !still && A === S_HERO && B === S_FOLDERS) {
+          var arc0 = Math.sin(Math.PI * lt), amp0 = (30 + delay[p] * 90) * arc0;
+          x += Math.cos(phase[p] * 2 + t * .35) * amp0; y += Math.sin(phase[p] * 3 + t * .3) * amp0 * .6;
+        }
+        if (false) {
           var arc = Math.sin(Math.PI * lt), amp = (70 + delay[p] * 170) * arc;
           x += Math.cos(phase[p] * 2 + t * .7) * amp; y += Math.sin(phase[p] * 3 + t * .55) * amp * .7;
         }
@@ -2144,7 +2146,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         dot(ctx, x + ox[p], y + oy[p], s);
       }
     }
-    netDraw(t, mode === -1 ? Math.max(reveal, revealB) : 0, dt / 1000);   // PROTOTYPE: the balls of ideas
+    netDraw(t, mode === -1 ? (focus >= 0 || fTrans ? 1 : Math.max(reveal, revealB)) : 0, dt / 1000);   // PROTOTYPE: the balls of ideas
     requestAnimationFrame(draw);
   }
 
