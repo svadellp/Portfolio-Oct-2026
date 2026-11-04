@@ -1638,13 +1638,62 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   }
   function pr0s(){ var r = stage.getBoundingClientRect(); return clamp(-r.top, 0, stage.offsetHeight - H) / H }
   function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
+  /* ---------- The hero: one animation that becomes the three spheres as you scroll ----------
+     1 One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
+     2 Orbit: the three spheres already circle the tagline, small, passing in front and behind; on scroll they come forward into a row.
+     3 Sea: a wide field of dots rolling like water in perspective; on scroll it lifts, row by row, and wraps into the three spheres. */
+  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 1 && +q <= 3 ? +q : 1 })();
+  var heroClock = 0;
+  function heroPos(c, i, t, out){
+    var P = SPH[c], N = P.n, m = Math.min(W, H);
+    if (HERO_V === 1) {
+      var y = 1 - 2 * (i + .5) / N, r = Math.sqrt(Math.max(0, 1 - y * y)), lon = c * 2.0944 + ((i * 2.39996) % 2.0944) + .06;
+      var br = 1 + .015 * Math.sin(t * .5 + y * 3);
+      var x = Math.cos(lon) * r * br, z = Math.sin(lon) * r * br; y *= br;
+      var yaw = t * .07, cy0 = Math.cos(yaw), sy0 = Math.sin(yaw), x1 = x * cy0 + z * sy0, z1 = -x * sy0 + z * cy0, tl = .32, y2 = y * Math.cos(tl) - z1 * Math.sin(tl), z2 = y * Math.sin(tl) + z1 * Math.cos(tl);
+      var R = m * .38; out[0] = W / 2 + x1 * R; out[1] = H * .52 - y2 * R; out[2] = z2; out[3] = .8;
+    } else if (HERO_V === 2) {
+      var th = t * .1 + c * 2.0944, oz = Math.sin(th), Rm = m * .1 * (1 + .3 * oz);
+      var ccx = W / 2 + Math.cos(th) * W * .3, ccy = H * .5 + oz * H * .1 + Math.cos(th) * H * .05;
+      var p = sphPoint(c, i, sphT[c]); out[0] = ccx + p[0] * Rm; out[1] = ccy - p[1] * Rm; out[2] = p[2]; out[3] = .6 + .4 * (oz + 1) / 2;
+    } else {
+      // a grid laid out so each sphere's dots come from its own third of the field, left to right
+      var cc = Math.ceil(Math.sqrt(N * .9)), rc = Math.ceil(N / cc), gz = Math.floor(i / cc) / (rc - 1);
+      var gx = (c + (i % cc + .5) / cc) / 3 * 2.4 - 1.2, wv = .07 * Math.sin(gx * 5 + t * .55) + .05 * Math.sin(gz * 9 - t * .4) + .03 * Math.sin((gx + gz) * 11 + t * .7);
+      var zf = 1 + gz * 3; out[0] = W / 2 + gx * W * .75 / zf; out[1] = H * .42 + H * .62 / zf - wv * H * .6 / zf; out[2] = 1.6 / zf - .6; out[3] = .75 + .25 / zf;
+    }
+    return out;
+  }
+  var _h = [0, 0, 0, 0];
+  function heroSys(t, dt, pr){
+    if (mode !== -1 || focus >= 0 || fTrans || pr.s >= T_FOLDERS - .001 || !SPH.length) return;
+    heroClock += dt; for (var c0 = 0; c0 < 3; c0++) sphT[c0] += dt;   // the spheres keep turning while they are still the hero
+    var u = smoothstep(.02, T_FOLDERS - .2, pr.s);
+    for (var c = 0; c < 3; c++) {
+      var h = ballHome(c), P = SPH[c], uc = clamp((u - c * .05) / .9, 0, 1), base = cell * .3;
+      for (var i = 0; i < P.n; i++) {
+        var p = sphPoint(c, i, sphT[c]), d = (p[2] + 1.2) / 2.2;
+        var tx = h.x + p[0] * h.r, ty = h.y - p[1] * h.r + Math.sin(t * .4 + c * 2.1) * 4;
+        var hp = heroPos(c, i, heroClock, _h), hd = (hp[2] + 1.2) / 2.2;
+        var dl = HERO_V === 3 ? (1 - hd) * .35 : ((i * 7919) % 1000) / 1000 * .3;   // the sea lifts front rows first
+        var lt = clamp((uc - dl) / (1 - .35), 0, 1); lt = lt * lt * (3 - 2 * lt);
+        var arc = Math.sin(Math.PI * lt) * (HERO_V === 2 ? 0 : 24 + (i % 11) * 4);
+        var x = hp[0] + (tx - hp[0]) * lt + Math.cos(i * 1.3) * arc, y = hp[1] + (ty - hp[1]) * lt + Math.sin(i * 2.1) * arc * .6;
+        var dd = hd + (d - hd) * lt;
+        var a = ((.2 + .75 * dd * dd) * (hp[3] + (1 - hp[3]) * lt)); if (a < .02) continue;
+        var g = (40 * (1 - dd)) | 0;
+        ctx.fillStyle = 'rgba(' + g + ',' + g + ',' + g + ',' + a.toFixed(3) + ')';
+        dot(ctx, x, y, base * (.6 + .8 * dd));
+      }
+    }
+  }
   function netDraw(t, alpha, dt){
     if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; if (pr0s() < T_FOLDERS - .3) netLand = 0; return }   // only replay the landing after scrolling away
-    netLand = Math.min(1, netLand + dt * .7);
+    netLand = 1;   // the hero's dots land them; no second landing
     var anyOpen = focus >= 0;
     if (focus >= 0) lastFocus = focus;
     var FO = focus >= 0 ? focus : (lastFocus >= 0 && ballF[lastFocus] > .001 ? lastFocus : -1);
-    if (focus >= 0 && txtFor !== focus && peek.textContent.trim()) { txtPts = peekTargets(); txtFor = focus }
+
     if (focus < 0 && FO < 0) txtFor = -1;
     for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
@@ -2065,7 +2114,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     peek.classList.toggle('live', peekA > .6 && mode === -1);
 
     // 1) Live field in the hero
-    var fieldA = 1 - pr.swap;
+    var fieldA = 0;   // the old cloud is replaced by the hero animation
     if (fieldA > .01) {
       var sq = cell * .74;
       for (var i = 0; i < cloud.length; i++) {
@@ -2112,7 +2161,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
 
     // 2) Particles
-    var pixA = (pr.s < T_TEXT && mode === -1) ? pr.swap : 1;
+    var pixA = mode === -1 ? 0 : 1;
     if (pixA > .01) {
       var span = .6, still = A === B, calm = still && A >= S_FOLDERS;
       // Diving into the brain: it grows past the screen while the pixels peel off towards the folders
@@ -2188,7 +2237,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         dot(ctx, x + ox[p], y + oy[p], s);
       }
     }
-    netDraw(t, mode === -1 ? (focus >= 0 || fTrans ? 1 : Math.max(reveal, revealB)) : 0, dt / 1000);   // PROTOTYPE: the balls of ideas
+    heroSys(t, dt / 1000, pr);
+    netDraw(t, mode === -1 ? (focus >= 0 || fTrans ? 1 : (pr.s >= T_FOLDERS - .001 ? 1 : 0)) : 0, dt / 1000);   // PROTOTYPE: the balls of ideas
     requestAnimationFrame(draw);
   }
 
@@ -3057,23 +3107,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function paintPixels(list){ ntx.clearRect(0, 0, nt.width / navDpr, nt.height / navDpr); ntx.fillStyle = 'rgb(' + (list.bg || [248, 248, 246]).join(',') + ')'; ntx.fillRect(0, 0, innerWidth, innerHeight);
     for (var i = 0; i < list.length; i++) { var q = list[i]; ntx.fillStyle = 'rgba(' + q[3] + ',' + q[4] + ',' + q[5] + ',' + q[6] + ')'; dot(ntx, q[0], q[1], q[2]) } }
   var navDpr = 1;
-  function pixelNav(apply){
-    if (navBusy) return;
-    if (reduce) { apply(); return }
-    navBusy = true;
-    var bg = getComputedStyle(document.body).backgroundColor || '#F8F8F8';
-    navDpr = 1; nt.width = 4; nt.height = 4; ntx.fillStyle = bg; ntx.fillRect(0, 0, 4, 4);   // a plain sheet of paper
-    nt.style.opacity = 0; nt.classList.add('live');
-    var t0 = performance.now(), IN = 260, HOLD = 60, OUT = 420, done = false;
-    (function step(now){
-      var el = now - t0;
-      if (el < IN) nt.style.opacity = (el / IN).toFixed(3);
-      else if (!done) { nt.style.opacity = 1; done = true; document.documentElement.classList.add('instant'); apply();
-        requestAnimationFrame(function(){ document.documentElement.classList.remove('instant') }) }
-      else if (el > IN + HOLD) { var k = clamp((el - IN - HOLD) / OUT, 0, 1); nt.style.opacity = (1 - k * k * (3 - 2 * k)).toFixed(3); if (k >= 1) { nt.classList.remove('live'); navBusy = false; return } }
-      requestAnimationFrame(step);
-    })(t0);
-  }
+  function pixelNav(apply){ apply() }   // plain navigation, no transition
   function fly(src, dst){
     var N = Math.max(src.length, dst.length), vw = innerWidth, vh = innerHeight, bgA = src.bg || [248, 248, 246], bgB = dst.bg || [248, 248, 246];
     shuffle(src); shuffle(dst);
@@ -3195,6 +3229,14 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   eqTick(); setInterval(eqTick, 160);
 })();
 </script>
+<div id="heroPick" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.08);font:500 12px/1 system-ui,sans-serif">
+  <span style="padding:7px 8px 7px 10px;color:#888">Hero</span>
+  <button type="button" data-v="1">1 One sphere</button><button type="button" data-v="2">2 Orbit</button><button type="button" data-v="3">3 Sea</button>
+</div>
+<style>#heroPick button{font:inherit;border:0;border-radius:999px;padding:7px 12px;background:transparent;color:#111}#heroPick button.on{background:#111;color:#fff}</style>
+<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 1 && +q <= 3 ? q : '1';
+  [].forEach.call(document.querySelectorAll('#heroPick button'), function(b){ b.classList.toggle('on', b.getAttribute('data-v') === String(q));
+    b.addEventListener('click', function(){ try { localStorage.setItem('heroV', b.getAttribute('data-v')) } catch (e) {} location.search = '?hero=' + b.getAttribute('data-v') }) }) })();</script>
 <div id="dot" aria-hidden="true"></div>
 <script>
 (function(){   // the red dot follows the pointer closely and swells over anything clickable (the spheres too)
