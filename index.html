@@ -52,6 +52,9 @@
 html:root{--font:'Commit Mono',ui-monospace,Menlo,monospace}
 .hero-line{letter-spacing:-.03em!important}
 
+.c-fig img{display:block;width:100%;height:auto}
+.cs-m:not(.cover) img{object-fit:contain;background:#EFEFEF}   /* figures show whole, tall posters included */
+
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
 #dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#ED155A;z-index:100000;pointer-events:none;
@@ -1023,7 +1026,7 @@ var FOLDERS = [
     { title: 'Prioticket brand', kind: 'Brand strategy, February 2022', img: 'images/project-1.jpg',
       text: 'Built out the brand identity of a B2B ticketing platform: colour palette, shapes and patterns, brand guidelines and assets.',
       result: '', id: 'prioticket-brand' },
-    { title: 'Ignite Experience', kind: 'Co-founder, since October 2021', img: 'images/project-4.jpg',
+    { title: 'Ignite Experience', kind: 'Co-founder, since October 2021', img: 'images/ignite/ignite-207.jpg',
       text: 'A techno and art collective I co-founded with three friends. I lead the brand, the 3D sphere identity and the animated event announcements.',
       result: '', id: 'ignite' }
   ]},
@@ -1282,7 +1285,7 @@ var CASES = {
   },
 
   'ignite': {
-    title: 'Ignite Experience', sub: 'Where techno and art become one',
+    title: 'Ignite Experience', sub: 'Where techno and art become one', hero: 'images/ignite/ignite-207.jpg',
     meta: [['Type', 'Brand strategy'], ['When', 'Since October 2021'], ['Role', 'Co-founder: art direction, branding, strategy'], ['Tools', 'Figma, Blender, Illustrator, Premiere Pro']],
     blocks: [
       ['p', 'In October 2021 I started a business with three friends. We all love art and techno culture, but couldn’t find anything that brought both together. So we founded Ignite Experience: a techno-based cultural community that features up-and-coming artists and gives them a space to show their creative genius.'],
@@ -1292,9 +1295,13 @@ var CASES = {
       ['p', 'Ignite is a work in progress, built on experimentation, trial and error, and a lot of passion for music, musicians, art and artists. We started with no knowledge, no money and no connections. If we could do it, anyone can.'],
       ['h', 'Building more than an identity'],
       ['p', 'Ignite is our crowd, our artists, the team and our community, and we thrive through art in all its forms. A 3D sphere felt like the perfect symbol for that 360° expression, so I made the sphere the core of the brand and of the animated art pieces that announce our events.'],
-      ['fig', 'The Ignite sphere.'],
+      ['fig', 'The Ignite sphere, on the Symbiosis Vol. I poster.', 'images/ignite/ignite-224.jpg'],
+      ['fig', 'Symbiosis Vol. I and A Night with Ignite Vol. IV.', 'images/ignite/ignite-225.jpg'],
       ['p', 'Instagram is our main channel: where we share our message, connect with the crowd and grow the community, and where we share our curation of the art that happens at our events.'],
-      ['fig', 'Event announcements on Instagram.']
+      ['fig', 'Event announcements on Instagram.', 'images/ignite/ignite-218.jpg'],
+      ['fig', 'Art at the events: “you are an art piece yourself”.', 'images/ignite/ignite-217.jpg'],
+      ['fig', 'Hot people win tickets: QR coasters at the bar.', 'images/ignite/ignite-213-1.jpg'],
+      ['fig', 'No flash: a story asking the crowd to keep the night in the moment.', 'images/ignite/ignite-214-1.jpg']
     ]
   },
 
@@ -2968,7 +2975,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (k === 'h') html += '<h2>' + esc(v) + '</h2>';
       else if (k === 'p') html += '<p>' + esc(v) + '</p>';
       else if (k === 'ul') html += '<ul>' + v.map(function(x){ return '<li>' + esc(x) + '</li>' }).join('') + '</ul>';
-      else if (k === 'fig') html += '<figure class="c-fig"><div>Image to add</div><figcaption>' + esc(v) + '</figcaption></figure>';
+      else if (k === 'fig') html += '<figure class="c-fig">' + (bk[2] ? '<img src="' + bk[2] + '" alt="" loading="lazy">' : '<div>Image to add</div>') + '<figcaption>' + esc(v) + '</figcaption></figure>';
       else if (k === 'notes') html += '<div class="c-notes">' + v.map(function(n){ return '<div><b>' + esc(n[0]) + '</b><span>' + esc(n[1]) + '</span></div>' }).join('') + '</div>';
       else if (k === 'shelf') html += '<div class="c-shelf">' + v.map(function(g){ return '<section><h3>' + esc(g[0]) + '<i>' + g[1].length + '</i></h3><ol>' + g[1].map(function(b){ return '<li><b>' + esc(b[0]) + '</b><span>' + esc(b[1]) + '</span></li>' }).join('') + '</ol></section>' }).join('') + '</div>';
       else if (k === 'records') html += '<div class="c-records">' + v.map(function(r){ return '<div><span class="cover"></span><b>' + esc(r[1]) + '</b><span>' + esc(r[0]) + '</span></div>' }).join('') + '</div>';
@@ -2996,7 +3003,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function renderStory(c, id, loc, next){
     var media = [], heroM = c.noHero ? '' : (c.video ? '<video src="' + c.video + '" poster="' + (c.poster || '') + '" autoplay muted loop playsinline preload="auto"></video>' : '<img src="' + (c.hero || loc.it.img) + '" alt="">');
     if (heroM) media.push({ html: heroM, cap: c.sub, cover: !c.heroZoom, zoom: !!c.heroZoom });
-    c.blocks.forEach(function(bk){ if (bk[0] === 'fig') media.push({ html: '<div class="cs-ph"><span>Image to add</span></div>', cap: bk[1] }) });
+    c.blocks.forEach(function(bk){ if (bk[0] === 'fig') media.push({ html: bk[2] ? '<img src="' + bk[2] + '" alt="' + esc(bk[1]) + '">' : '<div class="cs-ph"><span>Image to add</span></div>', cap: bk[1] }) });
     // chapters: the opening, then one per heading; each block points at the picture that belongs with it
     var chFirst = [], k = heroM ? 1 : 0, ch = 0;
     c.blocks.forEach(function(bk){ if (bk[0] === 'h') ch++; if (bk[0] === 'fig') { if (chFirst[ch] == null) chFirst[ch] = k; k++ } });
@@ -3013,7 +3020,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       else if (t === 'p') S.html += '<p' + m + '>' + esc(v) + '</p>';
       else if (t === 'link') S.html += '<p class="cs-link"' + m + '><a href="' + esc(v[1]) + '" target="_blank" rel="noopener">' + esc(v[0]) + ' <span aria-hidden="true">&nearr;</span></a></p>';
       else if (t === 'ul') S.html += '<ul' + m + '>' + v.map(function(x){ return '<li>' + esc(x) + '</li>' }).join('') + '</ul>';
-      else if (t === 'fig') S.html += '<figure class="c-fig"' + m + '><div>Image to add</div><figcaption>' + esc(v) + '</figcaption></figure>';
+      else if (t === 'fig') S.html += '<figure class="c-fig"' + m + '>' + (bk[2] ? '<img src="' + bk[2] + '" alt="" loading="lazy">' : '<div>Image to add</div>') + '<figcaption>' + esc(v) + '</figcaption></figure>';
       else if (t === 'notes') S.html += '<div class="c-notes"' + m + '>' + v.map(function(n){ return '<div><b>' + esc(n[0]) + '</b><span>' + esc(n[1]) + '</span></div>' }).join('') + '</div>';
       else if (t === 'stats') S.html += '<div class="c-stats"' + m + '>' + v.map(function(n){ return '<div><b>' + esc(n[0]) + '</b><i>' + esc(n[1]) + '</i><span>' + esc(n[2]) + '</span></div>' }).join('') + '</div>';
     });
