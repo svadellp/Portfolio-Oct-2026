@@ -25,23 +25,28 @@
 
 .about-layer{display:none!important}   /* the About page is gone */
 
-/* the open view: a centred list of work, each with its image */
+/* the open view: the sphere fills the left, the folder and its work sit on the right; the list moves inside its own space */
 @media (min-width:761px){
-  #peek.peek{left:50%;right:auto;top:52%;width:min(1080px,84vw);max-width:none}
-  #peek.peek ol{display:grid;grid-template-columns:1fr 1fr;column-gap:40px;border-top:0}
-  #peek.peek li{display:grid;grid-template-columns:clamp(150px,14vw,210px) 1fr;column-gap:20px;align-items:start;padding:16px 0;border-bottom:1px solid var(--line);background:rgba(248,248,248,.82)}
+  #peek.peek{left:52%;right:var(--gutter);top:0;bottom:0;width:auto;max-width:620px;padding-top:108px;padding-bottom:70px}
+  #peek.peek .group.on{display:flex;flex-direction:column;height:100%}
+  #peek.peek .gback{display:block;width:max-content;margin:0 0 22px;text-align:left}
+  #peek.peek ol{flex:1;min-height:0;overflow:hidden;border-top:1px solid var(--line);
+    -webkit-mask-image:linear-gradient(transparent,#000 28px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(transparent,#000 28px,#000 calc(100% - 48px),transparent)}
+  #peek.peek ol > li{transform:translateY(calc(var(--off, 0) * -1px));will-change:transform}
+  #peek.peek li{display:grid;grid-template-columns:clamp(150px,13vw,200px) 1fr;column-gap:22px;align-items:start;padding:18px 0;border-bottom:1px solid var(--line)}
   #peek.peek .thumb{grid-row:1 / span 2;display:block;aspect-ratio:4 / 3;overflow:hidden;background:#E9E9E9}
   #peek.peek .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease)}
   #peek.peek li:hover .thumb img{transform:scale(1.04)}
   #peek.peek .row{padding:2px 0 4px}
   #peek.peek .more{grid-template-rows:1fr!important}
-  #peek.peek .more > div{padding-left:34px}
+  #peek.peek .more > div{padding-left:0}
   #peek.peek p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  #peek.peek h2{background:rgba(248,248,248,.82);display:table}
-  #peek.peek .gback{background:rgba(248,248,248,.82);display:table;margin-bottom:22px}
-  #peek.peek .hint{display:block;background:none}
 }
 @media (max-width:760px){ #peek.peek .thumb{display:block;aspect-ratio:16 / 9;overflow:hidden;margin-top:12px} #peek.peek .thumb img{width:100%;height:100%;object-fit:cover} }
+/* no numbers: just the names */
+.peek h2 i,.peek .row i,#sky .cname b i{display:none!important}
+/* Helvetica throughout */
+html:root{--font:"Helvetica Neue",Helvetica,Arial,sans-serif}
 
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
@@ -1578,7 +1583,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   var NF = FOLDERS.length, SPH_STYLE = NF === 2 ? [2, 1] : [0, 1, 2], peekShow = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0, sphHot = [0, 0, 0];
   function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .5, H * .17) };
     return { x: W * (NF === 2 ? [.3, .7] : [.2, .5, .8])[ci], y: b.y + b.h / 2, r: Math.min(W * (NF === 2 ? .13 : .1), H * (NF === 2 ? .22 : .19)) } }
-  function ballOpen(ci){ return { x: W / 2, y: H / 2, r: Math.max(W, H) * .62 } }   // past the edges of the screen: you are inside it
+  function ballOpen(ci){ return narrow ? { x: W / 2, y: H * .3, r: W * .45 } : { x: W * .08, y: H / 2, r: Math.max(W * .44, H * .6) } }   // big, on the left: only its right side shows
   function sphBuild(){
     var N = narrow ? 520 : (NF === 2 ? 1500 : 950); SPH = [];
     for (var c = 0; c < NF; c++) {
@@ -1817,10 +1822,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       if (dis > .999 && (focus < 0 || peekOp > .98)) continue;   // the dots stay until the real text has fully appeared
       var L = netEase(clamp(netLand / .9, 0, 1)), hot = netHot === c ? 1 : 0;
       var cx = h.x + (o.x - h.x) * e, cy = h.y + (o.y - h.y) * e + Math.sin(t * .4 + c * 2.1) * 4 * (1 - e);   // a slow float
-      var R = (h.r + (o.r - h.r) * e) * (1 + hot * .05) * (.3 + .7 * L), P = SPH[c], st = sphT[c], base = cell * (.3 + .1 * e);
+      var R = (h.r + (o.r - h.r) * e) * (1 + hot * .05) * (.3 + .7 * L), P = SPH[c], st = sphT[c], base = cell * (.3 + .22 * e);
       for (var i = 0; i < P.n; i++) {
         var p = sphPoint(c, i, st), d = (p[2] + 1.2) / 2.2;                   // depth: the near side is bigger and darker
-        var a = (.2 + .75 * d * d) * alpha * ga * (1 - .62 * e); if (a < .02) continue;   // once inside, the dots step back into a quiet background
+        var a = (.2 + .75 * d * d) * alpha * ga * (1 - .2 * e); if (a < .02) continue;   // once open, the dots stay present on the left
         if (dis > 0) {
           // each dot leaves at its own moment, drifts on a soft curve, and settles on a letter; the real text then takes over
           var tg = txtPts[(c * P.n + i) % txtPts.length], dl0 = ((i * 7919) % 1000) / 1000 * .35, u0 = clamp((dis - dl0) / .55, 0, 1), ue = u0 * u0 * (3 - 2 * u0);
@@ -1873,7 +1878,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var bx = narrow ? (W - bw) / 2 : gut + Math.max(0, (W * .52 - gut - bw) / 2);
     var by = narrow ? 136 + bh * .3 : Math.max(64 + bh * .38, (H + 4) / 2 - bh / 2 + 30);   // centred in the space between the top bar and the footer
     bigBoxes = FOLDERS.map(function(){ return { x: bx, y: by, w: bw, h: bh } });
-    peek.style.top = narrow ? (by + bh + 22) + 'px' : '52%';   // desktop: the list sits at the top of its column   // phones: the list sits under the folder and scrolls if needed
+    peek.style.top = narrow ? (by + bh + 22) + 'px' : '0px';   // desktop: the list sits at the top of its column   // phones: the list sits under the folder and scrolls if needed
     bigT = fboxes.map(function(o){ return { sc: bw / o.w, tx: (bx + bw / 2) - (o.x + o.w / 2), ty: (by + bh / 2) - (o.y + o.h / 2) } });
     hits.forEach(function(h, i){
       var b = fboxes[i], base = FOLDER_BASE[i % FOLDER_BASE.length];
@@ -2219,7 +2224,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (pendingFocus >= 0 && mode === -1 && sharpA > .75) { var pf = pendingFocus; pendingFocus = -1; setFocus(pf) }
     peekGate = focus >= 0 && txtPts.length && txtFor === focus ? smoothstep(.62, 1, ballF[focus]) : 1;
     peekOp = peekA * peekGate * (mode === -1 ? 1 : 0); peek.style.opacity = peekOp.toFixed(3);
-    peek.style.transform = narrow ? 'translateY(0px)' : 'translate(-50%, -50%)';   // centred over the sphere's dots
+    peek.style.transform = 'none';
     peek.classList.toggle('live', peekA > .6 && mode === -1);
 
     // 1) Live field in the hero
@@ -3352,6 +3357,19 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     }
   }
   eqTick(); setInterval(eqTick, 160);
+})();
+</script>
+<script>
+(function(){   // the open list moves inside its own space with the wheel or a swipe; the page itself never scrolls
+  var tgt = 0, cur = 0, ol = null;
+  function list(){ var g = document.querySelector('#peek .group.on'); return g ? g.querySelector('ol') : null }
+  function max(){ return ol ? Math.max(0, ol.scrollHeight - ol.clientHeight + 40) : 0 }
+  function feed(d){ var l = list(); if (!l) return false; if (l !== ol) { ol = l; tgt = cur = 0 } tgt = Math.max(0, Math.min(max(), tgt + d)); return true }
+  addEventListener('wheel', function(e){ if (!document.querySelector('#peek.live')) return; feed(e.deltaY) }, { passive: true });
+  var ty = null; addEventListener('touchstart', function(e){ ty = e.touches[0].clientY }, { passive: true });
+  addEventListener('touchmove', function(e){ if (ty == null || !document.querySelector('#peek.live')) return; var y = e.touches[0].clientY; feed(ty - y); ty = y }, { passive: true });
+  (function loop(){ var l = list(); if (l !== ol) { ol = l; tgt = cur = 0 } if (!document.querySelector('#peek.live')) tgt = 0;
+    cur += (tgt - cur) * .12; if (ol) ol.style.setProperty('--off', cur.toFixed(1)); requestAnimationFrame(loop) })();
 })();
 </script>
 <div id="dot" aria-hidden="true"></div>
