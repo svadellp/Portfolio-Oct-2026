@@ -1586,13 +1586,15 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       var rr = 1 + (q - .5) * .55 * w;
       x = x * rr + dx * .32 * w; y = y * rr + dy * .32 * w; z = z * rr + dz * .32 * w;
     } else {                                          // Rooms: bands turning at their own pace, breathing a little
-      var lon = P.a[i] + t * (.05 + .2 * (1 - y * y)) + .7 * Math.sin(t * .13) * y;      // the bands turn at their own pace and twist back and forth
-      var lobe = 1 + .07 * Math.sin(lon * 3 - t * .5 + y * 2) + .04 * Math.sin(y * 5 + t * .37);   // soft lobes rolling around it
-      var r2 = Math.sqrt(Math.max(0, 1 - y * y)), br = (1 + .03 * Math.sin(t * .45 + y * 2.5)) * lobe;
+      // dots stream slowly from pole to pole while the bands twist back and forth: lots of movement, still a perfect sphere
+      var sv = (Math.acos(Math.max(-1, Math.min(1, y))) / Math.PI + t * (.018 + .022 * q)) % 1;
+      y = Math.cos(sv * Math.PI);
+      var lon = P.a[i] + t * (.05 + .2 * (1 - y * y)) + .7 * Math.sin(t * .13) * y;
+      var r2 = Math.sqrt(Math.max(0, 1 - y * y)), br = 1 + .015 * Math.sin(t * .45 + y * 2.5);
       x = Math.cos(lon) * r2 * br; z = Math.sin(lon) * r2 * br; y *= br;
     }
     // turn the whole sphere slowly, tilted towards the viewer
-    var yaw = t * [.12, .08, .05][sty], tilt = [.38, .3 + .15 * Math.sin(t * .07), .26 + .16 * Math.sin(t * .09)][sty];   // its axis wanders slowly
+    var yaw = t * [.12, .08, .05][sty], tilt = [.38, .3 + .15 * Math.sin(t * .07), .3 + .1 * Math.sin(t * .09)][sty];   // its axis tips gently
     var cy = Math.cos(yaw), sy = Math.sin(yaw), x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
     var ct = Math.cos(tilt), st = Math.sin(tilt), y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
     _p[0] = x1; _p[1] = y2; _p[2] = z2; return _p;
