@@ -21,7 +21,7 @@
 
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
-#dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#FF1E1E;z-index:100000;pointer-events:none;
+#dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#ED155A;z-index:100000;pointer-events:none;
   opacity:0;transition:width .25s var(--ease),height .25s var(--ease),margin .25s var(--ease),opacity .3s}
 #dot.on{opacity:1}#dot.big{width:34px;height:34px;margin:-17px 0 0 -17px}
 @media not ((hover:hover) and (pointer:fine)){ #dot{display:none} }
@@ -36,8 +36,8 @@
   --grey:#8C8C8C;
   --line:#E6E6E6;
   --surface:#F4F4F4;
-  --accent:#FF1E1E;              /* the red of the pointer */
-  --accent-soft:rgba(255,30,30,.2);
+  --accent:#ED155A;              /* the red of the pointer */
+  --accent-soft:rgba(237,21,90,.2);
 
   --font:'Archiv Grotesk',system-ui,sans-serif;
   --gutter:clamp(20px,3.2vw,48px);
@@ -182,13 +182,13 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 /* PROTOTYPE: three floating balls of ideas replace the folders */
 #folders{display:none!important}
 #sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
-#sky [data-c]{--cc:#FF1E1E}
-#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .4s,transform .5s var(--ease)}
+#sky [data-c]{--cc:#ED155A}
+#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .35s}
 #sky .cname b{display:block;font-size:var(--t-h3);font-weight:500;letter-spacing:-.02em;transition:color .3s}
 #sky .cname b i{font-style:normal;color:var(--grey);margin-right:.35em;font-variant-numeric:tabular-nums;transition:color .3s}
 #sky .cname span{display:block;margin-top:2px;font-size:var(--t-small);color:var(--grey)}
 #sky .cname.hot b,#sky .cname.hot b i{color:var(--cc)}
-#sky .cname.gone{opacity:0;transform:translate(-50%,8px)}
+#sky .cname.gone{opacity:0}
 .peek{position:absolute;z-index:4;left:58%;right:var(--gutter);top:50%;transform:translateY(-50%);max-width:480px;opacity:0;pointer-events:none}
 .peek.live{pointer-events:auto}
 .peek .group{display:none}
@@ -628,7 +628,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
   .case .br-book{width:68px}.case .br-end{height:104px}.case .br-shelf{gap:40px 14px}
 }
 /* The music room: its own darker space */
-.case.room{--paper:var(--room,#D9D9D9);--ink:#161616;--grey:#656565;--line:rgba(22,22,22,.13);--accent:#FF1E1E;background:var(--room,#D9D9D9);color:var(--ink)}
+.case.room{--paper:var(--room,#D9D9D9);--ink:#161616;--grey:#656565;--line:rgba(22,22,22,.13);--accent:#ED155A;background:var(--room,#D9D9D9);color:var(--ink)}
 .case.room .case-inner{max-width:none;padding:118px var(--gutter) 40px}
 .case.room .c-body{margin-top:0}
 .case.room .c-body > *{max-width:none}
@@ -1651,7 +1651,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var hb = -1;
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
     if (hb !== netHot) { netHot = hb; cv.style.cursor = hb >= 0 ? 'pointer' : ''; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el, ci){ el.classList.toggle('hot', ci === hb) }) }
-    [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', anyOpen) });
+    var namesGone = anyOpen || FO >= 0; [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', namesGone) });
     for (c = 0; c < 3; c++) {
       var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
       var ga = 1, dis = FO >= 0 && c !== FO && txtPts.length ? ballF[FO] : 0;   // how far this sphere has turned into the list's letters
@@ -1677,7 +1677,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
           continue;
         }
         var g = (40 * (1 - d)) | 0, hr = sphHot[c];
-        ctx.fillStyle = 'rgba(' + ((g + (255 - g) * hr) | 0) + ',' + ((g + (30 - g) * hr) | 0) + ',' + ((g + (30 - g) * hr) | 0) + ',' + a.toFixed(3) + ')';
+        ctx.fillStyle = 'rgba(' + ((g + (237 - g) * hr) | 0) + ',' + ((g + (21 - g) * hr) | 0) + ',' + ((g + (90 - g) * hr) | 0) + ',' + a.toFixed(3) + ')';
         dot(ctx, cx + p[0] * R, cy - p[1] * R, base * (.6 + .8 * d));
       }
     }
@@ -3061,21 +3061,17 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (navBusy) return;
     if (reduce) { apply(); return }
     navBusy = true;
-    navDpr = Math.min(2, devicePixelRatio || 1);
-    nt.width = innerWidth * navDpr; nt.height = innerHeight * navDpr; ntx.setTransform(navDpr, 0, 0, navDpr, 0, 0);
-    var src = snapshot();
-    paintPixels(src); nt.style.opacity = 0; nt.classList.add('live');
-    var t0 = performance.now(), FADE = 260;
-    // the page turns into pixels…
-    (function fadeIn(now){
-      var k = clamp((now - t0) / FADE, 0, 1); nt.style.opacity = k;
-      if (k < 1) { requestAnimationFrame(fadeIn); return }
-      // …the next page is set up underneath…
-      document.documentElement.classList.add('instant');
-      apply();
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){ requestAnimationFrame(function(){
-        var dst = snapshot(); fly(src, dst);
-      }) }) });
+    var bg = getComputedStyle(document.body).backgroundColor || '#F8F8F8';
+    navDpr = 1; nt.width = 4; nt.height = 4; ntx.fillStyle = bg; ntx.fillRect(0, 0, 4, 4);   // a plain sheet of paper
+    nt.style.opacity = 0; nt.classList.add('live');
+    var t0 = performance.now(), IN = 260, HOLD = 60, OUT = 420, done = false;
+    (function step(now){
+      var el = now - t0;
+      if (el < IN) nt.style.opacity = (el / IN).toFixed(3);
+      else if (!done) { nt.style.opacity = 1; done = true; document.documentElement.classList.add('instant'); apply();
+        requestAnimationFrame(function(){ document.documentElement.classList.remove('instant') }) }
+      else if (el > IN + HOLD) { var k = clamp((el - IN - HOLD) / OUT, 0, 1); nt.style.opacity = (1 - k * k * (3 - 2 * k)).toFixed(3); if (k >= 1) { nt.classList.remove('live'); navBusy = false; return } }
+      requestAnimationFrame(step);
     })(t0);
   }
   function fly(src, dst){
