@@ -1560,7 +1560,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      Labs breathes between order and scatter, like an experiment loosening and coming back together;
      Rooms swirls, its bands of dots turning at different speeds like a gas planet, denser at the poles.
      Click one and it moves left, big, with its pieces on the right */
-  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0];
+  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0;
   function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .5, H * .17) };
     return { x: W * [.2, .5, .8][ci], y: b.y + b.h / 2, r: Math.min(W * .1, H * .19) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .5 } }
@@ -1614,11 +1614,36 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function blobCells(b, fc){ var cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) * .5, out = [], N = 700;
     for (var i = 0; i < N; i++) { var y = 1 - 2 * (i + .5) / N, r = Math.sqrt(1 - y * y), th = i * 2.39996, z = Math.sin(th) * r; if (z < -.2) continue; out.push([cx + Math.cos(th) * r * R, cy - y * R, 1, .5, (z + 1) / 2]) }
     return out }
+  // where the list's letters are: its text is drawn off screen in the same font and place, and sampled into points
+  function peekTargets(){
+    var pts = [], pr0 = peek.getBoundingClientRect(); if (!pr0.width) return pts;
+    var oc = document.createElement('canvas'), ow = Math.ceil(W), oh = Math.ceil(H); oc.width = ow; oc.height = oh;
+    var g = oc.getContext('2d'); g.fillStyle = '#000'; g.textBaseline = 'alphabetic';
+    var walker = document.createTreeWalker(peek, NodeFilter.SHOW_TEXT), nd;
+    while ((nd = walker.nextNode())) {
+      var txt = nd.nodeValue; if (!txt || !txt.trim()) continue;
+      var el = nd.parentElement, cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      var rg = document.createRange(); rg.selectNodeContents(nd); var rs = rg.getClientRects(); if (!rs.length) continue;
+      g.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      if (g.letterSpacing !== undefined) g.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing;
+      var fs = parseFloat(cs.fontSize), r0 = rs[0];
+      g.fillText(txt.replace(/\s+/g, ' ').trim(), r0.left + (txt.match(/^\s*/)[0].length ? 0 : 0), r0.top + (r0.height + fs * .7) / 2);
+    }
+    var img = g.getImageData(0, 0, ow, oh).data, step = 3;
+    for (var y = Math.max(0, pr0.top - 30) | 0; y < Math.min(oh, pr0.bottom + 30); y += step)
+      for (var x = Math.max(0, pr0.left - 10) | 0; x < Math.min(ow, pr0.right + 10); x += step) if (img[(y * ow + x) * 4 + 3] > 110) pts.push([x, y]);
+    for (var i = pts.length - 1; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0, tq = pts[i]; pts[i] = pts[j]; pts[j] = tq }   // shuffle, so every dot finds a different letter
+    return pts;
+  }
   function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
   function netDraw(t, alpha, dt){
     if (!net || alpha < .01) { if (skyEl) skyEl.style.opacity = 0; netLand = 0; return }
     netLand = Math.min(1, netLand + dt * .7);
     var anyOpen = focus >= 0;
+    if (focus >= 0) lastFocus = focus;
+    var FO = focus >= 0 ? focus : (lastFocus >= 0 && ballF[lastFocus] > .001 ? lastFocus : -1);
+    if (focus >= 0 && txtFor !== focus && peek.textContent.trim()) { txtPts = peekTargets(); txtFor = focus }
+    if (focus < 0 && FO < 0) txtFor = -1;
     for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
@@ -1627,14 +1652,26 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     [].forEach.call(skyEl.querySelectorAll('.cname'), function(el){ el.classList.toggle('gone', anyOpen) });
     for (c = 0; c < 3; c++) {
       var h = ballHome(c), o = ballOpen(c), f = ballF[c], e = f * f * (3 - 2 * f);
-      var ga = anyOpen && focus !== c ? Math.max(0, 1 - ballF[focus] * 1.6) : 1;
-      if (ga < .01) continue;
+      var ga = 1, dis = FO >= 0 && c !== FO && txtPts.length ? ballF[FO] : 0;   // how far this sphere has turned into the list's letters
+      if (FO >= 0 && c !== FO && !txtPts.length) { ga = Math.max(0, 1 - ballF[FO] * 1.6); if (ga < .01) continue }
+      if (dis > .999) continue;
       var L = netEase(clamp(netLand / .9, 0, 1)), hot = netHot === c ? 1 : 0;
       var cx = h.x + (o.x - h.x) * e, cy = h.y + (o.y - h.y) * e + Math.sin(t * .4 + c * 2.1) * 4 * (1 - e);   // a slow float
       var R = (h.r + (o.r - h.r) * e) * (1 + hot * .05) * (.3 + .7 * L), P = SPH[c], st = sphT[c], base = cell * (.3 + .1 * e);
       for (var i = 0; i < P.n; i++) {
         var p = sphPoint(c, i, st), d = (p[2] + 1.2) / 2.2;                   // depth: the near side is bigger and darker
         var a = (.2 + .75 * d * d) * alpha * ga; if (a < .02) continue;
+        if (dis > 0) {
+          // each dot leaves at its own moment, drifts on a soft curve, and settles on a letter; the real text then takes over
+          var tg = txtPts[(c * P.n + i) % txtPts.length], dl0 = ((i * 7919) % 1000) / 1000 * .35, u0 = clamp((dis - dl0) / .55, 0, 1), ue = u0 * u0 * (3 - 2 * u0);
+          var sx = cx + p[0] * R, sy = cy - p[1] * R, arc = Math.sin(Math.PI * ue) * (40 + (i % 13) * 6);
+          var px2 = sx + (tg[0] - sx) * ue + Math.cos(i * 1.7) * arc, py2 = sy + (tg[1] - sy) * ue + Math.sin(i * 2.3) * arc * .6;
+          var a2 = a + (.85 - a) * ue; a2 *= 1 - (focus >= 0 ? clamp(peekOp, 0, 1) : smoothstep(.85, 1, dis));   // they hand over to the real text as it appears
+          if (a2 < .02) continue;
+          ctx.fillStyle = 'rgba(17,17,17,' + a2.toFixed(3) + ')';
+          dot(ctx, px2, py2, base * (.6 + .8 * d) * (1 - ue) + 1.5 * ue);
+          continue;
+        }
         var g = (40 * (1 - d)) | 0;
         ctx.fillStyle = 'rgba(' + g + ',' + g + ',' + g + ',' + a.toFixed(3) + ')';
         dot(ctx, cx + p[0] * R, cy - p[1] * R, base * (.6 + .8 * d));
@@ -2018,7 +2055,8 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
       h.classList.toggle('live', big ? sharpBig > .7 : (sharpA > .7 && focus < 0));
     });
     if (pendingFocus >= 0 && mode === -1 && sharpA > .75) { var pf = pendingFocus; pendingFocus = -1; setFocus(pf) }
-    peek.style.opacity = (peekA * (mode === -1 ? 1 : 0)).toFixed(3);
+    peekGate = focus >= 0 && txtPts.length && txtFor === focus ? smoothstep(.62, 1, ballF[focus]) : 1;
+    peekOp = peekA * peekGate * (mode === -1 ? 1 : 0); peek.style.opacity = peekOp.toFixed(3);
     peek.style.transform = narrow ? 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)' : 'translateY(' + ((1 - peekA) * 16).toFixed(1) + 'px)';
     peek.classList.toggle('live', peekA > .6 && mode === -1);
 
