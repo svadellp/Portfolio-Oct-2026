@@ -23,6 +23,8 @@
 .case .case-inner,.about-layer .about-inner{transition:none!important;transform:none!important}
 #peek,#peek *{transition:none!important}
 
+.about-layer{display:none!important}   /* the About page is gone */
+
 /* the pointer is a vibrant red dot */
 @media (hover:hover) and (pointer:fine){ html,html *{cursor:none!important} }
 #dot{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#ED155A;z-index:100000;pointer-events:none;
@@ -916,7 +918,6 @@ header.dark .hdr-exit{display:inline-flex}
     <a href="#work" id="workLink" data-t="Projects">Projects</a>
     <a href="#lab" id="labLink" data-t="Labs">Labs</a>
     <a href="#rooms" id="shelfLink" data-t="Rooms">Rooms</a>
-    <a href="#about" id="aboutLink" data-t="About">About</a>
   </nav>
   <button type="button" class="hdr-exit" id="exitRoom" data-t="Exit Room">Exit Room</button>
 </header>
@@ -928,8 +929,7 @@ header.dark .hdr-exit{display:inline-flex}
       <canvas id="field" aria-hidden="true"></canvas>
       <div class="hero-copy" id="heroCopy">
         <p class="hero-loc"><span>Working from:</span> Amsterdam, NL</p>
-        <h1 class="hero-line" id="heroLine">Curious idea collector.<br>Creative dot connector.<br>Stubborn experience builder.</h1>
-        <p class="services"><span>Services:</span> Product design, strategy, creative direction and AI coding. Yes, all of them.</p>
+        <h1 class="hero-line" id="heroLine">Designer by craft,<br>founder by experience,<br>curious by default.</h1>
       </div>
       <nav class="corner" aria-label="Elsewhere">
         <a href="https://www.linkedin.com/in/saravadellperez" target="_blank" rel="noopener" data-t="LinkedIn">LinkedIn</a>
@@ -2139,7 +2139,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 
     // HTML layers
     heroLine.style.opacity = 1 - pr.swap;
-    heroCopy.querySelector('.services').style.opacity = heroCopy.querySelector('.hero-loc').style.opacity = 1 - smoothstep(0, .6, pr.swap);
+    heroCopy.querySelector('.hero-loc').style.opacity = 1 - smoothstep(0, .6, pr.swap);
     // Once the pixels have formed the folders, sharp folders take their place (and hand back when leaving)
     // It starts while the last pixels are landing, and follows the scroll with a little lag so it never pops
     var sharpTarget = 0;
@@ -3238,7 +3238,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   [['workLink', 0], ['labLink', 1], ['shelfLink', 2]].forEach(function(l){
     $(l[0]).addEventListener('click', function(e){ e.preventDefault(); if (!atFolder(l[1])) pixelNav(function(){ navFolder(l[1]) }) });
   });
-  $('aboutLink').addEventListener('click', function(e){ e.preventDefault(); if (!aboutEl.classList.contains('live')) pixelNav(navAbout) });
+
   $('exitRoom').addEventListener('click', function(){ var lc = findItem(caseOpen || 'music'); pixelNav(function(){ navFolder(lc ? lc.f : 2) }) });
 
   /* ---------- Start ---------- */
