@@ -1639,32 +1639,41 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
   function pr0s(){ var r = stage.getBoundingClientRect(); return clamp(-r.top, 0, stage.offsetHeight - H) / H }
   function netEase(t){ var c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }   // lands with a small overshoot, then settles
   /* ---------- The hero: one animation that becomes the three spheres as you scroll ----------
-     1 One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
+     (old) One sphere: a large sphere behind the tagline, made of three slices; on scroll it splits and each slice rounds into its own sphere.
      2 Orbit: the three spheres already circle the tagline, small, passing in front and behind; on scroll they come forward into a row.
      3 Sea: a wide field of dots rolling like water in perspective; on scroll it lifts, row by row, and wraps into the three spheres. */
-  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 1 && +q <= 3 ? +q : 1 })();
+  var HERO_V = (function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} return +q >= 3 && +q <= 6 ? +q : 3 })();
   var heroClock = 0;
   function heroPos(c, i, t, out){
-    var P = SPH[c], N = P.n, m = Math.min(W, H);
-    if (HERO_V === 1) {
-      var y = 1 - 2 * (i + .5) / N, r = Math.sqrt(Math.max(0, 1 - y * y)), lon = c * 2.0944 + ((i * 2.39996) % 2.0944) + .06;
-      var br = 1 + .015 * Math.sin(t * .5 + y * 3);
-      var x = Math.cos(lon) * r * br, z = Math.sin(lon) * r * br; y *= br;
-      var yaw = t * .07, cy0 = Math.cos(yaw), sy0 = Math.sin(yaw), x1 = x * cy0 + z * sy0, z1 = -x * sy0 + z * cy0, tl = .32, y2 = y * Math.cos(tl) - z1 * Math.sin(tl), z2 = y * Math.sin(tl) + z1 * Math.cos(tl);
-      var R = m * .38; out[0] = W / 2 + x1 * R; out[1] = H * .52 - y2 * R; out[2] = z2; out[3] = .8;
-    } else if (HERO_V === 2) {
-      var th = t * .1 + c * 2.0944, oz = Math.sin(th), Rm = m * .1 * (1 + .3 * oz);
-      var ccx = W / 2 + Math.cos(th) * W * .3, ccy = H * .5 + oz * H * .1 + Math.cos(th) * H * .05;
-      var p = sphPoint(c, i, sphT[c]); out[0] = ccx + p[0] * Rm; out[1] = ccy - p[1] * Rm; out[2] = p[2]; out[3] = .6 + .4 * (oz + 1) / 2;
-    } else {
-      // a grid laid out so each sphere's dots come from its own third of the field, left to right
+    var P = SPH[c], N = P.n, m = Math.min(W, H), q = ((i * 7919) % 1000) / 1000;
+    if (HERO_V === 3) {                                // Sea: a field of dots rolling like water, each third becomes a sphere
       var cc = Math.ceil(Math.sqrt(N * .9)), rc = Math.ceil(N / cc), gz = Math.floor(i / cc) / (rc - 1);
       var gx = (c + (i % cc + .5) / cc) / 3 * 2.4 - 1.2, wv = .07 * Math.sin(gx * 5 + t * .55) + .05 * Math.sin(gz * 9 - t * .4) + .03 * Math.sin((gx + gz) * 11 + t * .7);
-      var zf = 1 + gz * 3; out[0] = W / 2 + gx * W * .75 / zf; out[1] = H * .42 + H * .62 / zf - wv * H * .6 / zf; out[2] = 1.6 / zf - .6; out[3] = .75 + .25 / zf;
+      var zf = 1 + gz * 3; out[0] = W / 2 + gx * W * .75 / zf; out[1] = H * .42 + H * .62 / zf - wv * H * .6 / zf; out[2] = 1.6 / zf - .6; out[3] = .75 + .25 / zf; out[4] = (1 - 1 / zf) * .35;
+      return out;
     }
+    var x, y, z, R, cx0 = W / 2, cy0 = H * .5, tilt, yaw, dl;
+    if (HERO_V === 4) {                                // Galaxy: a slow spiral with three arms, one for each sphere
+      var q2 = ((i * 4241) % 1000) / 1000, r = Math.pow((i + .5) / N, .75) * (.9 + q2 * .2), th = c * 2.0944 + r * 3.4 + (q - .5) * 1.1 * (1.15 - r * .6);
+      x = Math.cos(th) * r; z = Math.sin(th) * r; y = (((i * 3571) % 1000) / 1000 - .5) * .08 * (1 - r * .7);
+      R = m * .5; tilt = 1.05; yaw = t * .05; dl = r * .3;
+    } else if (HERO_V === 5) {                         // Silk: one long twisting band of dots drifting across the screen
+      var rows = 10, L = Math.ceil(N / rows), al = i % L, ac = Math.floor(i / L) / (rows - 1) - .5, sv = (c + al / L) / 3;
+      var px = (sv * 2 - 1) * 1.35, py = .22 * Math.sin(sv * 5 + t * .3), pz = .35 * Math.cos(sv * 4 - t * .22), ph = sv * 5.5 + t * .18;
+      x = px; y = py + Math.cos(ph) * ac * .32; z = pz + Math.sin(ph) * ac * .32;
+      R = W * .45; cy0 = H * .5; tilt = .15; yaw = 0; dl = sv * .35;
+    } else {                                           // Ring: a large ring of dots, each third becomes a sphere
+      var tubes = 14, L2 = Math.ceil(N / tubes), al2 = i % L2, ar = Math.floor(i / L2);
+      var aa = (c + al2 / L2) / 3 * 6.2832, bb = ar / tubes * 6.2832 + t * .25 + aa * 2, rt = .26;
+      x = (1 + rt * Math.cos(bb)) * Math.cos(aa); z = (1 + rt * Math.cos(bb)) * Math.sin(aa); y = rt * Math.sin(bb);
+      R = m * .36; tilt = 1.15; yaw = t * .045; dl = q * .3;
+    }
+    var cy1 = Math.cos(yaw), sy1 = Math.sin(yaw), x1 = x * cy1 + z * sy1, z1 = -x * sy1 + z * cy1;
+    var ct = Math.cos(tilt), st = Math.sin(tilt), y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
+    out[0] = cx0 + x1 * R; out[1] = cy0 - y2 * R; out[2] = Math.max(-1, Math.min(1, z2)); out[3] = .8; out[4] = dl;
     return out;
   }
-  var _h = [0, 0, 0, 0];
+  var _h = [0, 0, 0, 0, 0];
   function heroSys(t, dt, pr){
     if (mode !== -1 || focus >= 0 || fTrans || pr.s >= T_FOLDERS - .001 || !SPH.length) return;
     heroClock += dt; for (var c0 = 0; c0 < 3; c0++) sphT[c0] += dt;   // the spheres keep turning while they are still the hero
@@ -1675,9 +1684,9 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
         var p = sphPoint(c, i, sphT[c]), d = (p[2] + 1.2) / 2.2;
         var tx = h.x + p[0] * h.r, ty = h.y - p[1] * h.r + Math.sin(t * .4 + c * 2.1) * 4;
         var hp = heroPos(c, i, heroClock, _h), hd = (hp[2] + 1.2) / 2.2;
-        var dl = HERO_V === 3 ? (1 - hd) * .35 : ((i * 7919) % 1000) / 1000 * .3;   // the sea lifts front rows first
+        var dl = hp[4];   // each hero sets its own order of departure
         var lt = clamp((uc - dl) / (1 - .35), 0, 1); lt = lt * lt * (3 - 2 * lt);
-        var arc = Math.sin(Math.PI * lt) * (HERO_V === 2 ? 0 : 24 + (i % 11) * 4);
+        var arc = Math.sin(Math.PI * lt) * (16 + (i % 11) * 3);
         var x = hp[0] + (tx - hp[0]) * lt + Math.cos(i * 1.3) * arc, y = hp[1] + (ty - hp[1]) * lt + Math.sin(i * 2.1) * arc * .6;
         var dd = hd + (d - hd) * lt;
         var a = ((.2 + .75 * dd * dd) * (hp[3] + (1 - hp[3]) * lt)); if (a < .02) continue;
@@ -3231,10 +3240,10 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
 </script>
 <div id="heroPick" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.08);font:500 12px/1 system-ui,sans-serif">
   <span style="padding:7px 8px 7px 10px;color:#888">Hero</span>
-  <button type="button" data-v="1">1 One sphere</button><button type="button" data-v="2">2 Orbit</button><button type="button" data-v="3">3 Sea</button>
+  <button type="button" data-v="3">Sea</button><button type="button" data-v="4">Galaxy</button><button type="button" data-v="5">Silk</button><button type="button" data-v="6">Ring</button>
 </div>
 <style>#heroPick button{font:inherit;border:0;border-radius:999px;padding:7px 12px;background:transparent;color:#111}#heroPick button.on{background:#111;color:#fff}</style>
-<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 1 && +q <= 3 ? q : '1';
+<script>(function(){ var q = (location.search.match(/hero=(\d)/) || [])[1]; try { q = q || localStorage.getItem('heroV') } catch (e) {} q = +q >= 3 && +q <= 6 ? q : '3';
   [].forEach.call(document.querySelectorAll('#heroPick button'), function(b){ b.classList.toggle('on', b.getAttribute('data-v') === String(q));
     b.addEventListener('click', function(){ try { localStorage.setItem('heroV', b.getAttribute('data-v')) } catch (e) {} location.search = '?hero=' + b.getAttribute('data-v') }) }) })();</script>
 <div id="dot" aria-hidden="true"></div>
