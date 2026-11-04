@@ -189,7 +189,7 @@ nav a[data-t]:hover,nav a[data-t]:focus-visible,.hdr-exit[data-t]:hover{color:va
 #folders{display:none!important}
 #sky{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}
 #sky [data-c]{--cc:#ED155A}
-#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none}
+#sky .cname{position:absolute;text-align:center;transform:translate(-50%,0);pointer-events:none;transition:opacity .35s}
 #sky .cname b{display:block;font-size:var(--t-h3);font-weight:500;letter-spacing:-.02em;transition:color .3s}
 #sky .cname b i{font-style:normal;color:var(--grey);margin-right:.35em;font-variant-numeric:tabular-nums;transition:color .3s}
 #sky .cname span{display:block;margin-top:2px;font-size:var(--t-small);color:var(--grey)}
@@ -1564,7 +1564,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
      Labs breathes between order and scatter, like an experiment loosening and coming back together;
      Rooms swirls, its bands of dots turning at different speeds like a gas planet, denser at the poles.
      Click one and it moves left, big, with its pieces on the right */
-  var net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0, sphHot = [0, 0, 0];
+  var peekShow = 0, net = null, skyEl, netHot = -1, netLand = 0, ballF = [0, 0, 0], SPH = [], sphT = [0, 0, 0], lastFocus = -1, txtPts = [], txtFor = -1, peekGate = 1, peekOp = 0, sphHot = [0, 0, 0];
   function ballHome(ci){ var b = fboxes[ci]; if (W < 760) return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w * .5, H * .17) };
     return { x: W * [.2, .5, .8][ci], y: b.y + b.h / 2, r: Math.min(W * .1, H * .19) } }
   function ballOpen(ci){ var b = bigBoxes[ci]; return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.min(b.w, b.h) * .5 } }
@@ -1757,7 +1757,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     var FO = focus >= 0 ? focus : (lastFocus >= 0 && ballF[lastFocus] > .001 ? lastFocus : -1);
 
     if (focus < 0 && FO < 0) txtFor = -1;
-    for (var c = 0; c < 3; c++) { ballF[c] = focus === c ? 1 : 0; /* no animation: it is simply there */ sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
+    for (var c = 0; c < 3; c++) { var tgF = focus === c ? 1 : 0; ballF[c] += clamp(tgF - ballF[c], -dt / 1.1, dt / 1.1); sphT[c] += dt * (netHot === c ? 1.8 : 1); sphHot[c] += ((netHot === c ? 1 : 0) - sphHot[c]) * (1 - Math.exp(-dt * 6)) }   // hovering wakes a sphere up a little
     skyEl.style.opacity = (clamp((netLand - .45) / .55, 0, 1) * alpha).toFixed(3);
     var hb = -1;
     if (!anyOpen && alpha > .7 && mouse.on && netLand > .8) for (c = 0; c < 3; c++) { var hm = ballHome(c); if (Math.hypot(mouse.tx - hm.x, mouse.ty - hm.y) < hm.r * 1.1) hb = c }
@@ -2157,7 +2157,7 @@ var MOSAIC_FALLBACK = {"images/project-1.jpg": "M1KSM1KSM1KSM1KTM1KTM1KSM1KTM1KT
     if (reduce) sharpBig = bigTarget;
     if (bigIdx >= 0 && focus < 0 && sharpBig < .01) bigIdx = -1;
     var solidB = smoothstep(0, .55, sharpBig), revealB = smoothstep(.25, 1, sharpBig), letGoB = smoothstep(.55, 1, sharpBig);
-    var peekA = focus >= 0 ? 1 : 0;
+    peekShow += ((focus >= 0 ? smoothstep(.55, 1, ballF[focus]) : 0) - peekShow) * (focus >= 0 ? .12 : .25); var peekA = peekShow;   // the list fades in, in place, once the sphere has arrived
     hits.forEach(function(h, i){
       var big = i === bigIdx && sharpA < .05, bt = bigT[i];
       h.style.transform = big ? 'translate(' + bt.tx.toFixed(2) + 'px,' + bt.ty.toFixed(2) + 'px) scale(' + bt.sc.toFixed(4) + ')' : '';
